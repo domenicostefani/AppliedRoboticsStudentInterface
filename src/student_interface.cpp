@@ -4,13 +4,24 @@
 #include <stdexcept>
 #include <sstream>
 namespace student {
+ int i = 0; 
 
  void loadImage(cv::Mat& img_out, const std::string& config_folder){  
    throw std::logic_error( "STUDENT FUNCTION - LOAD IMAGE - NOT IMPLEMENTED" );
  }
 
  void genericImageListener(const cv::Mat& img_in, std::string topic, const std::string& config_folder){
-    throw std::logic_error( "STUDENT FUNCTION - IMAGE LISTENER - NOT CORRECTLY IMPLEMENTED" );
+    //throw std::logic_error( "STUDENT FUNCTION - IMAGE LISTENER - NOT CORRECTLY IMPLEMENTED" );
+    
+    cv::imshow("current picture", img_in);
+    char c = cv::waitKey(30);
+    if(c == 's'){
+        std::string filename = config_folder;
+        filename += "/image_";
+        filename += std::to_string(i++);
+        filename += ".jpg";
+        cv::imwrite(filename, img_in);
+    }
   }
 
   bool extrinsicCalib(const cv::Mat& img_in, std::vector<cv::Point3f> object_points, const cv::Mat& camera_matrix, cv::Mat& rvec, cv::Mat& tvec, const std::string& config_folder){
