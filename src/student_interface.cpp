@@ -37,12 +37,14 @@ namespace student {
 
   bool extrinsicCalib(const cv::Mat& img_in, std::vector<cv::Point3f> object_points, const cv::Mat& camera_matrix, cv::Mat& rvec, cv::Mat& tvec, const std::string& config_folder){
     throw std::logic_error( "STUDENT FUNCTION - EXTRINSIC CALIB - NOT IMPLEMENTED" );
+
+    // cv::solvePnP();
   }
 
   void imageUndistort(const cv::Mat& img_in, cv::Mat& img_out,
           const cv::Mat& cam_matrix, const cv::Mat& dist_coeffs, const std::string& config_folder){
-
-    throw std::logic_error( "STUDENT FUNCTION - IMAGE UNDISTORT - NOT IMPLEMENTED" );
+    cv::undistort(img_in,img_out,cam_matrix,dist_coeffs);
+    // throw std::logic_error( "STUDENT FUNCTION - IMAGE UNDISTORT - NOT IMPLEMENTED" );
 
   }
 
