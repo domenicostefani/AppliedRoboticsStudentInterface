@@ -100,9 +100,8 @@ namespace student {
     std::string windowname = "Select corners, counterclockwise, start from red";
     cv::namedWindow(windowname);
     cv::setMouseCallback(windowname, onMouse, (void*)&points);
-    int X, Y;
 
-    while(points.size() <= 4){
+    while(points.size() < 4){
       cv::imshow(windowname, img_in);
 
       for(int i=0; i < points.size(); i++){
@@ -117,29 +116,28 @@ namespace student {
     }
   }
 
-
-  bool extrinsicCalib(const cv::Mat& img_in, std::vector<cv::Point3f> object_points, const cv::Mat& camera_matrix, cv::Mat& rvec, cv::Mat& tvec, const std::string& config_folder){
+  bool extrinsicCalib(const cv::Mat& img_in, std::vector<cv::Point3f> object_points,
+                      const cv::Mat& camera_matrix, cv::Mat& rvec,
+                      cv::Mat& tvec, const std::string& config_folder){
     // throw std::logic_error( "STUDENT FUNCTION - EXTRINSIC CALIB - NOT IMPLEMENTED" );
-
     std::vector<cv::Point2f> corners;
     if(AUTO_CORNER_DETECTION)
       autodetect_corners(img_in,corners);
     else
       manualselect_corners(img_in,corners);
-/*
-    cv::line(img_in, corners[0], corners[1], cv::Scalar(0,0,255));
-    cv::line(img_in, corners[1], corners[2], cv::Scalar(0,0,255));
-    cv::line(img_in, corners[2], corners[3], cv::Scalar(0,0,255));
-    cv::line(img_in, corners[3], corners[0], cv::Scalar(0,0,255));
 
-    cv::circle(img_in, corners[0], 20, cv::Scalar(50,50,50),4);
-    cv::circle(img_in, corners[1], 20, cv::Scalar(50,50,50),4);
-    cv::circle(img_in, corners[2], 20, cv::Scalar(50,50,50),4);
-    cv::circle(img_in, corners[3], 20, cv::Scalar(50,50,50),4);
-    // display
-    cv::imshow("input", img_in);
-*/
-    // cv::solvePnP(object_points,corners, camera_matrix, <dist_coeffs>, rvec, tvec);
+    // cv::line(img_in, corners[0], corners[1], cv::Scalar(0,0,255));
+    // cv::line(img_in, corners[1], corners[2], cv::Scalar(0,0,255));
+    // cv::line(img_in, corners[2], corners[3], cv::Scalar(0,0,255));
+    // cv::line(img_in, corners[3], corners[0], cv::Scalar(0,0,255));
+    //
+    // cv::circle(img_in, corners[0], 20, cv::Scalar(50,50,50),4);
+    // cv::circle(img_in, corners[1], 20, cv::Scalar(50,50,50),4);
+    // cv::circle(img_in, corners[2], 20, cv::Scalar(50,50,50),4);
+    // cv::circle(img_in, corners[3], 20, cv::Scalar(50,50,50),4);
+    // // display
+    // cv::imshow("input", img_in);
+
     cv::Mat nullmat;
     cv::solvePnP(object_points,corners, camera_matrix, nullmat, rvec, tvec);
   }
@@ -151,13 +149,23 @@ namespace student {
 
   }
 
-  void findPlaneTransform(const cv::Mat& cam_matrix, const cv::Mat& rvec, const cv::Mat& tvec, const std::vector<cv::Point3f>& object_points_plane, cv::Mat& plane_transf, const std::string& config_folder){
-    throw std::logic_error( "STUDENT FUNCTION - FIND PLANE TRANSFORM - NOT IMPLEMENTED" );
+  void findPlaneTransform(const cv::Mat& cam_matrix, const cv::Mat& rvec,
+                          const cv::Mat& tvec,
+                          const std::vector<cv::Point3f>& object_points_plane,
+                          const std::vector<cv::Point2f>& dest_image_points_plane,
+                          cv::Mat& plane_transf, const std::string& config_folder){
+
+    cv::Mat image_points;
+
+    // project points
+    cv::projectPoints(object_points_plane, rvec, tvec, cam_matrix, cv::Mat(), image_points);
+
+    plane_transf = cv::getPerspectiveTransform(image_points, dest_image_points_plane);
   }
 
-
   void unwarp(const cv::Mat& img_in, cv::Mat& img_out, const cv::Mat& transf, const double scale, const std::string& config_folder){
-    throw std::logic_error( "STUDENT FUNCTION - UNWRAP - NOT IMPLEMENTED" );
+    // throw std::logic_error( "STUDENT FUNCTION - UNWRAP - NOT IMPLEMENTED" );
+    cv::warpPerspective(img_in, img_out, transf, img_in.size());
   }
 
   bool processMap(const cv::Mat& img_in, const double scale, std::vector<Polygon>& obstacle_list, std::vector<std::pair<int,Polygon>>& victim_list, Polygon& gate, const std::string& config_folder){
