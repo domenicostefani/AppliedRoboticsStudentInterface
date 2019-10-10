@@ -163,7 +163,7 @@ namespace student {
     plane_transf = cv::getPerspectiveTransform(image_points, dest_image_points_plane);
   }
 
-  void unwarp(const cv::Mat& img_in, cv::Mat& img_out, const cv::Mat& transf, const double scale, const std::string& config_folder){
+  void unwarp(const cv::Mat& img_in, cv::Mat& img_out, const cv::Mat& transf, const std::string& config_folder){
     // throw std::logic_error( "STUDENT FUNCTION - UNWRAP - NOT IMPLEMENTED" );
     cv::warpPerspective(img_in, img_out, transf, img_in.size());
   }
