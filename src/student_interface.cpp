@@ -4,6 +4,9 @@
 #include <stdexcept>
 #include <sstream>
 #include <stdlib.h>
+
+#define AUTO_CORNER_DETECTION false
+
 namespace student {
  int i = 0;
 
@@ -35,10 +38,110 @@ namespace student {
     }
   }
 
-  bool extrinsicCalib(const cv::Mat& img_in, std::vector<cv::Point3f> object_points, const cv::Mat& camera_matrix, cv::Mat& rvec, cv::Mat& tvec, const std::string& config_folder){
-    throw std::logic_error( "STUDENT FUNCTION - EXTRINSIC CALIB - NOT IMPLEMENTED" );
+  bool autodetect_corners(const cv::Mat& img_in, std::vector<cv::Point2f>& corners){
+      // // convert to grayscale (you could load as grayscale instead)
+      // cv::Mat gray;
+      // cv::cvtColor(img_in,gray, CV_BGR2GRAY);
+      //
+      // // compute mask (you could use a simple threshold if the image is always as good as the one you provided)
+      // cv::Mat mask;
+      // cv::threshold(gray, mask, 10, 255, CV_THRESH_BINARY_INV | CV_THRESH_OTSU);
+      //
+      //
+      // // find contours (if always so easy to segment as your image, you could just add the black/rect pixels to a vector)
+      // std::vector<std::vector<cv::Point>> contours;
+      // std::vector<cv::Vec4i> hierarchy;
+      // cv::findContours(mask,contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+      //
+      // /// Draw contours and find biggest contour (if there are other contours in the image, we assume the biggest one is the desired rect)
+      // // drawing here is only for demonstration!
+      // int biggestContourIdx = -1;
+      // float biggestContourArea = 0;
+      // // cv::Mat drawing = cv::Mat::zeros( mask.size(), CV_8UC3 ); REMOVE
+      //
+      // for( int i = 0; i< contours.size(); i++ )
+      // {
+      //     // cv::Scalar color = cv::Scalar(0, 100, 0); REMOVE
+      //     //drawContours( drawing, contours, i, color, 1, 8, hierarchy, 0, cv::Point() ); REMOVE
+      //
+      //     float ctArea= cv::contourArea(contours[i]);
+      //     if(ctArea > biggestContourArea)
+      //     {
+      //         biggestContourArea = ctArea;
+      //         biggestContourIdx = i;
+      //     }
+      // }
+      //
+      // // if no contour found
+      // if(biggestContourIdx < 0)
+      // {
+      //     std::cout << "no contour found" << std::endl;
+      //     return false;
+      // }
+      //
+      // // compute the rotated bounding rect of the biggest contour! (this is the part that does what you want/need)
+      // cv::RotatedRect boundingBox = cv::minAreaRect(contours[biggestContourIdx]);
+      // // one thing to remark: this will compute the OUTER boundary box, so maybe you have to erode/dilate if you want something between the ragged lines
+      //
+      // boundingBox.points(corners);
+      return true;
+    }
 
-    // cv::solvePnP();
+  void onMouse(int evt, int x, int y, int flags, void* param) {
+      if(evt == CV_EVENT_LBUTTONDOWN) {
+          std::vector<cv::Point>* ptPtr = (std::vector<cv::Point>*)param;
+          ptPtr->push_back(cv::Point(x,y));
+      }
+  }
+
+  void manualselect_corners(const cv::Mat& img_in, std::vector<cv::Point2f>& corners){
+
+    std::vector<cv::Point> points;
+    std::string windowname = "Select corners, counterclockwise, start from red";
+    cv::namedWindow(windowname);
+    cv::setMouseCallback(windowname, onMouse, (void*)&points);
+    int X, Y;
+
+    while(points.size() <= 4){
+      cv::imshow(windowname, img_in);
+
+      for(int i=0; i < points.size(); i++){
+          cv::circle(img_in, points[i], 20, cv::Scalar(240,0,0),CV_FILLED);
+      }
+      cv::waitKey(1);
+    }
+    cv::destroyWindow(windowname);
+
+    for(int i=0; i < 4; i++){
+        corners.push_back(points[i]);
+    }
+  }
+
+
+  bool extrinsicCalib(const cv::Mat& img_in, std::vector<cv::Point3f> object_points, const cv::Mat& camera_matrix, cv::Mat& rvec, cv::Mat& tvec, const std::string& config_folder){
+    // throw std::logic_error( "STUDENT FUNCTION - EXTRINSIC CALIB - NOT IMPLEMENTED" );
+
+    std::vector<cv::Point2f> corners;
+    if(AUTO_CORNER_DETECTION)
+      autodetect_corners(img_in,corners);
+    else
+      manualselect_corners(img_in,corners);
+/*
+    cv::line(img_in, corners[0], corners[1], cv::Scalar(0,0,255));
+    cv::line(img_in, corners[1], corners[2], cv::Scalar(0,0,255));
+    cv::line(img_in, corners[2], corners[3], cv::Scalar(0,0,255));
+    cv::line(img_in, corners[3], corners[0], cv::Scalar(0,0,255));
+
+    cv::circle(img_in, corners[0], 20, cv::Scalar(50,50,50),4);
+    cv::circle(img_in, corners[1], 20, cv::Scalar(50,50,50),4);
+    cv::circle(img_in, corners[2], 20, cv::Scalar(50,50,50),4);
+    cv::circle(img_in, corners[3], 20, cv::Scalar(50,50,50),4);
+    // display
+    cv::imshow("input", img_in);
+*/
+    // cv::solvePnP(object_points,corners, camera_matrix, <dist_coeffs>, rvec, tvec);
+    cv::Mat nullmat;
+    cv::solvePnP(object_points,corners, camera_matrix, nullmat, rvec, tvec);
   }
 
   void imageUndistort(const cv::Mat& img_in, cv::Mat& img_out,
