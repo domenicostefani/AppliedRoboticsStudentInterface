@@ -279,12 +279,11 @@ namespace student {
     cv::cvtColor(img_in, hsv_img, cv::COLOR_BGR2HSV);
 
     // Extract blue color region
-    cv::Mat blue_mask;
-    cv::inRange(hsv_img, cv::Scalar(100, 120, 150),
-    cv::Scalar(135, 255, 255), blue_mask);
+    cv::Mat blue_mask;    
+    cv::inRange(hsv_img, cv::Scalar(110, 75, 0), cv::Scalar(130, 255, 255), blue_mask);
 
     // remove noise with opening operation
-    cv::morphologyEx(blue_mask, blue_mask, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));
+    //cv::morphologyEx(blue_mask, blue_mask, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));
 
     // find robot contours and approximate to triangle
     std::vector<std::vector<cv::Point>> contours;
@@ -300,14 +299,15 @@ namespace student {
     #endif
 
     std::vector<cv::Point> approx_curve;
-    std::vector<std::vector<cv::Point>> contours_approx;
+    std::vector<std::vector<cv::Point>> contours_approx;    
     bool found = false;
     for (int i=0; i<contours.size(); ++i)
-    {
-        // Approximate the i-th contours
-        cv::approxPolyDP(contours[i], approx_curve, 30, true);
+    { 
+        // Approximate the i-th contours      
+        cv::approxPolyDP(contours[i], approx_curve, 10, true);
 
         // Check the number of edge of the aproximated contour
+        std::cout << "Approx contour count: " << approx_curve.size() << std::endl;
         if (approx_curve.size() != 3) continue;
 
         // draw approximated contours
@@ -316,17 +316,17 @@ namespace student {
             cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
         #endif
 
-        // cv::imshow("findRobot", contours_img);
-        // cv::waitKey(0);
+        cv::imshow("findRobot", contours_img);
+        cv::waitKey(0);
 
         found = true;
         break;
     }
 
     // set robot position
-    if (found){
+    if (found){      
         // emplace back every vertex on triangle (output of this function)
-        for (const auto& pt: approx_curve) {
+        for (const auto& pt: approx_curve) {        
           triangle.emplace_back(pt.x/scale, pt.y/scale);
           // remember to use the scale to convert the position on the image
           // (pixels) to the position in the arena (meters)
@@ -336,7 +336,7 @@ namespace student {
         double cx = 0, cy = 0;
 
         // Compute the triangle baricenter
-        for (auto vertex: triangle)
+        for (auto vertex: triangle) 
         {
           // NB: triangle point are expressed in meters
           cx += vertex.x;
@@ -350,11 +350,11 @@ namespace student {
         Point top_vertex;
         for (auto& vertex: triangle)
         {
-          const double dx = vertex.x-cx;
+          const double dx = vertex.x-cx;      
           const double dy = vertex.y-cy;
           const double curr_d = dx*dx + dy*dy;
           if (curr_d > dst)
-          {
+          { 
             dst = curr_d;
             top_vertex = vertex;
           }
@@ -368,14 +368,14 @@ namespace student {
         const double dx = cx - top_vertex.x;
         const double dy = cy - top_vertex.y;
         theta = std::atan2(dy, dx);
-
-        #ifdef FIND_ROBOT_DEBUG_PLOT
+        
+        #ifdef FIND_ROBOT_DEBUG_PLOT   
             // Draw over the image
             cv::Point cv_baricenter(x*scale, y*scale); // convert back m to px
             cv::Point cv_vertex(top_vertex.x*scale, top_vertex.y*scale); // convert back m to px
             cv::line(contours_img, cv_baricenter, cv_vertex, cv::Scalar(0,255,0), 3);
             cv::circle(contours_img, cv_baricenter, 5, cv::Scalar(0,0,255), -1);
-            cv::circle(contours_img, cv_vertex, 5, cv::Scalar(0,255,0), -1);
+            cv::circle(contours_img, cv_vertex, 5, cv::Scalar(0,255,0), -1);      
             std::cout << "(x, y, theta) = " << x << ", " << y << ", " << theta*180/M_PI << std::endl;
         #endif
     }
@@ -385,8 +385,9 @@ namespace student {
       cv::waitKey(0);
     #endif
 
-  return found;
+  return found;    
   }
+
 
   bool planPath(const Polygon& borders, const std::vector<Polygon>& obstacle_list, const std::vector<std::pair<int,Polygon>>& victim_list, const Polygon& gate, const float x, const float y, const float theta, Path& path){
     throw std::logic_error( "STUDENT FUNCTION - PLAN PATH - NOT IMPLEMENTED" );
