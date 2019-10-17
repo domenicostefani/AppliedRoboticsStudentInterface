@@ -41,12 +41,12 @@ namespace student {
     }
 
     img_out = current_img;
-    function_call_counter++;  
+    function_call_counter++;
 
     // If the function is called more than N times load increment image idx
     if(function_call_counter > freeze_img_n_step){
         function_call_counter = 0;
-        idx = (idx + 1)%img_list.size();    
+        idx = (idx + 1)%img_list.size();
         current_img = cv::imread(img_list[idx]);
     }
  }
@@ -208,7 +208,7 @@ namespace student {
 
   void findObstacles(const cv::Mat& hsv_img, const double scale,
                         std::vector<Polygon>& obstacle_list){
-     //Obstacles are red
+     #define FIND_OBSTACLES_DEBUG
 
      /* Red color requires 2 ranges*/
      cv::Mat lower_red_hue_range; // the lower range for red hue
@@ -221,8 +221,10 @@ namespace student {
      //This can reduce false positives
      // cv::GaussianBlur(red_hue_image, red_hue_image, cv::Size(9, 9), 2, 2);
 
-     imshow("Red filtered",red_hue_image);
-     cv::waitKey(0);
+     #ifdef FIND_OBSTACLES_DEBUG
+       imshow("Red filtered",red_hue_image);
+       cv::waitKey(0);
+     #endif
 
      /*
       * Now the mask has to undergo contour detection
@@ -231,6 +233,8 @@ namespace student {
      std::vector<std::vector<cv::Point>> contours, contours_approx;
      std::vector<cv::Point> approx_curve;
      cv::Mat contours_img;
+
+     contours_img = hsv_img.clone();
 
      cv::findContours(red_hue_image, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
@@ -245,6 +249,9 @@ namespace student {
        }
        obstacle_list.push_back(scaled_contour);
     }
+
+    imshow("contours_img",contours_img);
+    cv::waitKey(0);
   }
 
   bool processMap(const cv::Mat& img_in, const double scale,
@@ -252,25 +259,13 @@ namespace student {
                   std::vector<std::pair<int,Polygon>>& victim_list,
                   Polygon& gate, const std::string& config_folder){
 
-      // imshow("Detect here",img_in);
-      // cv::waitKey(0);
-
       // Convert to HSV for better color detection
       cv::Mat img_hsv;
       cv::cvtColor(img_in, img_hsv, cv::COLOR_BGR2HSV);
 
-      findObstacles(img_hsv, scale, obstacle_list);
+      // findObstacles(img_hsv, scale, obstacle_list);
       // findGate(img_hsv, scale, gate);
       // findVictims(img_hsv, scale, victim_list);
-
-
-      // contours_img = hsv_img.clone();
-      // for(Polygon *contour:obstacle_list){
-      //   contours_approx = {approx_curve};
-      //   drawContours(contours_img, contours_approx, -1, cv::Scalar(0,170,220), 3, cv::LINE_AA);
-      // }
-      // imshow("Contours", contours_img);
-      // cv::waitKey(0);
 
       return true;
   }
@@ -284,8 +279,8 @@ namespace student {
     cv::cvtColor(img_in, hsv_img, cv::COLOR_BGR2HSV);
 
     // Extract blue color region
-    cv::Mat blue_mask;    
-    cv::inRange(hsv_img, cv::Scalar(100, 120, 150), 
+    cv::Mat blue_mask;
+    cv::inRange(hsv_img, cv::Scalar(100, 120, 150),
     cv::Scalar(135, 255, 255), blue_mask);
 
     // remove noise with opening operation
@@ -305,11 +300,11 @@ namespace student {
     #endif
 
     std::vector<cv::Point> approx_curve;
-    std::vector<std::vector<cv::Point>> contours_approx;    
+    std::vector<std::vector<cv::Point>> contours_approx;
     bool found = false;
     for (int i=0; i<contours.size(); ++i)
-    { 
-        // Approximate the i-th contours      
+    {
+        // Approximate the i-th contours
         cv::approxPolyDP(contours[i], approx_curve, 30, true);
 
         // Check the number of edge of the aproximated contour
@@ -321,17 +316,17 @@ namespace student {
             cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
         #endif
 
-        cv::imshow("findRobot", contours_img);
-        cv::waitKey(0);
+        // cv::imshow("findRobot", contours_img);
+        // cv::waitKey(0);
 
         found = true;
         break;
     }
 
     // set robot position
-    if (found){      
+    if (found){
         // emplace back every vertex on triangle (output of this function)
-        for (const auto& pt: approx_curve) {        
+        for (const auto& pt: approx_curve) {
           triangle.emplace_back(pt.x/scale, pt.y/scale);
           // remember to use the scale to convert the position on the image
           // (pixels) to the position in the arena (meters)
@@ -341,7 +336,7 @@ namespace student {
         double cx = 0, cy = 0;
 
         // Compute the triangle baricenter
-        for (auto vertex: triangle) 
+        for (auto vertex: triangle)
         {
           // NB: triangle point are expressed in meters
           cx += vertex.x;
@@ -355,11 +350,11 @@ namespace student {
         Point top_vertex;
         for (auto& vertex: triangle)
         {
-          const double dx = vertex.x-cx;      
+          const double dx = vertex.x-cx;
           const double dy = vertex.y-cy;
           const double curr_d = dx*dx + dy*dy;
           if (curr_d > dst)
-          { 
+          {
             dst = curr_d;
             top_vertex = vertex;
           }
@@ -373,14 +368,14 @@ namespace student {
         const double dx = cx - top_vertex.x;
         const double dy = cy - top_vertex.y;
         theta = std::atan2(dy, dx);
-        
-        #ifdef FIND_ROBOT_DEBUG_PLOT   
+
+        #ifdef FIND_ROBOT_DEBUG_PLOT
             // Draw over the image
             cv::Point cv_baricenter(x*scale, y*scale); // convert back m to px
             cv::Point cv_vertex(top_vertex.x*scale, top_vertex.y*scale); // convert back m to px
             cv::line(contours_img, cv_baricenter, cv_vertex, cv::Scalar(0,255,0), 3);
             cv::circle(contours_img, cv_baricenter, 5, cv::Scalar(0,0,255), -1);
-            cv::circle(contours_img, cv_vertex, 5, cv::Scalar(0,255,0), -1);      
+            cv::circle(contours_img, cv_vertex, 5, cv::Scalar(0,255,0), -1);
             std::cout << "(x, y, theta) = " << x << ", " << y << ", " << theta*180/M_PI << std::endl;
         #endif
     }
@@ -390,7 +385,7 @@ namespace student {
       cv::waitKey(0);
     #endif
 
-  return found;    
+  return found;
   }
 
   bool planPath(const Polygon& borders, const std::vector<Polygon>& obstacle_list, const std::vector<std::pair<int,Polygon>>& victim_list, const Polygon& gate, const float x, const float y, const float theta, Path& path){
