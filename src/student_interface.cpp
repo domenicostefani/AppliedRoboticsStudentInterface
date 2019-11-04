@@ -245,8 +245,7 @@ namespace student {
     cv::warpPerspective(img_in, img_out, transf, img_in.size());
   }
 
-  void findObstacles(const cv::Mat& hsv_img, const double scale,
-                        std::vector<Polygon>& obstacle_list){
+  void findObstacles(const cv::Mat& hsv_img, const double scale, std::vector<Polygon>& obstacle_list){
      #define FIND_OBSTACLES_DEBUG
 
      /* Red color requires 2 ranges*/
@@ -261,8 +260,8 @@ namespace student {
      // cv::GaussianBlur(red_hue_image, red_hue_image, cv::Size(9, 9), 2, 2);
 
      #ifdef FIND_OBSTACLES_DEBUG
-       imshow("Red filtered",red_hue_image);
-       cv::waitKey(0);
+       //imshow("Red filtered",red_hue_image);
+       //cv::waitKey(0);
      #endif
 
      /*
@@ -272,7 +271,6 @@ namespace student {
      std::vector<std::vector<cv::Point>> contours, contours_approx;
      std::vector<cv::Point> approx_curve;
      cv::Mat contours_img;
-
      contours_img = hsv_img.clone();
 
      cv::findContours(red_hue_image, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
@@ -287,10 +285,90 @@ namespace student {
          scaled_contour.emplace_back(pt.x/scale, pt.y/scale);
        }
        obstacle_list.push_back(scaled_contour);
+
+       contours_approx = {approx_curve};
+       cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
     }
 
-    imshow("contours_img",contours_img);
+    imshow("obstacles",contours_img);
     cv::waitKey(0);
+  }
+
+  bool findGate(const cv::Mat& hsv_img, const double scale, Polygon& gate){
+    
+    // Find green regions
+    cv::Mat green_mask;
+    cv::inRange(hsv_img, cv::Scalar(45, 50, 50), cv::Scalar(75, 255, 255), green_mask);
+    
+    std::vector<std::vector<cv::Point>> contours, contours_approx;
+    std::vector<cv::Point> approx_curve;
+    cv::Mat contours_img;
+    contours_img = hsv_img.clone();
+
+    cv::findContours(green_mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    
+    bool res = false;
+
+    for( auto& contour : contours){
+        //const double area = cv::contourArea(contour);
+        //std::cout << "AREA " << area << std::endl;
+        //std::cout << "SIZE: " << contours.size() << std::endl;
+            
+        approxPolyDP(contour, approx_curve, 10, true);
+
+        if (approx_curve.size() != 4) continue;
+
+        contours_approx = {approx_curve};
+        drawContours(contours_img, contours_approx, -1, cv::Scalar(0,170,220), 3, cv::LINE_AA);
+
+        for (const auto& pt: approx_curve) {
+          gate.emplace_back(pt.x/scale, pt.y/scale);
+        }
+
+        res = true;
+        break;  
+    }
+
+    cv::imshow("findGate", contours_img);
+    cv::waitKey(0);
+    
+    return res;
+  }
+
+  bool findVictims(const cv::Mat& hsv_img, const double scale, std::vector<std::pair<int,Polygon>>& victim_list){
+
+    // Find green regions
+    cv::Mat green_mask;
+    cv::inRange(hsv_img, cv::Scalar(45, 50, 50), cv::Scalar(75, 255, 255), green_mask);
+
+    std::vector<std::vector<cv::Point>> contours, contours_approx;
+    std::vector<cv::Point> approx_curve;
+    cv::Mat contours_img;
+    contours_img = hsv_img.clone();
+
+    cv::findContours(green_mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+    for (int i=0; i<contours.size(); ++i)
+    {
+        approxPolyDP(contours[i], approx_curve, 10, true);
+
+        if( approx_curve.size() != 4){  // ignore gate
+
+          Polygon scaled_contour;
+          for (const auto& pt: approx_curve) {
+            scaled_contour.emplace_back(pt.x/scale, pt.y/scale);
+          }
+          victim_list.push_back({i+1, scaled_contour});
+
+          contours_approx = {approx_curve};
+          drawContours(contours_img, contours_approx, -1, cv::Scalar(0,170,220), 3, cv::LINE_AA);
+        }
+    }
+
+    cv::imshow("findVictims", contours_img);
+    cv::waitKey(0);
+    
+    return true;
   }
 
   bool processMap(const cv::Mat& img_in, const double scale,
@@ -302,9 +380,9 @@ namespace student {
       cv::Mat img_hsv;
       cv::cvtColor(img_in, img_hsv, cv::COLOR_BGR2HSV);
 
-      // findObstacles(img_hsv, scale, obstacle_list);
-      // findGate(img_hsv, scale, gate);
-      // findVictims(img_hsv, scale, victim_list);
+      findGate(img_hsv, scale, gate);
+      findVictims(img_hsv, scale, victim_list);
+      findObstacles(img_hsv, scale, obstacle_list);
 
       return true;
   }
@@ -346,11 +424,11 @@ namespace student {
         cv::approxPolyDP(contours[i], approx_curve, 10, true);
 
         // Check the number of edge of the aproximated contour
-        std::cout << "Approx contour count: " << approx_curve.size() << std::endl;
         if (approx_curve.size() != 3) continue;
 
         // draw approximated contours
         #ifdef FIND_ROBOT_DEBUG_PLOT
+            //std::cout << "Approx contour count: " << approx_curve.size() << std::endl;
             contours_approx = {approx_curve};
             cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
         #endif
@@ -427,10 +505,7 @@ namespace student {
   return found;
   }
 
-
   bool planPath(const Polygon& borders, const std::vector<Polygon>& obstacle_list, const std::vector<std::pair<int,Polygon>>& victim_list, const Polygon& gate, const float x, const float y, const float theta, Path& path){
     throw std::logic_error( "STUDENT FUNCTION - PLAN PATH - NOT IMPLEMENTED" );
   }
-
-
 }
