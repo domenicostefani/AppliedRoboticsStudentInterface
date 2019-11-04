@@ -1,7 +1,7 @@
 #include "student_image_elab_interface.hpp"
 #include "student_planning_interface.hpp"
 
-#include <stdexcept>
+#include <experimental/filesystem>
 #include <sstream>
 #include <stdlib.h>
 
@@ -156,24 +156,63 @@ namespace student {
   bool extrinsicCalib(const cv::Mat& img_in, std::vector<cv::Point3f> object_points,
                       const cv::Mat& camera_matrix, cv::Mat& rvec,
                       cv::Mat& tvec, const std::string& config_folder){
-    // throw std::logic_error( "STUDENT FUNCTION - EXTRINSIC CALIB - NOT IMPLEMENTED" );
+    // #define ESTRINISIC_CALIB_DEBUG
     std::vector<cv::Point2f> corners;
+
     if(AUTO_CORNER_DETECTION)
       autodetect_corners(img_in,corners);
-    else
-      manualselect_corners(img_in,corners);
+    else{
+      ///Try to read calibration file
 
-    // cv::line(img_in, corners[0], corners[1], cv::Scalar(0,0,255));
-    // cv::line(img_in, corners[1], corners[2], cv::Scalar(0,0,255));
-    // cv::line(img_in, corners[2], corners[3], cv::Scalar(0,0,255));
-    // cv::line(img_in, corners[3], corners[0], cv::Scalar(0,0,255));
-    //
-    // cv::circle(img_in, corners[0], 20, cv::Scalar(50,50,50),4);
-    // cv::circle(img_in, corners[1], 20, cv::Scalar(50,50,50),4);
-    // cv::circle(img_in, corners[2], 20, cv::Scalar(50,50,50),4);
-    // cv::circle(img_in, corners[3], 20, cv::Scalar(50,50,50),4);
-    // // display
-    // cv::imshow("input", img_in);
+      std::string file_path = config_folder + "/extrinsicCalib.csv";
+
+      if (!std::experimental::filesystem::exists(file_path)){
+        // File does not exist
+        manualselect_corners(img_in,corners);
+        // Save the file
+        std::experimental::filesystem::create_directories(config_folder);
+        std::ofstream output(file_path);
+        if (!output.is_open()){
+          throw std::runtime_error("Cannot write file: " + file_path);
+        }
+        for (const auto pt: corners) {
+          output << pt.x << " " << pt.y << std::endl;
+        }
+        output.close();
+      }else{
+        // Load configuration from file
+        std::ifstream input(file_path);
+        if (!input.is_open()){
+          throw std::runtime_error("Cannot read file: " + file_path);
+        }
+        while (!input.eof()){
+          double x, y;
+          if (!(input >> x >> y)) {
+            if (input.eof()) break;
+            else {
+              throw std::runtime_error("Malformed file: " + file_path);
+            }
+          }
+          corners.emplace_back(x, y);
+        }
+        input.close();
+      }
+    }
+
+    #ifdef ESTRINISIC_CALIB_DEBUG
+      cv::line(img_in, corners[0], corners[1], cv::Scalar(0,0,255));
+      cv::line(img_in, corners[1], corners[2], cv::Scalar(0,0,255));
+      cv::line(img_in, corners[2], corners[3], cv::Scalar(0,0,255));
+      cv::line(img_in, corners[3], corners[0], cv::Scalar(0,0,255));
+
+      cv::circle(img_in, corners[0], 20, cv::Scalar(50,50,50),4);
+      cv::circle(img_in, corners[1], 20, cv::Scalar(50,50,50),4);
+      cv::circle(img_in, corners[2], 20, cv::Scalar(50,50,50),4);
+      cv::circle(img_in, corners[3], 20, cv::Scalar(50,50,50),4);
+      // display
+      cv::imshow("Selected border points", img_in);
+      cv::waitKey(0);
+    #endif
 
     cv::Mat nullmat;
     cv::solvePnP(object_points,corners, camera_matrix, nullmat, rvec, tvec);
@@ -357,7 +396,7 @@ namespace student {
     cv::cvtColor(img_in, hsv_img, cv::COLOR_BGR2HSV);
 
     // Extract blue color region
-    cv::Mat blue_mask;    
+    cv::Mat blue_mask;
     cv::inRange(hsv_img, cv::Scalar(110, 75, 0), cv::Scalar(130, 255, 255), blue_mask);
 
     // remove noise with opening operation
@@ -377,11 +416,11 @@ namespace student {
     #endif
 
     std::vector<cv::Point> approx_curve;
-    std::vector<std::vector<cv::Point>> contours_approx;    
+    std::vector<std::vector<cv::Point>> contours_approx;
     bool found = false;
     for (int i=0; i<contours.size(); ++i)
     {
-        // Approximate the i-th contours      
+        // Approximate the i-th contours
         cv::approxPolyDP(contours[i], approx_curve, 10, true);
 
         // Check the number of edge of the aproximated contour
@@ -402,9 +441,9 @@ namespace student {
     }
 
     // set robot position
-    if (found){      
+    if (found){
         // emplace back every vertex on triangle (output of this function)
-        for (const auto& pt: approx_curve) {        
+        for (const auto& pt: approx_curve) {
           triangle.emplace_back(pt.x/scale, pt.y/scale);
           // remember to use the scale to convert the position on the image
           // (pixels) to the position in the arena (meters)
@@ -414,7 +453,7 @@ namespace student {
         double cx = 0, cy = 0;
 
         // Compute the triangle baricenter
-        for (auto vertex: triangle) 
+        for (auto vertex: triangle)
         {
           // NB: triangle point are expressed in meters
           cx += vertex.x;
@@ -428,11 +467,11 @@ namespace student {
         Point top_vertex;
         for (auto& vertex: triangle)
         {
-          const double dx = vertex.x-cx;      
+          const double dx = vertex.x-cx;
           const double dy = vertex.y-cy;
           const double curr_d = dx*dx + dy*dy;
           if (curr_d > dst)
-          { 
+          {
             dst = curr_d;
             top_vertex = vertex;
           }
@@ -446,14 +485,14 @@ namespace student {
         const double dx = cx - top_vertex.x;
         const double dy = cy - top_vertex.y;
         theta = std::atan2(dy, dx);
-        
-        #ifdef FIND_ROBOT_DEBUG_PLOT   
+
+        #ifdef FIND_ROBOT_DEBUG_PLOT
             // Draw over the image
             cv::Point cv_baricenter(x*scale, y*scale); // convert back m to px
             cv::Point cv_vertex(top_vertex.x*scale, top_vertex.y*scale); // convert back m to px
             cv::line(contours_img, cv_baricenter, cv_vertex, cv::Scalar(0,255,0), 3);
             cv::circle(contours_img, cv_baricenter, 5, cv::Scalar(0,0,255), -1);
-            cv::circle(contours_img, cv_vertex, 5, cv::Scalar(0,255,0), -1);      
+            cv::circle(contours_img, cv_vertex, 5, cv::Scalar(0,255,0), -1);
             std::cout << "(x, y, theta) = " << x << ", " << y << ", " << theta*180/M_PI << std::endl;
         #endif
     }
@@ -463,7 +502,7 @@ namespace student {
       cv::waitKey(0);
     #endif
 
-  return found;    
+  return found;
   }
 
   bool planPath(const Polygon& borders, const std::vector<Polygon>& obstacle_list, const std::vector<std::pair<int,Polygon>>& victim_list, const Polygon& gate, const float x, const float y, const float theta, Path& path){
