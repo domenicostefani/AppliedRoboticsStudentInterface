@@ -335,7 +335,7 @@ namespace student {
     return res;
   }
 
-  bool findVictims(const cv::Mat& hsv_img, const double scale, std::vector<std::pair<int,Polygon>>& victim_list){
+  bool findVictims(const cv::Mat& hsv_img, const double scale, std::vector<std::pair<int,Polygon>>& victim_list, const std::string& config_folder){
 
     // Find green regions
     cv::Mat green_mask;
@@ -347,6 +347,7 @@ namespace student {
     contours_img = hsv_img.clone();
 
     cv::findContours(green_mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    std::vector<cv::Rect> boundRect(contours.size());
 
     for (int i=0; i<contours.size(); ++i)
     {
@@ -362,10 +363,75 @@ namespace student {
 
           contours_approx = {approx_curve};
           drawContours(contours_img, contours_approx, -1, cv::Scalar(0,170,220), 3, cv::LINE_AA);
+          boundRect[i] = boundingRect(cv::Mat(approx_curve)); // find bounding box for each green blob
         }
     }
 
     cv::imshow("findVictims", contours_img);
+    cv::waitKey(0);
+
+
+    // TEMPLATE MATCHING
+
+    cv::Mat img;
+    cv::cvtColor(hsv_img, img, cv::COLOR_HSV2BGR);
+
+    // generate binary mask with inverted pixels w.r.t. green mask -> black numbers are part of this mask
+    cv::Mat green_mask_inv, filtered(img.rows, img.cols, CV_8UC3, cv::Scalar(255,255,255));
+    cv::bitwise_not(green_mask, green_mask_inv);
+
+    cv::imshow("Numbers", green_mask_inv);
+    cv::waitKey(0);
+
+    // Load digits template images
+    std::vector<cv::Mat> templROIs;
+    for (int i=0; i<=9; ++i) {
+        templROIs.emplace_back(cv::imread(config_folder + "/../imgs/template/" + std::to_string(i) + ".png"));
+    }  
+
+    img.copyTo(filtered, green_mask_inv);   // create copy of image without green shapes
+
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size((2*2) + 1, (2*2)+1));
+
+    // For each green blob in the original image containing a digit
+    for (int i=0; i < boundRect.size(); ++i)
+    {
+        cv::Mat processROI(filtered, boundRect[i]); // extract the ROI containing the digit
+
+        if (processROI.empty()) continue;
+
+        cv::resize(processROI, processROI, cv::Size(200, 200)); // resize the ROI
+        cv::threshold( processROI, processROI, 100, 255, 0 ); // threshold and binarize the image, to suppress some noise
+
+        // Apply some additional smoothing and filtering
+        cv::erode(processROI, processROI, kernel);
+        cv::GaussianBlur(processROI, processROI, cv::Size(5, 5), 2, 2);
+        cv::erode(processROI, processROI, kernel);
+
+        // Show the actual image used for the template matching
+        cv::imshow("ROI", processROI);
+
+        // FLIP HERE
+
+        // Find the template digit with the best matching
+        double maxScore = 0;
+        int maxIdx = -1;
+        for (int j = 0; j < templROIs.size(); ++j) 
+        {
+          cv::Mat result;
+          //cv::cvtColor(processROI, processROI, cv::COLOR_BGR2GRAY);
+          cv::matchTemplate(processROI, templROIs[j], result, cv::TM_CCOEFF);
+          double score;
+          cv::minMaxLoc(result, nullptr, &score); 
+          if (score > maxScore) {
+              maxScore = score;
+              maxIdx = j;
+          }
+        }
+
+        std::cout << "Best fitting template: " << maxIdx << std::endl;
+    }
+    
     cv::waitKey(0);
     
     return true;
@@ -381,7 +447,7 @@ namespace student {
       cv::cvtColor(img_in, img_hsv, cv::COLOR_BGR2HSV);
 
       findGate(img_hsv, scale, gate);
-      findVictims(img_hsv, scale, victim_list);
+      findVictims(img_hsv, scale, victim_list, config_folder);
       findObstacles(img_hsv, scale, obstacle_list);
 
       return true;
