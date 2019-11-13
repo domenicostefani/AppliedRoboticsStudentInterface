@@ -1,11 +1,14 @@
 #include "student_image_elab_interface.hpp"
 #include "student_planning_interface.hpp"
+#include "dubins.hpp"
 
 #include <experimental/filesystem>
 #include <sstream>
 #include <stdlib.h>
+#include <vector>
 
 #define AUTO_CORNER_DETECTION false
+#define DUBINS_DEBUG
 
 namespace student {
  int i = 0;
@@ -295,25 +298,25 @@ namespace student {
   }
 
   bool findGate(const cv::Mat& hsv_img, const double scale, Polygon& gate){
-    
+
     // Find green regions
     cv::Mat green_mask;
     cv::inRange(hsv_img, cv::Scalar(45, 50, 50), cv::Scalar(75, 255, 255), green_mask);
-    
+
     std::vector<std::vector<cv::Point>> contours, contours_approx;
     std::vector<cv::Point> approx_curve;
     cv::Mat contours_img;
     contours_img = hsv_img.clone();
 
     cv::findContours(green_mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-    
+
     bool res = false;
 
     for( auto& contour : contours){
         //const double area = cv::contourArea(contour);
         //std::cout << "AREA " << area << std::endl;
         //std::cout << "SIZE: " << contours.size() << std::endl;
-            
+
         approxPolyDP(contour, approx_curve, 10, true);
 
         if (approx_curve.size() != 4) continue;
@@ -326,12 +329,12 @@ namespace student {
         }
 
         res = true;
-        break;  
+        break;
     }
 
     cv::imshow("findGate", contours_img);
     cv::waitKey(0);
-    
+
     return res;
   }
 
@@ -372,7 +375,6 @@ namespace student {
 
     cv::imshow("findVictims", contours_img);
     cv::waitKey(0);
-
 
     // TEMPLATE MATCHING
 
@@ -604,7 +606,71 @@ namespace student {
   return found;
   }
 
-  bool planPath(const Polygon& borders, const std::vector<Polygon>& obstacle_list, const std::vector<std::pair<int,Polygon>>& victim_list, const Polygon& gate, const float x, const float y, const float theta, Path& path){
-    throw std::logic_error( "STUDENT FUNCTION - PLAN PATH - NOT IMPLEMENTED" );
+  bool planPath(const Polygon& borders, const std::vector<Polygon>& obstacle_list,
+                const std::vector<std::pair<int,Polygon>>& victim_list,
+                const Polygon& gate, const float x, const float y, const float theta,
+                Path& path,
+                const std::string& config_folder){
+
+    printf("--------PLANNING WAS CALLED--------\n");
+
+    // throw std::logic_error( "STUDENT FUNCTION - PLAN PATH - NOT IMPLEMENTED" );
+
+    //TODO: feed startpoint here
+    double x0 = x;
+    double y0 = y;
+    double th0 = theta;
+    //TODO: feed endpoint here (GATE)
+    //Polygon gate is defined as vector<Point>
+    double xf = gate.at(1).x; //TODO: fix, we should not take the first point of the gate polygon
+    double yf = gate.at(1).x; //TODO: fix, we should not take the first point of the gate polygon
+    double thf = M_PI / 3.0;  //TODO: fix, we should not go with a random angle to the gate
+    //TODO: Howto find
+    double Kmax = 10.0;
+
+    int pidx;
+
+    dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx);
+
+#ifdef DUBINS_DEBUG
+    printf("L: %f\n", curve.L);
+    printf("a1: %f [%f,%f,%f]>>[%f,%f,%f]\n", curve.a1.L,
+      curve.a1.x0,
+      curve.a1.y0,
+      curve.a1.th0,
+      curve.a1.xf,
+      curve.a1.y0,
+      curve.a1.thf);
+    printf("a2: %f [%f,%f,%f]>>[%f,%f,%f]\n", curve.a2.L,
+      curve.a2.x0,
+      curve.a2.y0,
+      curve.a2.th0,
+      curve.a2.xf,
+      curve.a2.y0,
+      curve.a2.thf);
+    printf("a3: %f [%f,%f,%f]>>[%f,%f,%f]\n", curve.a3.L,
+      curve.a3.x0,
+      curve.a3.y0,
+      curve.a3.th0,
+      curve.a3.xf,
+      curve.a3.y0,
+      curve.a3.thf);
+
+
+    std::vector<dubins::Position> res = curve.discretizeSingleCurve((double)0.01);
+    std::vector<Pose> points;
+
+    for (dubins::Position p : res){
+      Pose pose(p.s,p.x,p.y,p.th,p.k);
+      points.push_back(pose);
+    }
+
+    path.setPoints(points);
+
+#endif
+
+    return true;
   }
+
+
 }
