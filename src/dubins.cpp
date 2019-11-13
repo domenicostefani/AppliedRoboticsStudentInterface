@@ -4,7 +4,10 @@
 #include <stdio.h>
 #include <math.h>
 #include <limits>
+#include <vector>
 #include <assert.h>
+
+#include <iostream> //TODO: remove
 
 namespace dubins{
   /*!
@@ -418,7 +421,7 @@ namespace dubins{
       return res;
     }
   }
-  
+
   /*
    * Evaluate an arc (circular or straight) composing a Dubins curve, at a
    * given arc-length s
@@ -428,5 +431,107 @@ namespace dubins{
     x = x0 + s * sinc(k * s / 2.0) * cos(th0 + k * s / 2.);
     y = y0 + s * sinc(k * s / 2.0) * sin(th0 + k * s / 2.);
     th = mod2pi(th0 + k * s);
+  }
+
+  Position::Position(double s, double x, double y, double th, double k){
+    this->s  = s;
+    this->x  = x;
+    this->y  = y;
+    this->th = th;
+    this->k  = k;
+  };
+
+  /*
+  * Returns a discrete point vector, sampling at every delta interval
+  * @param[in]  arc             arc object to discretize
+  * @param[in]  delta           interval at which to sample points
+  * @param[i/o] remainingDelta  carry
+  * @return                     std::vector of points along the arc
+  */
+  std::vector<Position> Arc::discretizeArc(double delta, double& remainingDelta, double& last_s, bool add_endpoint){
+    std::vector<Position> res;
+
+    /*
+      This functions saves a point every "delta" interval along the Arc
+      What happens when a particular delta does not divide perfectly the length
+      of the arc?
+      In that case, a variable "remainingDelta" is set to a value that indicates
+      the length of the last interval that we were not able to include in the
+      sampling.
+      When the next arc is discretized, the process will start from a point that
+      is not the start of the arc but one that is "delta"-far from the last
+      point sampled from the previous arc.
+    */
+
+    if (remainingDelta == 0){
+      int nPoints = floor(this->L/delta);    // find the number of points required
+      remainingDelta =
+             this->L-((double)delta*nPoints);  // save the amount of delta left in the end
+
+      for(int j = 0; j <= nPoints; ++j){
+        double xc,yc,thc;
+        double s = delta * j;
+        circline(s,this->x0,this->y0,this->th0,this->k,xc,yc,thc);
+        Position current(s+last_s,xc,yc,thc,this->k);
+        res.push_back(current);
+
+        // In this case remainingDelta was 0 and now it's not 0
+        // It will be considered by the next discretize
+
+        //TODO: Remember that the last point is not the final point and we should remember the final points
+        //TODO: also we should compute the sum of the s when adding a curve to a curve
+      }
+    }else{
+      // remainingDelta is not 0, meaning that a previous discretization left a
+      // bit of the curve out
+
+      //Now the first delta is what remains to be sampled
+      double firstdelta = delta - remainingDelta;
+      // the number of points excludes the first one
+      int nPoints = floor((this->L - firstdelta)/delta);
+
+      remainingDelta =
+             this->L-(firstdelta + (double)delta*nPoints);  // save the amount of delta left in the end
+
+      // Deal with the other points
+      for(int j = 0; j <= nPoints; ++j){
+        double xc,yc,thc;
+        double s = firstdelta + (delta * j);
+        circline(s,this->x0,this->y0,this->th0,this->k,xc,yc,thc);
+        Position current(s + last_s,xc,yc,thc,this->k);
+        res.push_back(current);
+      }
+    }
+
+    if(add_endpoint){
+        double xc,yc,thc;
+        double s = this->L;
+        circline(s,this->x0,this->y0,this->th0,this->k,xc,yc,thc);
+        Position current(s + last_s,xc,yc,thc,this->k);
+        res.push_back(current);
+    }
+
+
+    last_s += this->L;
+    return res;
+  }
+
+  std::vector<Position> Curve::discretizeCurve(double delta, double& remainingDelta, double& last_s, bool add_endpoint){
+    std::vector<Position> res;
+    std::vector<Position> posA1 = this->a1.discretizeArc(delta,remainingDelta,last_s,false);
+    std::vector<Position> posA2 = this->a2.discretizeArc(delta,remainingDelta,last_s,false);
+    std::vector<Position> posA3 = this->a3.discretizeArc(delta,remainingDelta,last_s,add_endpoint);
+
+    res = posA1;
+    res.insert( res.end(), posA2.begin(), posA2.end() );
+    res.insert( res.end(), posA3.begin(), posA3.end() );
+
+    return res;
+  }
+
+  std::vector<Position> Curve::discretizeSingleCurve(double delta){
+    double remainingDelta = 0.0;
+    double last_s = 0.0;
+    return this->discretizeCurve(delta, remainingDelta, last_s, true);
   }
 }

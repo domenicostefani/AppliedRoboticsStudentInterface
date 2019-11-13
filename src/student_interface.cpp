@@ -5,8 +5,10 @@
 #include <experimental/filesystem>
 #include <sstream>
 #include <stdlib.h>
+#include <vector>
 
 #define AUTO_CORNER_DETECTION false
+#define DUBINS_DEBUG
 
 namespace student {
  int i = 0;
@@ -516,19 +518,23 @@ namespace student {
 
     // throw std::logic_error( "STUDENT FUNCTION - PLAN PATH - NOT IMPLEMENTED" );
 
-    //Test code
-    double x0 = 0.0;
-    double y0 = 0.0;
-    double th0 = -2.0 / 3 * M_PI;
-    double xf = 4.0;
-    double yf = 0.0;
-    double thf = M_PI / 3.0;
-    double Kmax = 3.0;
+    //TODO: feed startpoint here
+    double x0 = x;
+    double y0 = y;
+    double th0 = theta;
+    //TODO: feed endpoint here (GATE)
+    //Polygon gate is defined as vector<Point>
+    double xf = gate.at(1).x; //TODO: fix, we should not take the first point of the gate polygon
+    double yf = gate.at(1).x; //TODO: fix, we should not take the first point of the gate polygon
+    double thf = M_PI / 3.0;  //TODO: fix, we should not go with a random angle to the gate
+    //TODO: Howto find
+    double Kmax = 10.0;
 
     int pidx;
 
     dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx);
 
+#ifdef DUBINS_DEBUG
     printf("L: %f\n", curve.L);
     printf("a1: %f [%f,%f,%f]>>[%f,%f,%f]\n", curve.a1.L,
       curve.a1.x0,
@@ -552,6 +558,21 @@ namespace student {
       curve.a3.y0,
       curve.a3.thf);
 
+
+    std::vector<dubins::Position> res = curve.discretizeSingleCurve((double)0.01);
+    std::vector<Pose> points;
+
+    for (dubins::Position p : res){
+      Pose pose(p.s,p.x,p.y,p.th,p.k);
+      points.push_back(pose);
+    }
+
+    path.setPoints(points);
+
+#endif
+
     return true;
   }
+
+
 }

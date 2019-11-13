@@ -5,7 +5,20 @@
 
 #pragma once
 
+#include <vector>
+
 namespace dubins{
+
+  class Position{
+  public:
+    double s;
+    double x;
+    double y;
+    double th;
+    double k;
+    Position(double s, double x, double y, double th, double k);
+  };
+
   /*!
   * Class representing one of the three arcs of every path of Dubin's maneuvers
   */
@@ -24,8 +37,8 @@ namespace dubins{
     * @param[in] k         curvature of the arc
     * @param[in] L         arc length
     */
-    void
-    set(double x0, double y0, double th0, double k, double L);
+    void set(double x0, double y0, double th0, double k, double L);
+    std::vector<Position> discretizeArc(double delta, double& remainingDelta, double& last_s, bool add_endpoint);
   };
 
   /*!
@@ -49,6 +62,9 @@ namespace dubins{
     */
     Curve(double x0, double y0, double th0, double s1, double s2, double s3,
           double k0, double k1, double k2);
+
+    std::vector<Position> discretizeCurve(double delta, double& remainingDelta, double& last_s, bool add_endpoint);
+    std::vector<Position> discretizeSingleCurve(double delta);
   };
 
   /*!
@@ -66,6 +82,4 @@ namespace dubins{
   Curve
   dubins_shortest_path(double x0, double y0, double th0, double xf,
                        double yf, double thf, double Kmax, int& pidx);
-
-
 }
