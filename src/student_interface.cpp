@@ -338,7 +338,7 @@ namespace student {
     return res;
   }
 
-  bool findVictims(const cv::Mat& hsv_img, const double scale, std::vector<std::pair<int,Polygon>>& victim_list){
+  bool findVictims(const cv::Mat& hsv_img, const double scale, std::vector<std::pair<int,Polygon>>& victim_list, const std::string& config_folder){
 
     // Find green regions
     cv::Mat green_mask;
@@ -350,6 +350,9 @@ namespace student {
     contours_img = hsv_img.clone();
 
     cv::findContours(green_mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+    std::vector<cv::Rect> boundRect(contours.size());
+    std::vector<cv::RotatedRect> minRect(contours.size());
 
     for (int i=0; i<contours.size(); ++i)
     {
@@ -365,12 +368,107 @@ namespace student {
 
           contours_approx = {approx_curve};
           drawContours(contours_img, contours_approx, -1, cv::Scalar(0,170,220), 3, cv::LINE_AA);
+          boundRect[i] = boundingRect(cv::Mat(approx_curve)); // find bounding box for each green blob
+          minRect[i] = minAreaRect(cv::Mat(contours[i]));
         }
     }
 
     cv::imshow("findVictims", contours_img);
     cv::waitKey(0);
 
+    // TEMPLATE MATCHING
+
+    cv::Mat img;
+    cv::cvtColor(hsv_img, img, cv::COLOR_HSV2BGR);
+
+    // generate binary mask with inverted pixels w.r.t. green mask -> black numbers are part of this mask
+    cv::Mat green_mask_inv, filtered(img.rows, img.cols, CV_8UC3, cv::Scalar(255,255,255));
+    cv::bitwise_not(green_mask, green_mask_inv);
+
+    cv::imshow("Numbers", green_mask_inv);
+    cv::waitKey(0);
+
+    cv::Mat curr_num;
+
+    // Load digits template images
+    std::vector<cv::Mat> templROIs;
+    for (int i=0; i<=5; ++i) {
+        curr_num = cv::imread(config_folder + "/../imgs/template/" + std::to_string(i) + ".png");
+        templROIs.emplace_back(curr_num);
+
+        for(int j = 0; j < 3; ++j){
+            cv::rotate(curr_num, curr_num, cv::ROTATE_90_CLOCKWISE);
+            templROIs.emplace_back(curr_num);
+        }
+    }  
+
+    img.copyTo(filtered, green_mask_inv);   // create copy of image without green shapes
+
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size((2*2) + 1, (2*2)+1));
+
+    contours.clear();
+
+    // For each green blob in the original image containing a digit
+    for (int i=0; i < boundRect.size(); ++i)
+    {
+        cv::Mat processROI(filtered, boundRect[i]); // extract the ROI containing the digit
+        
+        // FLIP HERE
+        cv::flip(processROI, processROI, 0);
+
+        if (processROI.empty()) continue;
+
+        cv::resize(processROI, processROI, cv::Size(200, 200)); // resize the ROI
+        cv::threshold( processROI, processROI, 100, 255, 0 ); // threshold and binarize the image, to suppress some noise
+
+        // Apply some additional smoothing and filtering
+        cv::erode(processROI, processROI, kernel);
+        cv::GaussianBlur(processROI, processROI, cv::Size(5, 5), 2, 2);
+        cv::erode(processROI, processROI, kernel);
+        
+        // advanced ROI with rotation
+        cv::cvtColor(processROI, processROI, cv::COLOR_BGR2GRAY);
+        cv::bitwise_not(processROI, processROI);
+        
+        // extract minimum rectangle enclosing the number
+        cv::findContours(processROI, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);  
+        minRect[i] = minAreaRect(cv::Mat(contours[0]));
+
+        // draw min rectangle
+        //cv::Point2f rect_points[4];
+        //minRect[i].points(rect_points);
+        //for(int k = 0; k < 4; ++k){
+        //   line(processROI, rect_points[k], rect_points[(k+1)%4], cv::Scalar(255,0,255), 1, 8);        
+        //}
+
+        // rotate min rectangle to align with axes
+        cv::Mat rotM = cv::getRotationMatrix2D(minRect[i].center, minRect[i].angle, 1.0);
+        cv::warpAffine(processROI, processROI, rotM, processROI.size(), cv::INTER_CUBIC);
+        cv::bitwise_not(processROI, processROI);
+        cv::cvtColor(processROI, processROI, cv::COLOR_GRAY2BGR);
+        
+        // Show the actual image used for the template matching
+        cv::imshow("ROI", processROI);
+
+        // Find the template digit with the best matching
+        double maxScore = 0;
+        int maxIdx = -1;
+        for (int j = 0; j < templROIs.size(); ++j) 
+        {
+          cv::Mat result;
+          cv::matchTemplate(processROI, templROIs[j], result, cv::TM_CCOEFF);
+          double score;
+          cv::minMaxLoc(result, nullptr, &score);
+          if (score > maxScore) {
+              maxScore = score;
+              maxIdx = floor(j/4);
+          }
+        }
+
+        std::cout << "Best fitting template: " << maxIdx << std::endl;
+        cv::waitKey(0);
+    }
+    
     return true;
   }
 
@@ -384,7 +482,7 @@ namespace student {
       cv::cvtColor(img_in, img_hsv, cv::COLOR_BGR2HSV);
 
       findGate(img_hsv, scale, gate);
-      findVictims(img_hsv, scale, victim_list);
+      findVictims(img_hsv, scale, victim_list, config_folder);
       findObstacles(img_hsv, scale, obstacle_list);
 
       return true;
