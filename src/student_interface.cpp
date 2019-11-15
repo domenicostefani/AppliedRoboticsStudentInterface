@@ -408,6 +408,8 @@ namespace student {
 
     contours.clear();
 
+    int curr_victim = 0;
+
     // For each green blob in the original image containing a digit
     for (int i=0; i < boundRect.size(); ++i)
     {
@@ -464,6 +466,9 @@ namespace student {
               maxIdx = floor(j/4);
           }
         }
+
+        victim_list[curr_victim].first = maxIdx;
+        curr_victim++;
 
         std::cout << "Best fitting template: " << maxIdx << std::endl;
         cv::waitKey(0);
@@ -622,8 +627,8 @@ namespace student {
     double th0 = theta;
     //TODO: feed endpoint here (GATE)
     //Polygon gate is defined as vector<Point>
-    double xf = gate.at(1).x; //TODO: fix, we should not take the first point of the gate polygon
-    double yf = gate.at(1).x; //TODO: fix, we should not take the first point of the gate polygon
+    double xf = gate.at(0).x; //TODO: fix, we should not take the first point of the gate polygon
+    double yf = gate.at(0).y; //TODO: fix, we should not take the first point of the gate polygon
     double thf = M_PI / 3.0;  //TODO: fix, we should not go with a random angle to the gate
     //TODO: Howto find
     double Kmax = 10.0;
