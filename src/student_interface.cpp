@@ -411,7 +411,7 @@ namespace student {
             cv::rotate(curr_num, curr_num, cv::ROTATE_90_CLOCKWISE);
             templROIs.emplace_back(curr_num);
         }
-    }  
+    }
 
     img.copyTo(filtered, green_mask_inv);   // create copy of image without green shapes
 
@@ -425,7 +425,7 @@ namespace student {
     for (int i=0; i < boundRect.size(); ++i)
     {
         cv::Mat processROI(filtered, boundRect[i]); // extract the ROI containing the digit
-        
+
         // FLIP HERE
         cv::flip(processROI, processROI, 0);
 
@@ -438,20 +438,20 @@ namespace student {
         cv::erode(processROI, processROI, kernel);
         cv::GaussianBlur(processROI, processROI, cv::Size(5, 5), 2, 2);
         cv::erode(processROI, processROI, kernel);
-        
+
         // advanced ROI with rotation
         cv::cvtColor(processROI, processROI, cv::COLOR_BGR2GRAY);
         cv::bitwise_not(processROI, processROI);
-        
+
         // extract minimum rectangle enclosing the number
-        cv::findContours(processROI, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);  
+        cv::findContours(processROI, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
         minRect[i] = minAreaRect(cv::Mat(contours[0]));
 
         // draw min rectangle
         //cv::Point2f rect_points[4];
         //minRect[i].points(rect_points);
         //for(int k = 0; k < 4; ++k){
-        //   line(processROI, rect_points[k], rect_points[(k+1)%4], cv::Scalar(255,0,255), 1, 8);        
+        //   line(processROI, rect_points[k], rect_points[(k+1)%4], cv::Scalar(255,0,255), 1, 8);
         //}
 
         // rotate min rectangle to align with axes
@@ -459,14 +459,14 @@ namespace student {
         cv::warpAffine(processROI, processROI, rotM, processROI.size(), cv::INTER_CUBIC);
         cv::bitwise_not(processROI, processROI);
         cv::cvtColor(processROI, processROI, cv::COLOR_GRAY2BGR);
-        
+
         // Show the actual image used for the template matching
         cv::imshow("ROI", processROI);
 
         // Find the template digit with the best matching
         double maxScore = 0;
         int maxIdx = -1;
-        for (int j = 0; j < templROIs.size(); ++j) 
+        for (int j = 0; j < templROIs.size(); ++j)
         {
           cv::Mat result;
           cv::matchTemplate(processROI, templROIs[j], result, cv::TM_CCOEFF);
@@ -484,7 +484,7 @@ namespace student {
         std::cout << "Best fitting template: " << maxIdx << std::endl;
         cv::waitKey(0);
     }
-    
+
     return true;
   }
 
@@ -502,6 +502,18 @@ namespace student {
       findVictims(img_hsv, scale, victim_list, config_folder);
 
       return true;
+  }
+
+  /*!
+  * Finds the baricenter of a utils::Polygon
+  */
+  void baricenter(const Polygon& polygon, double& cx, double& cy){
+    for (auto vertex: polygon){
+      cx += vertex.x;
+      cy += vertex.y;
+    }
+    cx /= static_cast<double>(polygon.size());
+    cy /=  static_cast<double>(polygon.size());
   }
 
   bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle, double& x, double& y, double& theta, const std::string& config_folder){
@@ -570,14 +582,7 @@ namespace student {
         double cx = 0, cy = 0;
 
         // Compute the triangle baricenter
-        for (auto vertex: triangle)
-        {
-          // NB: triangle point are expressed in meters
-          cx += vertex.x;
-          cy += vertex.y;
-        }
-        cx /= static_cast<double>(triangle.size());
-        cy /=  static_cast<double>(triangle.size());
+        baricenter(triangle,cx,cy);
 
         // Find the robot orientation (i.e the angle of height relative to the base with the x axis)
         double dst = 0;
@@ -622,31 +627,87 @@ namespace student {
   return found;
   }
 
+  /*!
+  * Find the arrival point
+  * Returns the baricenter of the gate polygon with the correct arrival angle
+  */
+  void center_gate(const Polygon& gate, const Polygon& borders, double& x,
+                   double& y, double& theta){
+
+    assert(gate.size() == 4);
+    assert(borders.size() == 4);
+    #ifdef GATE_DEBUG
+      printf("---Center gate called---\n");
+      printf("There are %zd points\n", gate.size());
+    #endif
+
+    ////   GATE BARICENTER
+    double gc_x=0, gc_y=0;
+    baricenter(gate,gc_x,gc_y);
+
+    //Find shortest rectangle side between the first two
+    Point shortest_p0;
+    Point shortest_p1;
+    double distance0 = pow((gate.at(0).x - gate.at(1).x), 2) +
+                       pow((gate.at(0).y - gate.at(1).y), 2);
+    double distance1 = pow((gate.at(1).x - gate.at(2).x), 2) +
+                       pow((gate.at(1).y - gate.at(2).y), 2);
+    if(distance0 < distance1){
+      shortest_p0.x = gate.at(0).x;
+      shortest_p0.y = gate.at(0).y;
+      shortest_p1.x = gate.at(1).x;
+      shortest_p1.y = gate.at(1).y;
+    }else{
+      shortest_p0.x = gate.at(1).x;
+      shortest_p0.y = gate.at(1).y;
+      shortest_p1.x = gate.at(2).x;
+      shortest_p1.y = gate.at(2).y;
+    }
+    ////   GATE ANGLE
+    double angle;
+    angle = atan2(shortest_p0.y-shortest_p1.y,shortest_p0.x-shortest_p1.x);
+    if (angle < 0)
+      angle += 2 * CV_PI;
+
+    // Decide if the angle is the found one or the opposite (+180°) based on
+    // the position of the gate
+    double ac_x = 0, ac_y = 0;
+    baricenter(borders,ac_x,ac_y);
+    #ifdef GATE_DEBUG
+      printf("Gate baricenter %f,%f\n",gc_x,gc_y);
+      printf("Arena baricenter %f,%f\n",ac_x,ac_y);
+    #endif
+    if(gc_y > ac_y){
+      angle -= CV_PI;
+      if (angle < 0)
+        angle += 2 * CV_PI;
+    }
+    ////   Assign Output
+    x = gc_x;
+    y = gc_y;
+    theta = angle;
+  }
+
   bool planPath(const Polygon& borders, const std::vector<Polygon>& obstacle_list,
                 const std::vector<std::pair<int,Polygon>>& victim_list,
                 const Polygon& gate, const float x, const float y, const float theta,
                 Path& path,
                 const std::string& config_folder){
 
-    printf("--------PLANNING WAS CALLED--------\n");
+    #ifdef PLAN_DEBUG
+      printf("--------PLANNING WAS CALLED--------\n");
+      fflush(stdout);
+    #endif
 
-    // throw std::logic_error( "STUDENT FUNCTION - PLAN PATH - NOT IMPLEMENTED" );
+    double x0 = x, y0 = y, th0 = theta;   // Startpoint
+    double xf, yf, thf;                   // Endpoint
+    center_gate(gate,borders,xf,yf,thf);  // Endpoint computation
+    double Kmax = 10.0;                   // Maximum curvature
+    double path_res = 0.01;               // Path resolution (sampling)
 
-    //TODO: feed startpoint here
-    double x0 = x;
-    double y0 = y;
-    double th0 = theta;
-    //TODO: feed endpoint here (GATE)
-    //Polygon gate is defined as vector<Point>
-    double xf = gate.at(0).x; //TODO: fix, we should not take the first point of the gate polygon
-    double yf = gate.at(0).y; //TODO: fix, we should not take the first point of the gate polygon
-    double thf = M_PI / 3.0;  //TODO: fix, we should not go with a random angle to the gate
-    //TODO: Howto find
-    double Kmax = 10.0;
-
-    int pidx;
-
-    dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx);
+    int pidx; // curve index
+    dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf,
+                                                       Kmax, pidx);
 
 #ifdef DUBINS_DEBUG
     printf("L: %f\n", curve.L);
@@ -671,22 +732,16 @@ namespace student {
       curve.a3.xf,
       curve.a3.y0,
       curve.a3.thf);
-
-
-    std::vector<dubins::Position> res = curve.discretizeSingleCurve((double)0.01);
+#endif
+    ////   Sample the curve with resolutioj @path_res
+    std::vector<dubins::Position> res = curve.discretizeSingleCurve(path_res);
+    ////   Path conversion into compatible output representation
     std::vector<Pose> points;
-
     for (dubins::Position p : res){
       Pose pose(p.s,p.x,p.y,p.th,p.k);
       points.push_back(pose);
     }
-
-    path.setPoints(points);
-
-#endif
-
+    path.setPoints(points); //Set output
     return true;
   }
-
-
 }
