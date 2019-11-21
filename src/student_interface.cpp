@@ -268,6 +268,16 @@ namespace student {
        //cv::waitKey(0);
      #endif
 
+     // compute robot dimension from barycenter for obstacle dilation
+     // distance between robot triangle front vertex and barycenter is triangle height/3*2
+     // from documentation, triangle height is 16 cm
+     float robot_dim = ceil(0.1117*scale);
+     std::cout << "robot dim: " << robot_dim << std::endl;    
+
+     // dilate obstacles
+     cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(robot_dim, robot_dim));
+     cv::dilate(red_hue_image, red_hue_image, kernel);
+
      /*
       * Now the mask has to undergo contour detection
      */
@@ -279,7 +289,7 @@ namespace student {
 
      cv::findContours(red_hue_image, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-     drawContours(contours_img, contours, -1, cv::Scalar(40,190,40), 1, cv::LINE_AA); //REMOVE
+     drawContours(contours_img, contours, -1, cv::Scalar(40,190,40), 3, cv::LINE_AA); //REMOVE
      for (int i=0; i<contours.size(); ++i)
      {
        approxPolyDP(contours[i], approx_curve, 3, true);
@@ -294,7 +304,7 @@ namespace student {
        cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
     }
 
-    imshow("obstacles",contours_img);
+    imshow("obstacles", contours_img);
     cv::waitKey(0);
   }
 
@@ -409,6 +419,8 @@ namespace student {
 
     contours.clear();
 
+    int curr_victim = 0;
+
     // For each green blob in the original image containing a digit
     for (int i=0; i < boundRect.size(); ++i)
     {
@@ -466,6 +478,9 @@ namespace student {
           }
         }
 
+        victim_list[curr_victim].first = maxIdx;
+        curr_victim++;
+
         std::cout << "Best fitting template: " << maxIdx << std::endl;
         cv::waitKey(0);
     }
@@ -483,8 +498,8 @@ namespace student {
       cv::cvtColor(img_in, img_hsv, cv::COLOR_BGR2HSV);
 
       findGate(img_hsv, scale, gate);
-      findVictims(img_hsv, scale, victim_list, config_folder);
       findObstacles(img_hsv, scale, obstacle_list);
+      findVictims(img_hsv, scale, victim_list, config_folder);
 
       return true;
   }
@@ -593,10 +608,10 @@ namespace student {
         const double dy = cy - top_vertex.y;
         theta = std::atan2(dy, dx);
 
+        cv::Point cv_baricenter(x*scale, y*scale); // convert back m to px
+        cv::Point cv_vertex(top_vertex.x*scale, top_vertex.y*scale); // convert back m to px
         #ifdef FIND_ROBOT_DEBUG_PLOT
             // Draw over the image
-            cv::Point cv_baricenter(x*scale, y*scale); // convert back m to px
-            cv::Point cv_vertex(top_vertex.x*scale, top_vertex.y*scale); // convert back m to px
             cv::line(contours_img, cv_baricenter, cv_vertex, cv::Scalar(0,255,0), 3);
             cv::circle(contours_img, cv_baricenter, 5, cv::Scalar(0,0,255), -1);
             cv::circle(contours_img, cv_vertex, 5, cv::Scalar(0,255,0), -1);
