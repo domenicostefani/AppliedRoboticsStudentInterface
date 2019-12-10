@@ -9,7 +9,11 @@
 #include <math.h>
 
 #define AUTO_CORNER_DETECTION false
-#define DUBINS_DEBUG
+#define DUBINS_DEBUG false
+//#define IMSHOW_DEBUG
+
+using point = std::pair<float,float>;
+using segment = std::pair<point, point>;
 
 namespace student {
  int i = 0;
@@ -303,9 +307,10 @@ namespace student {
        contours_approx = {approx_curve};
        cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
     }
-
+#ifdef IMSHOW_DEBUG
     imshow("obstacles", contours_img);
     cv::waitKey(0);
+#endif
   }
 
   bool findGate(const cv::Mat& hsv_img, const double scale, Polygon& gate){
@@ -342,10 +347,10 @@ namespace student {
         res = true;
         break;
     }
-
+#ifdef IMSHOW_DEBUG
     cv::imshow("findGate", contours_img);
     cv::waitKey(0);
-
+#endif
     return res;
   }
 
@@ -383,10 +388,10 @@ namespace student {
           minRect[i] = minAreaRect(cv::Mat(contours[i]));
         }
     }
-
+#ifdef IMSHOW_DEBUG
     cv::imshow("findVictims", contours_img);
     cv::waitKey(0);
-
+#endif
     // TEMPLATE MATCHING
 
     cv::Mat img;
@@ -395,10 +400,11 @@ namespace student {
     // generate binary mask with inverted pixels w.r.t. green mask -> black numbers are part of this mask
     cv::Mat green_mask_inv, filtered(img.rows, img.cols, CV_8UC3, cv::Scalar(255,255,255));
     cv::bitwise_not(green_mask, green_mask_inv);
-
+    
+#ifdef IMSHOW_DEBUG
     cv::imshow("Numbers", green_mask_inv);
     cv::waitKey(0);
-
+#endif
     cv::Mat curr_num;
 
     // Load digits template images
@@ -461,8 +467,9 @@ namespace student {
         cv::cvtColor(processROI, processROI, cv::COLOR_GRAY2BGR);
 
         // Show the actual image used for the template matching
+#ifdef IMSHOW_DEBUG
         cv::imshow("ROI", processROI);
-
+#endif
         // Find the template digit with the best matching
         double maxScore = 0;
         int maxIdx = -1;
@@ -541,7 +548,6 @@ namespace student {
       cv::Mat contours_img;
       contours_img = img_in.clone();
       //cv::drawContours(contours_img, contours, -1, cv::Scalar(0,0,0), 4, cv::LINE_AA);
-      std::cout << "Number of contours: " << contours.size() << std::endl;
     #endif
 
     std::vector<cv::Point> approx_curve;
@@ -561,10 +567,10 @@ namespace student {
             contours_approx = {approx_curve};
             cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
         #endif
-
+#ifdef IMSHOW_DEBUG
         cv::imshow("findRobot", contours_img);
         cv::waitKey(0);
-
+#endif
         found = true;
         break;
     }
@@ -619,7 +625,7 @@ namespace student {
         #endif
     }
 
-    #ifdef FIND_ROBOT_DEBUG_PLOT
+    #ifdef IMSHOW_DEBUG
       cv::imshow("findRobot", contours_img);
       cv::waitKey(0);
     #endif
@@ -688,11 +694,203 @@ namespace student {
     theta = angle;
   }
 
+
+
+
+// See if three points are counter-clockwise in direction
+int counter_clockwise(point A, point B, point C){
+    return (C.second-A.second) * (B.first-A.first) > (B.second-A.second) * (C.first-A.first);
+}
+
+// Return true if line segments AB and CD intersect.
+int intersect(point A,point B,point C,point D){
+	// Check if any three points are co-linear 
+	if( ( (A.first * (B.second - C.second) ) + (B.first * (C.second - A.second) ) + (C.first * (A.second - B.second) ) )== 0 ){
+		return 1;
+    }
+
+	if( ( (A.first * (B.second - D.second) ) + (B.first * (D.second - A.second) ) + (D.first * (A.second - B.second) ) )== 0 ){
+		return 1;
+    }
+
+	if( ( (A.first * (C.second - D.second) ) + (C.first * (D.second - A.second) ) + (D.first * (A.second - C.second) ) )== 0 ){
+		return 1;
+    }
+
+	if( ( (B.first * (C.second - D.second) ) + (C.first * (D.second - B.second) ) + (D.first * (B.second - C.second) ) )== 0 ){
+		return 1;
+    }
+		
+	return counter_clockwise(A,C,D) != counter_clockwise(B,C,D) and counter_clockwise(A,B,C) != counter_clockwise(A,B,D);
+}
+
+float determinant(point a, point b){
+	return ( (a.first * b.second) - (a.second * b.first) );
+}
+
+// generic line intersection function. Only returns -1 if lines are parallel
+int line_intersection(segment segment1, segment segment2, point* intersection){
+	
+	point x_diff = std::make_pair(segment1.first.first - segment1.second.first, segment2.first.first - segment2.second.first);
+	point y_diff = std::make_pair(segment1.first.second - segment1.second.second, segment2.first.second - segment2.second.second);
+
+	float div = determinant(x_diff, y_diff);
+	if(div == 0){
+		//parallel lines
+		return -1;
+    }
+
+	point d = std::make_pair( determinant(segment1.first , segment1.second) , determinant(segment2.first, segment2.second));
+	//point d = std::make_pair(segment2.first.first - segment1.first.first, segment2.first.second - segment1.first.second);
+	float x = std::abs(determinant(d, x_diff) / div);
+	float y = std::abs(determinant(d, y_diff) / div);
+    //x = x + 0.5;
+	//y = y + 0.5;
+	
+    *intersection = std::make_pair(x, y);
+    return 1;			
+}
+
+int segment_intersection(point a, point  b, point c, point d, point* intersection){
+	if( intersect(a, b, c, d) == 1){
+		return line_intersection(std::make_pair(a, b), std::make_pair(c, d), intersection);
+    } else{
+		return -1;
+    }
+}
+
+bool sort_by_x(const std::pair<point, int> &a, const std::pair<point, int> &b) 
+{ 
+    return (a.first.first < b.first.first);
+} 
+	
+// y_limit_upper, y_limit_lower from borders polygon
+void cell_decomposition(std::vector<Polygon> obstacle_list, std::vector<segment>& cell_edges, const Polygon& borders){
+    int scale = 600;
+    double y_limit_upper = borders[0].y;
+    double y_limit_lower = borders[2].y;
+    cv::Mat cells_img(int(std::abs(y_limit_upper-y_limit_lower)*scale), int(std::abs(borders[1].x-borders[0].x)*scale), CV_8UC3, cvScalar(255,255,255));
+    
+    // draw obstacles edges
+    for(int i = 0; i < obstacle_list.size(); i++){
+        obstacle_list[i].push_back(obstacle_list[i][0]);
+        
+        for(int j = 0; j < obstacle_list[i].size()-1; j++){
+            cv::line(cells_img, cv::Point(obstacle_list[i][j].x*scale, obstacle_list[i][j].y*scale), cv::Point(obstacle_list[i][j+1].x*scale, obstacle_list[i][j+1].y*scale), cv::Scalar(0,0,255), 3); // red
+        }
+    }
+    
+    segment curr_line_segment;    
+    point lower_obs_pt, upper_obs_pt;
+    bool bottom_is_blocked, top_is_blocked, all_blocked;
+    std::vector<std::pair<point, int>> sorted_vertices;
+    int res;
+    bool intersect_at_vertex;
+
+    // sort obstacle vertices along x
+    // sorted vertices need to memorize parent obstacle
+    for(int i = 0; i < obstacle_list.size(); i++){
+        for(int j = 0; j < obstacle_list[i].size()-1; j++){
+            sorted_vertices.push_back(std::make_pair(std::make_pair(obstacle_list[i][j].x, obstacle_list[i][j].y), i));
+        }
+    }
+
+    std::sort(sorted_vertices.begin(), sorted_vertices.end(), sort_by_x);
+    
+    // find vertical lines
+    for (int i = 0; i < sorted_vertices.size(); i++){
+    	curr_line_segment.first = std::make_pair(sorted_vertices[i].first.first, y_limit_lower);
+        curr_line_segment.second = std::make_pair(sorted_vertices[i].first.first, y_limit_upper);
+
+        lower_obs_pt = curr_line_segment.first;
+        upper_obs_pt = curr_line_segment.second;
+                
+        bottom_is_blocked = 0;
+        top_is_blocked = 0;
+        all_blocked = 0;
+        
+        point v1, v2, intersection;
+        
+        // find intersection point between the current vertical line proposed and the obstacles
+        for(int j = 0; j < obstacle_list.size(); j++){        
+            // append first vertex for last segment of obstacle polygon (not necessary, already done above)
+            //obstacle_list[j].push_back(obstacle_list[j][0]);
+            
+            // check all vertex pairs to find blocked directions 
+            for(int k = 0; k < obstacle_list[j].size()-1; k++){ // -1: last segment ends on the first vertex
+                v1 = std::make_pair(obstacle_list[j][k].x, obstacle_list[j][k].y);
+                v2 = std::make_pair(obstacle_list[j][k+1].x, obstacle_list[j][k+1].y);
+                
+                // intersect vertical line with current vertex connected to next one (to form a segment)
+                res = segment_intersection(lower_obs_pt, upper_obs_pt, v1, v2, &intersection);
+                                
+                // check if line is blocked by obstacle
+                if (res != -1){
+                    intersect_at_vertex = ((int(10000*sorted_vertices[i].first.first) == int(10000*intersection.first)) && (int(10000*sorted_vertices[i].first.second) == int(10000*intersection.second)));
+                    
+                    // check if current vertex belongs to current obstacle
+				    if ( sorted_vertices[i].second == j){
+				        // if intersection does not correspond to current vertex
+					    if (intersect_at_vertex == 0){
+					        // if intersection is higher than vertex, line is blocked from the top, otherwise is blocked from below (0,0 is top left)
+						    if ( intersection.second > sorted_vertices[i].first.second ){
+							    bottom_is_blocked = 1;
+							} else if ( intersection.second < sorted_vertices[i].first.second ){
+							    top_is_blocked = 1;
+							}
+						}
+					}
+				    else{
+					    if (intersect_at_vertex == 0){
+						    if ( bottom_is_blocked == 0 ){
+							    if ( (intersection.second > sorted_vertices[i].first.second) && intersection.second < (upper_obs_pt.second) ){
+								    upper_obs_pt = std::make_pair(intersection.first, intersection.second);
+							    }
+						    }
+						
+						    if ( top_is_blocked == 0 ){
+							    if ( (intersection.second < sorted_vertices[i].first.second) && (intersection.second > lower_obs_pt.second) ){
+								    lower_obs_pt = std::make_pair(intersection.first, intersection.second);
+							    }
+						    }
+					    }
+				    }
+				}
+			
+			    if( bottom_is_blocked == 1 && top_is_blocked == 1 ){
+				    all_blocked = 1;
+				}
+			}
+
+		    // completely blocked
+		    if(all_blocked == 1){
+			    break;
+	        }
+	    }
+	    
+	    // Draw the vertical cell lines	    	    	    
+	    if(bottom_is_blocked == 0){
+		    cv::line(cells_img, cv::Point(int(lower_obs_pt.first*scale), int(lower_obs_pt.second*scale)), cv::Point(int(sorted_vertices[i].first.first*scale), int(sorted_vertices[i].first.second*scale)), cv::Scalar(0,255,0), 2); // green
+		}
+		
+	    if(top_is_blocked == 0){
+		    cv::line(cells_img, cv::Point(int(sorted_vertices[i].first.first*scale), int(sorted_vertices[i].first.second*scale)), cv::Point(int(upper_obs_pt.first*scale), int(upper_obs_pt.second*scale)), cv::Scalar(255,0,0), 2); // blue
+		}		
+    }
+    
+	cv::imshow("cells", cells_img);
+	cv::waitKey(0);
+}
+
+
   bool planPath(const Polygon& borders, const std::vector<Polygon>& obstacle_list,
                 const std::vector<std::pair<int,Polygon>>& victim_list,
                 const Polygon& gate, const float x, const float y, const float theta,
                 Path& path,
                 const std::string& config_folder){
+
+    std::vector<segment> cell_edges;
+    cell_decomposition(obstacle_list, cell_edges, borders);
 
     #ifdef PLAN_DEBUG
       printf("--------PLANNING WAS CALLED--------\n");
