@@ -32,6 +32,16 @@ target_link_libraries(student
 )
 
 
+
+add_executable(hsv_panel
+  src/demo_shape_detection/hsv_panel.cpp
+)
+target_link_libraries(hsv_panel
+  ${OpenCV_LIBRARIES}
+)
+
+
+
 ## COMPILE DEMO EXECUTABLE
 ## add_executable(demo_dilatation_erosion
 ##   src/demo_shape_detection/demo_dilatation_erosion.cpp
