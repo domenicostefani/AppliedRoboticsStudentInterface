@@ -1,6 +1,7 @@
 #include "student_image_elab_interface.hpp"
 #include "student_planning_interface.hpp"
 #include "dubins.hpp"
+#include "hsv_panel.hpp"
 
 #include <experimental/filesystem>
 #include <sstream>
@@ -10,6 +11,19 @@
 
 #define AUTO_CORNER_DETECTION false
 #define DUBINS_DEBUG
+
+const std::string COLOR_CONFIG_FILE = "/color_parameters.config";
+struct Color_config{
+  int victims_lowbound = 0;
+  int victims_highbound = 0;
+  int robot_lowbound = 0;
+  int robot_highbound = 0;
+  int obstacle_lowbound1 = 0;
+  int obstacle_highbound1 = 0;
+  int obstacle_lowbound2 = 0;
+  int obstacle_highbound2 = 0;
+};
+Color_config Color_config;
 
 namespace student {
  int i = 0;
@@ -157,6 +171,68 @@ namespace student {
     }
   }
 
+  /*
+   * Open a series of panels to tune the color threshold for better detection
+  */
+  void tune_color_parameters(const cv::Mat &image, const std::string& config_folder){
+    // Set destination file
+    std::string file_path = config_folder;
+    file_path += "/";
+    file_path += COLOR_CONFIG_FILE;
+    // Call routine in panel library
+    hsvpanel::show_panel(image,file_path);
+    // Read and store saved parameters
+
+    ///Try to read calibration file
+    if (std::experimental::filesystem::exists(file_path)){
+      // Load configuration from file
+      std::ifstream input(file_path);
+      if (!input.is_open()){
+        throw std::runtime_error("Cannot read file: " + file_path);
+      }
+      while (!input.eof()){
+        std::string name;
+        int val;
+        if (!(input >> name >> val)) {
+          if (input.eof()) break;
+          else {
+            throw std::runtime_error("Malformed file: " + file_path);
+          }
+        }
+        printf("---> Reading %s : %d\n",name.c_str(),val);
+    //     select(name){
+    //       case 'victims_lowbound':
+    //         Color_config.victims_lowbound = val;
+    //         break;
+    //       case 'victims_highbound':
+    //         Color_config.victims_highbound = val;
+    //         break;
+    //       case 'robot_lowbound':
+    //         Color_config.robot_lowbound = val;
+    //         break;
+    //       case 'robot_highbound':
+    //         Color_config.robot_highbound = val;
+    //         break;
+    //       case 'obstacle_lowbound1':
+    //         Color_config.obstacle_lowbound1 = val;
+    //         break;
+    //       case 'obstacle_highbound1':
+    //         Color_config.obstacle_highbound1 = val;
+    //         break;
+    //       case 'obstacle_lowbound2':
+    //         Color_config.obstacle_lowbound2 = val;
+    //         break;
+    //       case 'obstacle_highbound2':
+    //         Color_config.obstacle_highbound2 = val;
+    //         break;
+    //       default:
+    //         throw std::runtime_error("Malformed file: " + file_path);
+    //     }
+      }
+      input.close();
+    }
+  }
+
   bool extrinsicCalib(const cv::Mat& img_in, std::vector<cv::Point3f> object_points,
                       const cv::Mat& camera_matrix, cv::Mat& rvec,
                       cv::Mat& tvec, const std::string& config_folder){
@@ -220,13 +296,15 @@ namespace student {
 
     cv::Mat nullmat;
     cv::solvePnP(object_points,corners, camera_matrix, nullmat, rvec, tvec);
+
+    // Call the routine with gui to tune the color values
+    // tune_color_parameters(img_in, config_folder);
   }
 
   void imageUndistort(const cv::Mat& img_in, cv::Mat& img_out,
           const cv::Mat& cam_matrix, const cv::Mat& dist_coeffs, const std::string& config_folder){
     cv::undistort(img_in,img_out,cam_matrix,dist_coeffs);
     // throw std::logic_error( "STUDENT FUNCTION - IMAGE UNDISTORT - NOT IMPLEMENTED" );
-
   }
 
   void findPlaneTransform(const cv::Mat& cam_matrix, const cv::Mat& rvec,
@@ -272,7 +350,7 @@ namespace student {
      // distance between robot triangle front vertex and barycenter is triangle height/3*2
      // from documentation, triangle height is 16 cm
      float robot_dim = ceil(0.1117*scale);
-     std::cout << "robot dim: " << robot_dim << std::endl;    
+     std::cout << "robot dim: " << robot_dim << std::endl;
 
      // dilate obstacles
      cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(robot_dim, robot_dim));

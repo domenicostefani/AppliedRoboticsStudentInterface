@@ -1,8 +1,8 @@
-## cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 2.8.3)
 project(student_proect)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-## add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 find_package(OpenCV REQUIRED )
 find_package(project_interface REQUIRED )
@@ -23,9 +23,9 @@ add_library(dubins SHARED
   src/dubins.cpp
 )
 
-add_library(hsvpanel SHARED
-  src/hsv_panel.cpp
-)
+## add_library(hsvpanel SHARED
+##   src/hsv_panel.cpp
+## )
 
 
 
@@ -34,19 +34,19 @@ target_link_libraries(student
   ${OpenCV_LIBRARIES}
 )
 
-target_link_libraries(hsvpanel
-  ${OpenCV_LIBRARIES}
-)
+## target_link_libraries(hsvpanel
+##   ${OpenCV_LIBRARIES}
+## )
 
 target_link_libraries(student
   dubins
 )
 
-target_link_libraries(student
-  hsvpanel
-)
-
-
+###target_link_libraries(student
+###  hsvpanel
+###)
+###
+###
 ### Dumb test for hsv panel
 ## add_executable(dumbcaller
 ##  src/dumbcaller.cpp
