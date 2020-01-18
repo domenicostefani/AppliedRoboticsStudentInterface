@@ -14,7 +14,8 @@ include_directories(
  ${project_interface_INCLUDE_DIRS}
 )
 
-## CREATE EXECUTABLE LIBRARY
+## CREATE EXECUTABLE LIBRARIES
+
 add_library(student SHARED
    src/student_interface.cpp
 )
@@ -23,31 +24,31 @@ add_library(dubins SHARED
   src/dubins.cpp
 )
 
-## add_library(hsvpanel SHARED
-##   src/hsv_panel.cpp
-## )
+add_library(hsvpanel SHARED
+  src/hsv_panel.cpp
+)
 
 
-
+## LINK LIBRARIES
 
 target_link_libraries(student
   ${OpenCV_LIBRARIES}
 )
 
-## target_link_libraries(hsvpanel
-##   ${OpenCV_LIBRARIES}
-## )
+target_link_libraries(hsvpanel
+  ${OpenCV_LIBRARIES}
+)
 
 target_link_libraries(student
   dubins
 )
 
-###target_link_libraries(student
-###  hsvpanel
-###)
-###
-###
-### Dumb test for hsv panel
+target_link_libraries(student
+  hsvpanel
+)
+
+
+### DEMO for Hsv panel
 ## add_executable(dumbcaller
 ##  src/dumbcaller.cpp
 ## )
@@ -57,19 +58,8 @@ target_link_libraries(student
 ## target_link_libraries(dumbcaller
 ##  hsvpanel
 ## )
-
-
-### Standalone hsv panel
-## add_executable(hsv_panel
-##   src/hsv_panel.cpp
-## )
-## target_link_libraries(hsv_panel
-##   ${OpenCV_LIBRARIES}
-## )
-
-
-
-## COMPILE DEMO EXECUTABLE
+##
+## DEMO FOR HSV UTILITES
 ## add_executable(demo_dilatation_erosion
 ##   src/demo_shape_detection/demo_dilatation_erosion.cpp
 ## )

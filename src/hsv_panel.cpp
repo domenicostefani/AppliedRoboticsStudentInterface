@@ -103,21 +103,21 @@ void hsvpanel::show_panel(cv::Mat image, std::string out_filename){
   /*                             Write output file                            */
   /*--------------------------------------------------------------------------*/
 
-  fprintf(fp, "victims_lowbound,%d,%d,%d\n", green.low_h, green.low_s,
+  fprintf(fp, "victims_lowbound %d %d %d\n", green.low_h, green.low_s,
                                              green.low_v);
-  fprintf(fp, "victims_highbound,%d,%d,%d\n", green.high_h, green.high_s,
+  fprintf(fp, "victims_highbound %d %d %d\n", green.high_h, green.high_s,
                                               green.high_v);
-  fprintf(fp, "robot_lowbound,%d,%d,%d\n", blue.low_h, blue.low_s,
+  fprintf(fp, "robot_lowbound %d %d %d\n", blue.low_h, blue.low_s,
                                            blue.low_v);
-  fprintf(fp, "robot_highbound,%d,%d,%d\n", blue.high_h, blue.high_s,
+  fprintf(fp, "robot_highbound %d %d %d\n", blue.high_h, blue.high_s,
                                             blue.high_v);
-  fprintf(fp, "obstacle_lowbound1,%d,%d,%d\n", lowred.low_h, lowred.low_s,
+  fprintf(fp, "obstacle_lowbound1 %d %d %d\n", lowred.low_h, lowred.low_s,
                                                lowred.low_v);
-  fprintf(fp, "obstacle_highbound1,%d,%d,%d\n", lowred.high_h, lowred.high_s,
+  fprintf(fp, "obstacle_highbound1 %d %d %d\n", lowred.high_h, lowred.high_s,
                                                 lowred.high_v);
-  fprintf(fp, "obstacle_lowbound2,%d,%d,%d\n", highred.low_h, highred.low_s,
+  fprintf(fp, "obstacle_lowbound2 %d %d %d\n", highred.low_h, highred.low_s,
                                               highred.low_v);
-  fprintf(fp, "obstacle_highbound2,%d,%d,%d\n", highred.high_h, highred.high_s,
+  fprintf(fp, "obstacle_highbound2 %d %d %d\n", highred.high_h, highred.high_s,
                                                 highred.high_v);
   // Close file
   fclose (fp);

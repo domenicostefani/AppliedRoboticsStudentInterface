@@ -10,18 +10,17 @@
 #include <math.h>
 
 #define AUTO_CORNER_DETECTION false
-#define DUBINS_DEBUG
 
 const std::string COLOR_CONFIG_FILE = "/color_parameters.config";
 struct Color_config{
-  int victims_lowbound = 0;
-  int victims_highbound = 0;
-  int robot_lowbound = 0;
-  int robot_highbound = 0;
-  int obstacle_lowbound1 = 0;
-  int obstacle_highbound1 = 0;
-  int obstacle_lowbound2 = 0;
-  int obstacle_highbound2 = 0;
+  std::tuple<int,int,int> victims_lowbound;
+  std::tuple<int,int,int> victims_highbound;
+  std::tuple<int,int,int> robot_lowbound;
+  std::tuple<int,int,int> robot_highbound;
+  std::tuple<int,int,int> obstacle_lowbound1;
+  std::tuple<int,int,int> obstacle_highbound1;
+  std::tuple<int,int,int> obstacle_lowbound2;
+  std::tuple<int,int,int> obstacle_highbound2;
 };
 Color_config Color_config;
 
@@ -175,6 +174,8 @@ namespace student {
    * Open a series of panels to tune the color threshold for better detection
   */
   void tune_color_parameters(const cv::Mat &image, const std::string& config_folder){
+    // #define COLOR_CONFIG_DEBUG
+
     // Set destination file
     std::string file_path = config_folder;
     file_path += "/";
@@ -185,6 +186,9 @@ namespace student {
 
     ///Try to read calibration file
     if (std::experimental::filesystem::exists(file_path)){
+      #ifdef COLOR_CONFIG_DEBUG
+        printf("Reading color configuration\n");
+      #endif
       // Load configuration from file
       std::ifstream input(file_path);
       if (!input.is_open()){
@@ -192,42 +196,36 @@ namespace student {
       }
       while (!input.eof()){
         std::string name;
-        int val;
-        if (!(input >> name >> val)) {
+        int v1,v2,v3;
+        if (!(input >> name >> v1 >> v2 >> v3)) {
           if (input.eof()) break;
           else {
             throw std::runtime_error("Malformed file: " + file_path);
           }
         }
-        printf("---> Reading %s : %d\n",name.c_str(),val);
-    //     select(name){
-    //       case 'victims_lowbound':
-    //         Color_config.victims_lowbound = val;
-    //         break;
-    //       case 'victims_highbound':
-    //         Color_config.victims_highbound = val;
-    //         break;
-    //       case 'robot_lowbound':
-    //         Color_config.robot_lowbound = val;
-    //         break;
-    //       case 'robot_highbound':
-    //         Color_config.robot_highbound = val;
-    //         break;
-    //       case 'obstacle_lowbound1':
-    //         Color_config.obstacle_lowbound1 = val;
-    //         break;
-    //       case 'obstacle_highbound1':
-    //         Color_config.obstacle_highbound1 = val;
-    //         break;
-    //       case 'obstacle_lowbound2':
-    //         Color_config.obstacle_lowbound2 = val;
-    //         break;
-    //       case 'obstacle_highbound2':
-    //         Color_config.obstacle_highbound2 = val;
-    //         break;
-    //       default:
-    //         throw std::runtime_error("Malformed file: " + file_path);
-    //     }
+
+        #ifdef COLOR_CONFIG_DEBUG
+          printf("---> Reading %s : %d,%d,%d\n",name.c_str(),v1,v2,v3);
+        #endif
+
+        if(name.compare("victims_lowbound")==0)
+            Color_config.victims_lowbound = std::make_tuple(v1,v2,v3);
+        else if(name.compare("victims_highbound")==0)
+            Color_config.victims_highbound= std::make_tuple(v1,v2,v3);
+        else if(name.compare("robot_lowbound")==0)
+            Color_config.robot_lowbound= std::make_tuple(v1,v2,v3);
+        else if(name.compare("robot_highbound")==0)
+            Color_config.robot_highbound= std::make_tuple(v1,v2,v3);
+        else if(name.compare("obstacle_lowbound1")==0)
+            Color_config.obstacle_lowbound1= std::make_tuple(v1,v2,v3);
+        else if(name.compare("obstacle_highbound1")==0)
+            Color_config.obstacle_highbound1= std::make_tuple(v1,v2,v3);
+        else if(name.compare("obstacle_lowbound2")==0)
+            Color_config.obstacle_lowbound2= std::make_tuple(v1,v2,v3);
+        else if(name.compare("obstacle_highbound2")==0)
+            Color_config.obstacle_highbound2= std::make_tuple(v1,v2,v3);
+        else
+            throw std::runtime_error("Wrong coefficient: " + file_path);
       }
       input.close();
     }
@@ -298,7 +296,7 @@ namespace student {
     cv::solvePnP(object_points,corners, camera_matrix, nullmat, rvec, tvec);
 
     // Call the routine with gui to tune the color values
-    // tune_color_parameters(img_in, config_folder);
+    tune_color_parameters(img_in, config_folder);
   }
 
   void imageUndistort(const cv::Mat& img_in, cv::Mat& img_out,
@@ -418,7 +416,7 @@ namespace student {
         }
 
         res = true;
-        break;
+
     }
 
     cv::imshow("findGate", contours_img);
@@ -644,7 +642,7 @@ namespace student {
         cv::waitKey(0);
 
         found = true;
-        break;
+
     }
 
     // set robot position
@@ -771,6 +769,8 @@ namespace student {
                 const Polygon& gate, const float x, const float y, const float theta,
                 Path& path,
                 const std::string& config_folder){
+    #define DUBINS_DEBUG
+    // #ifdef PLAN_DEBUG
 
     #ifdef PLAN_DEBUG
       printf("--------PLANNING WAS CALLED--------\n");
