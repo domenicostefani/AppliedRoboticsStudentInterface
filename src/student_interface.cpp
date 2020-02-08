@@ -11,7 +11,10 @@
 
 #define AUTO_CORNER_DETECTION false
 
+
 // #define COLOR_RANGE_DEBUG // Prints info about HSV ranges used for colors
+#define DUBINS_DEBUG false
+//#define IMSHOW_DEBUG
 
 const std::string COLOR_CONFIG_FILE = "/color_parameters.config";
 struct Color_config{
@@ -24,6 +27,10 @@ struct Color_config{
   std::tuple<int,int,int> obstacle_lowbound2;
   std::tuple<int,int,int> obstacle_highbound2;
 };
+
+using point = std::pair<float,float>;
+using segment = std::pair<point, point>;
+using cell = std::vector<point>;
 
 namespace student {
  int i = 0;
@@ -414,9 +421,10 @@ namespace student {
        contours_approx = {approx_curve};
        cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
     }
-
+#ifdef IMSHOW_DEBUG
     imshow("obstacles", contours_img);
     cv::waitKey(0);
+#endif
   }
 
   bool findGate(const cv::Mat& hsv_img, const double scale, Polygon& gate,
@@ -465,10 +473,10 @@ namespace student {
         res = true;
 
     }
-
+#ifdef IMSHOW_DEBUG
     cv::imshow("findGate", contours_img);
     cv::waitKey(0);
-
+#endif
     return res;
   }
 
@@ -521,10 +529,10 @@ namespace student {
           minRect[i] = minAreaRect(cv::Mat(contours[i]));
         }
     }
-
+#ifdef IMSHOW_DEBUG
     cv::imshow("findVictims", contours_img);
     cv::waitKey(0);
-
+#endif
     // TEMPLATE MATCHING
 
     cv::Mat img;
@@ -533,10 +541,11 @@ namespace student {
     // generate binary mask with inverted pixels w.r.t. green mask -> black numbers are part of this mask
     cv::Mat green_mask_inv, filtered(img.rows, img.cols, CV_8UC3, cv::Scalar(255,255,255));
     cv::bitwise_not(green_mask, green_mask_inv);
-
+    
+#ifdef IMSHOW_DEBUG
     cv::imshow("Numbers", green_mask_inv);
     cv::waitKey(0);
-
+#endif
     cv::Mat curr_num;
 
     // Load digits template images
@@ -599,8 +608,9 @@ namespace student {
         cv::cvtColor(processROI, processROI, cv::COLOR_GRAY2BGR);
 
         // Show the actual image used for the template matching
+#ifdef IMSHOW_DEBUG
         cv::imshow("ROI", processROI);
-
+#endif
         // Find the template digit with the best matching
         double maxScore = 0;
         int maxIdx = -1;
@@ -695,7 +705,6 @@ namespace student {
       cv::Mat contours_img;
       contours_img = img_in.clone();
       //cv::drawContours(contours_img, contours, -1, cv::Scalar(0,0,0), 4, cv::LINE_AA);
-      std::cout << "Number of contours: " << contours.size() << std::endl;
     #endif
 
     std::vector<cv::Point> approx_curve;
@@ -718,8 +727,6 @@ namespace student {
             cv::imshow("findRobot", contours_img);
             cv::waitKey(0);
         #endif
-
-
         found = true;
 
     }
@@ -774,7 +781,7 @@ namespace student {
         #endif
     }
 
-    #ifdef FIND_ROBOT_DEBUG_PLOT
+    #ifdef IMSHOW_DEBUG
       cv::imshow("findRobot", contours_img);
       cv::waitKey(0);
     #endif
@@ -843,12 +850,65 @@ namespace student {
     theta = angle;
   }
 
+
   bool planPath(const Polygon& borders, const std::vector<Polygon>& obstacle_list,
                 const std::vector<std::pair<int,Polygon>>& victim_list,
                 const Polygon& gate, const float x, const float y, const float theta,
                 Path& path,
                 const std::string& config_folder){
     // #define DUBINS_DEBUG
+
+    int scale = 200;
+
+    std::string vcd_dir = config_folder + "/../src/VCD";
+    
+    std::ofstream output(vcd_dir + "/i.txt");
+    
+    if (!output.is_open()){
+      throw std::runtime_error("Cannot write file: " + vcd_dir + "/i.txt");
+    }
+    
+    //write borders on first line
+    for(int i = 0; i < borders.size(); i++){
+        if(i < borders.size()-1){
+            output << "(" << int(borders[i].x*scale) << ", " << int(borders[i].y*scale) << "),";
+        } else {
+            output << "(" << int(borders[i].x*scale) << ", " << int(borders[i].y*scale) << ")" << std::endl;
+        }
+    }
+    
+    //write vertices on second line
+    int pt_x, pt_y;
+    
+    for(int i = 0; i < obstacle_list.size(); i++){
+        for(int j = 0; j < obstacle_list[i].size(); j++){
+            pt_x = int(obstacle_list[i][j].x*scale);
+            pt_y = int(obstacle_list[i][j].y*scale);
+                
+            output << "(" << pt_x << ", " << pt_y << "), ";
+        }
+        
+        //add first point again
+        pt_x = int(obstacle_list[i][0].x*scale);
+        pt_y = int(obstacle_list[i][0].y*scale);
+        
+        if(i < obstacle_list.size()-1){
+            output << "(" << pt_x << ", " << pt_y << "), ";
+        } else {
+            output << "(" << pt_x << ", " << pt_y << ")" << std::endl;
+        }
+    }
+    
+    //write source and destination on third line
+    output << "(" << int(x*scale) << ", " << int(y*scale) << "), (10, 190)"; 
+    
+    output.close();
+    
+    std::string cmd = "python " + vcd_dir + "/main.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt";
+    char str[cmd.size()+1];
+    strcpy(str, cmd.c_str());
+    system(str);
+    
     #ifdef PLAN_DEBUG
       printf("--------PLANNING WAS CALLED--------\n");
       fflush(stdout);
