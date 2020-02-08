@@ -88,16 +88,24 @@ void hsvpanel::show_panel(cv::Mat image, std::string out_filename){
   /*--------------------------------------------------------------------------*/
 
   string windowName = "Victim Detection (Green)";
-  WindowData green = displayControl(img_hsv,windowName,45,50,50,75,255,255);
+  WindowData green = displayControl(img_hsv,windowName,
+                                    45,50,50,     //Low HSV default
+                                    75,255,255);  //high HSV default
 
   windowName = "Robot Detection (Blue)";
-  WindowData blue = displayControl(img_hsv,windowName,110,75,10,130,255,255);
+  WindowData blue = displayControl(img_hsv,windowName,
+                                   110,75,10,     //Low HSV default
+                                   130,255,255);  //high HSV default
 
   windowName = "Obstacle Detection1 (LOW red)";
-  WindowData lowred = displayControl(img_hsv,windowName,0,100,100,10,255,255);
+  WindowData lowred = displayControl(img_hsv,windowName,
+                                     0,100,100,   //Low HSV default
+                                     10,255,255); //high HSV default
 
   windowName = "Obstacle Detection1 (HIGH red)";
-  WindowData highred = displayControl(img_hsv,windowName,160,100,100,180,255,255);
+  WindowData highred = displayControl(img_hsv,windowName,
+                                      160,100,100, //Low HSV default
+                                      180,255,255);//high HSV default
 
   /*--------------------------------------------------------------------------*/
   /*                             Write output file                            */
