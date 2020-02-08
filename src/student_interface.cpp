@@ -1,6 +1,7 @@
 #include "student_image_elab_interface.hpp"
 #include "student_planning_interface.hpp"
 #include "dubins.hpp"
+#include "hsv_panel.hpp"
 
 #include <experimental/filesystem>
 #include <sstream>
@@ -9,8 +10,23 @@
 #include <math.h>
 
 #define AUTO_CORNER_DETECTION false
+
+
+// #define COLOR_RANGE_DEBUG // Prints info about HSV ranges used for colors
 #define DUBINS_DEBUG false
 //#define IMSHOW_DEBUG
+
+const std::string COLOR_CONFIG_FILE = "/color_parameters.config";
+struct Color_config{
+  std::tuple<int,int,int> victims_lowbound;
+  std::tuple<int,int,int> victims_highbound;
+  std::tuple<int,int,int> robot_lowbound;
+  std::tuple<int,int,int> robot_highbound;
+  std::tuple<int,int,int> obstacle_lowbound1;
+  std::tuple<int,int,int> obstacle_highbound1;
+  std::tuple<int,int,int> obstacle_lowbound2;
+  std::tuple<int,int,int> obstacle_highbound2;
+};
 
 using point = std::pair<float,float>;
 using segment = std::pair<point, point>;
@@ -20,7 +36,6 @@ namespace student {
  int i = 0;
 
  void loadImage(cv::Mat& img_out, const std::string& config_folder){
-    //throw std::logic_error( "STUDENT FUNCTION - LOAD IMAGE - NOT IMPLEMENTED" );
 
     static bool initialized = false;
     static std::vector<cv::String> img_list; // list of images to load
@@ -162,6 +177,76 @@ namespace student {
     }
   }
 
+  Color_config read_colors(const std::string& config_folder){
+    Color_config color_config;
+
+    std::string file_path = config_folder;
+    file_path += "/";
+    file_path += COLOR_CONFIG_FILE;
+
+    if (std::experimental::filesystem::exists(file_path)){
+      #ifdef COLOR_CONFIG_DEBUG
+        printf("Reading color configuration\n");
+      #endif
+      // Load configuration from file
+      std::ifstream input(file_path);
+      if (!input.is_open()){
+        throw std::runtime_error("Cannot read file: " + file_path);
+      }
+      while (!input.eof()){
+        std::string name;
+        int v1,v2,v3;
+        if (!(input >> name >> v1 >> v2 >> v3)) {
+          if (input.eof()) break;
+          else {
+            throw std::runtime_error("Malformed file: " + file_path);
+          }
+        }
+
+        #ifdef COLOR_CONFIG_DEBUG
+          printf("---> Reading %s : %d,%d,%d\n",name.c_str(),v1,v2,v3);
+        #endif
+
+        if(name.compare("victims_lowbound")==0)
+            color_config.victims_lowbound = std::make_tuple(v1,v2,v3);
+        else if(name.compare("victims_highbound")==0)
+            color_config.victims_highbound= std::make_tuple(v1,v2,v3);
+        else if(name.compare("robot_lowbound")==0)
+            color_config.robot_lowbound= std::make_tuple(v1,v2,v3);
+        else if(name.compare("robot_highbound")==0)
+            color_config.robot_highbound= std::make_tuple(v1,v2,v3);
+        else if(name.compare("obstacle_lowbound1")==0)
+            color_config.obstacle_lowbound1= std::make_tuple(v1,v2,v3);
+        else if(name.compare("obstacle_highbound1")==0)
+            color_config.obstacle_highbound1= std::make_tuple(v1,v2,v3);
+        else if(name.compare("obstacle_lowbound2")==0)
+            color_config.obstacle_lowbound2= std::make_tuple(v1,v2,v3);
+        else if(name.compare("obstacle_highbound2")==0)
+            color_config.obstacle_highbound2= std::make_tuple(v1,v2,v3);
+        else
+            throw std::runtime_error("Wrong coefficient: " + file_path);
+      }
+      input.close();
+    }
+    return color_config;
+  }
+
+
+  /*
+   * Open a series of panels to tune the color threshold for better detection
+  */
+  void tune_color_parameters(const cv::Mat &image, const std::string& config_folder){
+    // #define COLOR_CONFIG_DEBUG
+
+    // Set destination file
+    std::string file_path = config_folder;
+    file_path += "/";
+    file_path += COLOR_CONFIG_FILE;
+    // Call routine in panel library
+    hsvpanel::show_panel(image,file_path);
+  }
+
+
   bool extrinsicCalib(const cv::Mat& img_in, std::vector<cv::Point3f> object_points,
                       const cv::Mat& camera_matrix, cv::Mat& rvec,
                       cv::Mat& tvec, const std::string& config_folder){
@@ -225,13 +310,14 @@ namespace student {
 
     cv::Mat nullmat;
     cv::solvePnP(object_points,corners, camera_matrix, nullmat, rvec, tvec);
+
+    // Call the routine with gui to tune the color values
+    tune_color_parameters(img_in, config_folder);
   }
 
   void imageUndistort(const cv::Mat& img_in, cv::Mat& img_out,
           const cv::Mat& cam_matrix, const cv::Mat& dist_coeffs, const std::string& config_folder){
     cv::undistort(img_in,img_out,cam_matrix,dist_coeffs);
-    // throw std::logic_error( "STUDENT FUNCTION - IMAGE UNDISTORT - NOT IMPLEMENTED" );
-
   }
 
   void findPlaneTransform(const cv::Mat& cam_matrix, const cv::Mat& rvec,
@@ -254,14 +340,41 @@ namespace student {
     cv::warpPerspective(img_in, img_out, transf, img_in.size());
   }
 
-  void findObstacles(const cv::Mat& hsv_img, const double scale, std::vector<Polygon>& obstacle_list){
-     #define FIND_OBSTACLES_DEBUG
+  void findObstacles(const cv::Mat& hsv_img, const double scale,
+                     std::vector<Polygon>& obstacle_list,
+                     const Color_config& color_config){
+     // #define FIND_OBSTACLES_DEBUG
 
      /* Red color requires 2 ranges*/
      cv::Mat lower_red_hue_range; // the lower range for red hue
      cv::Mat upper_red_hue_range; // the higher range for red hue
-     cv::inRange(hsv_img, cv::Scalar(0, 100, 100), cv::Scalar(10, 255, 255), lower_red_hue_range);
-     cv::inRange(hsv_img, cv::Scalar(160, 100, 100), cv::Scalar(179, 255, 255), upper_red_hue_range);
+
+     auto t = color_config.obstacle_lowbound1;
+     int lowH1 = std::get<0>(t);
+     int lowS1 = std::get<1>(t);
+     int lowV1 = std::get<2>(t);
+     t = color_config.obstacle_highbound1;
+     int highH1 = std::get<0>(t);
+     int highS1 = std::get<1>(t);
+     int highV1 = std::get<2>(t);
+     #ifdef COLOR_RANGE_DEBUG
+       printf("Using RED bound 1 (%d,%d,%d)-(%d,%d,%d)\n", lowH1, lowS1, lowV1, highH1, highS1, highV1);
+     #endif
+
+     t = color_config.obstacle_lowbound2;
+     int lowH2 = std::get<0>(t);
+     int lowS2 = std::get<1>(t);
+     int lowV2 = std::get<2>(t);
+     t = color_config.obstacle_highbound2;
+     int highH2 = std::get<0>(t);
+     int highS2 = std::get<1>(t);
+     int highV2 = std::get<2>(t);
+     #ifdef COLOR_RANGE_DEBUG
+       printf("Using RED bound 2 (%d,%d,%d)-(%d,%d,%d)\n", lowH2, lowS2,  lowV2, highH2, highS2, highV2);
+     #endif
+     cv::inRange(hsv_img, cv::Scalar(lowH1, lowS1, lowV1), cv::Scalar(highH1, highS1, highV1), lower_red_hue_range);
+     cv::inRange(hsv_img, cv::Scalar(lowH2, lowS2, lowV2), cv::Scalar(highH2, highS2, highV2), upper_red_hue_range);
+
      // Now we can combine the 2 masks
      cv::Mat red_hue_image;
      cv::addWeighted(lower_red_hue_range, 1.0, upper_red_hue_range, 1.0, 0.0, red_hue_image);
@@ -277,7 +390,7 @@ namespace student {
      // distance between robot triangle front vertex and barycenter is triangle height/3*2
      // from documentation, triangle height is 16 cm
      float robot_dim = ceil(0.1117*scale);
-     std::cout << "robot dim: " << robot_dim << std::endl;    
+     std::cout << "robot dim: " << robot_dim << std::endl;
 
      // dilate obstacles
      cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(robot_dim, robot_dim));
@@ -314,11 +427,23 @@ namespace student {
 #endif
   }
 
-  bool findGate(const cv::Mat& hsv_img, const double scale, Polygon& gate){
+  bool findGate(const cv::Mat& hsv_img, const double scale, Polygon& gate,
+                const Color_config& color_config){
 
     // Find green regions
+    auto t = color_config.victims_lowbound;
+    int lowH = std::get<0>(t);
+    int lowS = std::get<1>(t);
+    int lowV = std::get<2>(t);
+    t = color_config.victims_highbound;
+    int highH = std::get<0>(t);
+    int highS = std::get<1>(t);
+    int highV = std::get<2>(t);
+    #ifdef COLOR_RANGE_DEBUG
+      printf("Using GREEN bound  (%d,%d,%d)-(%d,%d,%d)\n", lowH, lowS, lowV, highH, highS, highV);
+    #endif
     cv::Mat green_mask;
-    cv::inRange(hsv_img, cv::Scalar(45, 50, 50), cv::Scalar(75, 255, 255), green_mask);
+    cv::inRange(hsv_img, cv::Scalar(lowH, lowS, lowV), cv::Scalar(highH, highS, highV), green_mask);
 
     std::vector<std::vector<cv::Point>> contours, contours_approx;
     std::vector<cv::Point> approx_curve;
@@ -346,7 +471,7 @@ namespace student {
         }
 
         res = true;
-        break;
+
     }
 #ifdef IMSHOW_DEBUG
     cv::imshow("findGate", contours_img);
@@ -355,11 +480,26 @@ namespace student {
     return res;
   }
 
-  bool findVictims(const cv::Mat& hsv_img, const double scale, std::vector<std::pair<int,Polygon>>& victim_list, const std::string& config_folder){
+  bool findVictims(const cv::Mat& hsv_img, const double scale,
+                   std::vector<std::pair<int,Polygon>>& victim_list,
+                   const Color_config& color_config,
+                   const std::string& config_folder){
 
     // Find green regions
+    auto t = color_config.victims_lowbound;
+    int lowH = std::get<0>(t);
+    int lowS = std::get<1>(t);
+    int lowV = std::get<2>(t);
+    t = color_config.victims_highbound;
+    int highH = std::get<0>(t);
+    int highS = std::get<1>(t);
+    int highV = std::get<2>(t);
+    #ifdef COLOR_RANGE_DEBUG
+      printf("Using GREEN bound  (%d,%d,%d)-(%d,%d,%d)\n", lowH, lowS, lowV, highH, highS, highV);
+    #endif
+
     cv::Mat green_mask;
-    cv::inRange(hsv_img, cv::Scalar(45, 50, 50), cv::Scalar(75, 255, 255), green_mask);
+    cv::inRange(hsv_img, cv::Scalar(lowH, lowS, lowV), cv::Scalar(highH, highS, highV), green_mask);
 
     std::vector<std::vector<cv::Point>> contours, contours_approx;
     std::vector<cv::Point> approx_curve;
@@ -505,9 +645,11 @@ namespace student {
       cv::Mat img_hsv;
       cv::cvtColor(img_in, img_hsv, cv::COLOR_BGR2HSV);
 
-      findGate(img_hsv, scale, gate);
-      findObstacles(img_hsv, scale, obstacle_list);
-      findVictims(img_hsv, scale, victim_list, config_folder);
+      Color_config color_config = read_colors(config_folder);
+
+      findGate(img_hsv, scale, gate,color_config);
+      findObstacles(img_hsv, scale, obstacle_list,color_config);
+      findVictims(img_hsv, scale, victim_list, color_config, config_folder);
 
       return true;
   }
@@ -524,17 +666,31 @@ namespace student {
     cy /=  static_cast<double>(polygon.size());
   }
 
-  bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle, double& x, double& y, double& theta, const std::string& config_folder){
-    //throw std::logic_error( "STUDENT FUNCTION - FIND ROBOT - NOT IMPLEMENTED" );
-    #define FIND_ROBOT_DEBUG_PLOT
+  bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
+                 double& x, double& y, double& theta,
+                 const std::string& config_folder){
+    // #define FIND_ROBOT_DEBUG_PLOT
+    Color_config color_config = read_colors(config_folder);
 
     // Convert color space from BGR to HSV
     cv::Mat hsv_img;
     cv::cvtColor(img_in, hsv_img, cv::COLOR_BGR2HSV);
 
     // Extract blue color region
+    auto t = color_config.robot_lowbound;
+    int lowH = std::get<0>(t);
+    int lowS = std::get<1>(t);
+    int lowV = std::get<2>(t);
+    t = color_config.robot_highbound;
+    int highH = std::get<0>(t);
+    int highS = std::get<1>(t);
+    int highV = std::get<2>(t);
+
+    #ifdef COLOR_RANGE_DEBUG
+      printf("Using BLUE bound  (%d,%d,%d)-(%d,%d,%d)\n", lowH, lowS, lowV, highH, highS, highV);
+    #endif
     cv::Mat blue_mask;
-    cv::inRange(hsv_img, cv::Scalar(110, 75, 0), cv::Scalar(130, 255, 255), blue_mask);
+    cv::inRange(hsv_img, cv::Scalar(lowH, lowS, lowV), cv::Scalar(highH, highS, highV), blue_mask);
 
     // remove noise with opening operation
     //cv::morphologyEx(blue_mask, blue_mask, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));
@@ -567,13 +723,12 @@ namespace student {
             //std::cout << "Approx contour count: " << approx_curve.size() << std::endl;
             contours_approx = {approx_curve};
             cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
+
+            cv::imshow("findRobot", contours_img);
+            cv::waitKey(0);
         #endif
-#ifdef IMSHOW_DEBUG
-        cv::imshow("findRobot", contours_img);
-        cv::waitKey(0);
-#endif
         found = true;
-        break;
+
     }
 
     // set robot position
@@ -701,6 +856,7 @@ namespace student {
                 const Polygon& gate, const float x, const float y, const float theta,
                 Path& path,
                 const std::string& config_folder){
+    // #define DUBINS_DEBUG
 
     int scale = 200;
 
