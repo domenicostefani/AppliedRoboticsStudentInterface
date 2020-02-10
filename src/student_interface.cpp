@@ -1166,27 +1166,34 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
     //write vertices on second line
     int pt_x, pt_y;
     
+    //add each obstacle in a separate line
     for(int i = 0; i < obstacle_list.size(); i++){
+
+        //add each vertex in (x,y) format
         for(int j = 0; j < obstacle_list[i].size(); j++){
             pt_x = int(obstacle_list[i][j].x*scale);
             pt_y = int(obstacle_list[i][j].y*scale);
-                
-            output << "(" << pt_x << ", " << pt_y << "), ";
+
+            if(j < obstacle_list[i].size()-1){
+                output << "(" << pt_x << "," << pt_y << "),";
+            } else {
+                output << "(" << pt_x << "," << pt_y << ")" << endl;
+            }
         }
-        
+        /*
         //add first point again
         pt_x = int(obstacle_list[i][0].x*scale);
         pt_y = int(obstacle_list[i][0].y*scale);
         
         if(i < obstacle_list.size()-1){
-            output << "(" << pt_x << ", " << pt_y << "), ";
+            output << "(" << pt_x << "," << pt_y << "),";
         } else {
-            output << "(" << pt_x << ", " << pt_y << ")" << endl;
-        }
+            output << "(" << pt_x << "," << pt_y << ")" << endl;
+        }*/
     }
     
     //write source and destination on third line
-    output << "(" << int(x*scale) << ", " << int(y*scale) << "), (" << int(xf*scale) << "," << int(yf*scale) << ")"; 
+    output << "(" << int(x*scale) << "," << int(y*scale) << "), (" << int(xf*scale) << "," << int(yf*scale) << ")"; 
     
     output.close();
     
