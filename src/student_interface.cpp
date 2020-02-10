@@ -12,18 +12,21 @@
 #define DUBINS_DEBUG false
 //#define IMSHOW_DEBUG
 
-using point = std::pair<float,float>;
-using segment = std::pair<point, point>;
-using cell = std::vector<point>;
+//using point = pair<float,float>;
+//using segment = pair<point, point>;
+//using cell = vector<point>;
+
+using namespace std;
 
 namespace student {
  int i = 0;
+ int scale = 200;
 
- void loadImage(cv::Mat& img_out, const std::string& config_folder){
-    //throw std::logic_error( "STUDENT FUNCTION - LOAD IMAGE - NOT IMPLEMENTED" );
+ void loadImage(cv::Mat& img_out, const string& config_folder){
+    //throw logic_error( "STUDENT FUNCTION - LOAD IMAGE - NOT IMPLEMENTED" );
 
     static bool initialized = false;
-    static std::vector<cv::String> img_list; // list of images to load
+    static vector<cv::String> img_list; // list of images to load
     static size_t idx = 0;  // idx of the current img
     static size_t function_call_counter = 0;  // idx of the current img
     const static size_t freeze_img_n_step = 30; // hold the current image for n iteration
@@ -45,7 +48,7 @@ namespace student {
     }
 
     if(!initialized){
-        throw std::logic_error( "Load Image can not find any jpg image in: " +  config_folder + "/img_to_load/");
+        throw logic_error( "Load Image can not find any jpg image in: " +  config_folder + "/img_to_load/");
         return;
     }
 
@@ -60,31 +63,30 @@ namespace student {
     }
  }
 
- void genericImageListener(const cv::Mat& img_in, std::string topic, const std::string& config_folder){
-    //throw std::logic_error( "STUDENT FUNCTION - IMAGE LISTENER - NOT CORRECTLY IMPLEMENTED" );
-
+ void genericImageListener(const cv::Mat& img_in, string topic, const string& config_folder){
+    //throw logic_error( "STUDENT FUNCTION - IMAGE LISTENER - NOT CORRECTLY IMPLEMENTED" );
 
     cv::imshow("current picture", img_in);
     char c = cv::waitKey(30);
     if(c == 's'){
       /* Create folder for images*/
-      std::string foldername = config_folder;
+      string foldername = config_folder;
       foldername += "/image";      //This is the folder used in the topic string
-      std::string command = "mkdir -p " + foldername;  //-p creates only if non exists
+      string command = "mkdir -p " + foldername;  //-p creates only if non exists
       system(command.c_str());  //use bash command
 
       /* Save current image */
-      std::string filename = config_folder;
+      string filename = config_folder;
       filename += topic;
       filename += "_";
-      filename += std::to_string(i++);
+      filename += to_string(i++);
       filename += ".jpg";
       cv::imwrite(filename, img_in);
       printf("Saved is '%s'\n", filename.c_str());
     }
   }
 
-  bool autodetect_corners(const cv::Mat& img_in, std::vector<cv::Point2f>& corners){
+  bool autodetect_corners(const cv::Mat& img_in, vector<cv::Point2f>& corners){
       // // convert to grayscale (you could load as grayscale instead)
       // cv::Mat gray;
       // cv::cvtColor(img_in,gray, CV_BGR2GRAY);
@@ -95,8 +97,8 @@ namespace student {
       //
       //
       // // find contours (if always so easy to segment as your image, you could just add the black/rect pixels to a vector)
-      // std::vector<std::vector<cv::Point>> contours;
-      // std::vector<cv::Vec4i> hierarchy;
+      // vector<vector<cv::Point>> contours;
+      // vector<cv::Vec4i> hierarchy;
       // cv::findContours(mask,contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
       //
       // /// Draw contours and find biggest contour (if there are other contours in the image, we assume the biggest one is the desired rect)
@@ -121,7 +123,7 @@ namespace student {
       // // if no contour found
       // if(biggestContourIdx < 0)
       // {
-      //     std::cout << "no contour found" << std::endl;
+      //     cout << "no contour found" << endl;
       //     return false;
       // }
       //
@@ -135,15 +137,15 @@ namespace student {
 
   void onMouse(int evt, int x, int y, int flags, void* param) {
       if(evt == CV_EVENT_LBUTTONDOWN) {
-          std::vector<cv::Point>* ptPtr = (std::vector<cv::Point>*)param;
+          vector<cv::Point>* ptPtr = (vector<cv::Point>*)param;
           ptPtr->push_back(cv::Point(x,y));
       }
   }
 
-  void manualselect_corners(const cv::Mat& img_in, std::vector<cv::Point2f>& corners){
+  void manualselect_corners(const cv::Mat& img_in, vector<cv::Point2f>& corners){
 
-    std::vector<cv::Point> points;
-    std::string windowname = "Select corners, counterclockwise, start from red";
+    vector<cv::Point> points;
+    string windowname = "Select corners, counterclockwise, start from red";
     cv::namedWindow(windowname);
     cv::setMouseCallback(windowname, onMouse, (void*)&points);
 
@@ -162,44 +164,44 @@ namespace student {
     }
   }
 
-  bool extrinsicCalib(const cv::Mat& img_in, std::vector<cv::Point3f> object_points,
+  bool extrinsicCalib(const cv::Mat& img_in, vector<cv::Point3f> object_points,
                       const cv::Mat& camera_matrix, cv::Mat& rvec,
-                      cv::Mat& tvec, const std::string& config_folder){
+                      cv::Mat& tvec, const string& config_folder){
     // #define ESTRINISIC_CALIB_DEBUG
-    std::vector<cv::Point2f> corners;
+    vector<cv::Point2f> corners;
 
     if(AUTO_CORNER_DETECTION)
       autodetect_corners(img_in,corners);
     else{
       ///Try to read calibration file
 
-      std::string file_path = config_folder + "/extrinsicCalib.csv";
+      string file_path = config_folder + "/extrinsicCalib.csv";
 
-      if (!std::experimental::filesystem::exists(file_path)){
+      if (!experimental::filesystem::exists(file_path)){
         // File does not exist
         manualselect_corners(img_in,corners);
         // Save the file
-        std::experimental::filesystem::create_directories(config_folder);
-        std::ofstream output(file_path);
+        experimental::filesystem::create_directories(config_folder);
+        ofstream output(file_path);
         if (!output.is_open()){
-          throw std::runtime_error("Cannot write file: " + file_path);
+          throw runtime_error("Cannot write file: " + file_path);
         }
         for (const auto pt: corners) {
-          output << pt.x << " " << pt.y << std::endl;
+          output << pt.x << " " << pt.y << endl;
         }
         output.close();
       }else{
         // Load configuration from file
-        std::ifstream input(file_path);
+        ifstream input(file_path);
         if (!input.is_open()){
-          throw std::runtime_error("Cannot read file: " + file_path);
+          throw runtime_error("Cannot read file: " + file_path);
         }
         while (!input.eof()){
           double x, y;
           if (!(input >> x >> y)) {
             if (input.eof()) break;
             else {
-              throw std::runtime_error("Malformed file: " + file_path);
+              throw runtime_error("Malformed file: " + file_path);
             }
           }
           corners.emplace_back(x, y);
@@ -228,17 +230,17 @@ namespace student {
   }
 
   void imageUndistort(const cv::Mat& img_in, cv::Mat& img_out,
-          const cv::Mat& cam_matrix, const cv::Mat& dist_coeffs, const std::string& config_folder){
+          const cv::Mat& cam_matrix, const cv::Mat& dist_coeffs, const string& config_folder){
     cv::undistort(img_in,img_out,cam_matrix,dist_coeffs);
-    // throw std::logic_error( "STUDENT FUNCTION - IMAGE UNDISTORT - NOT IMPLEMENTED" );
+    // throw logic_error( "STUDENT FUNCTION - IMAGE UNDISTORT - NOT IMPLEMENTED" );
 
   }
 
   void findPlaneTransform(const cv::Mat& cam_matrix, const cv::Mat& rvec,
                           const cv::Mat& tvec,
-                          const std::vector<cv::Point3f>& object_points_plane,
-                          const std::vector<cv::Point2f>& dest_image_points_plane,
-                          cv::Mat& plane_transf, const std::string& config_folder){
+                          const vector<cv::Point3f>& object_points_plane,
+                          const vector<cv::Point2f>& dest_image_points_plane,
+                          cv::Mat& plane_transf, const string& config_folder){
 
     cv::Mat image_points;
 
@@ -249,12 +251,12 @@ namespace student {
   }
 
   void unwarp(const cv::Mat& img_in, cv::Mat& img_out,
-              const cv::Mat& transf, const std::string& config_folder){
-    // throw std::logic_error( "STUDENT FUNCTION - UNWRAP - NOT IMPLEMENTED" );
+              const cv::Mat& transf, const string& config_folder){
+    // throw logic_error( "STUDENT FUNCTION - UNWRAP - NOT IMPLEMENTED" );
     cv::warpPerspective(img_in, img_out, transf, img_in.size());
   }
 
-  void findObstacles(const cv::Mat& hsv_img, const double scale, std::vector<Polygon>& obstacle_list){
+  void findObstacles(const cv::Mat& hsv_img, const double scale, vector<Polygon>& obstacle_list){
      #define FIND_OBSTACLES_DEBUG
 
      /* Red color requires 2 ranges*/
@@ -277,7 +279,7 @@ namespace student {
      // distance between robot triangle front vertex and barycenter is triangle height/3*2
      // from documentation, triangle height is 16 cm
      float robot_dim = ceil(0.1117*scale);
-     std::cout << "robot dim: " << robot_dim << std::endl;    
+     cout << "robot dim: " << robot_dim << endl;    
 
      // dilate obstacles
      cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(robot_dim, robot_dim));
@@ -287,8 +289,8 @@ namespace student {
       * Now the mask has to undergo contour detection
      */
 
-     std::vector<std::vector<cv::Point>> contours, contours_approx;
-     std::vector<cv::Point> approx_curve;
+     vector<vector<cv::Point>> contours, contours_approx;
+     vector<cv::Point> approx_curve;
      cv::Mat contours_img;
      contours_img = hsv_img.clone();
 
@@ -320,8 +322,8 @@ namespace student {
     cv::Mat green_mask;
     cv::inRange(hsv_img, cv::Scalar(45, 50, 50), cv::Scalar(75, 255, 255), green_mask);
 
-    std::vector<std::vector<cv::Point>> contours, contours_approx;
-    std::vector<cv::Point> approx_curve;
+    vector<vector<cv::Point>> contours, contours_approx;
+    vector<cv::Point> approx_curve;
     cv::Mat contours_img;
     contours_img = hsv_img.clone();
 
@@ -331,8 +333,8 @@ namespace student {
 
     for( auto& contour : contours){
         //const double area = cv::contourArea(contour);
-        //std::cout << "AREA " << area << std::endl;
-        //std::cout << "SIZE: " << contours.size() << std::endl;
+        //cout << "AREA " << area << endl;
+        //cout << "SIZE: " << contours.size() << endl;
 
         approxPolyDP(contour, approx_curve, 10, true);
 
@@ -355,21 +357,21 @@ namespace student {
     return res;
   }
 
-  bool findVictims(const cv::Mat& hsv_img, const double scale, std::vector<std::pair<int,Polygon>>& victim_list, const std::string& config_folder){
+  bool findVictims(const cv::Mat& hsv_img, const double scale, vector<pair<int,Polygon>>& victim_list, const string& config_folder){
 
     // Find green regions
     cv::Mat green_mask;
     cv::inRange(hsv_img, cv::Scalar(45, 50, 50), cv::Scalar(75, 255, 255), green_mask);
 
-    std::vector<std::vector<cv::Point>> contours, contours_approx;
-    std::vector<cv::Point> approx_curve;
+    vector<vector<cv::Point>> contours, contours_approx;
+    vector<cv::Point> approx_curve;
     cv::Mat contours_img;
     contours_img = hsv_img.clone();
 
     cv::findContours(green_mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-    std::vector<cv::Rect> boundRect(contours.size());
-    std::vector<cv::RotatedRect> minRect(contours.size());
+    vector<cv::Rect> boundRect(contours.size());
+    vector<cv::RotatedRect> minRect(contours.size());
 
     for (int i=0; i<contours.size(); ++i)
     {
@@ -409,9 +411,9 @@ namespace student {
     cv::Mat curr_num;
 
     // Load digits template images
-    std::vector<cv::Mat> templROIs;
+    vector<cv::Mat> templROIs;
     for (int i=0; i<=5; ++i) {
-        curr_num = cv::imread(config_folder + "/../imgs/template/" + std::to_string(i) + ".png");
+        curr_num = cv::imread(config_folder + "/../imgs/template/" + to_string(i) + ".png");
         templROIs.emplace_back(curr_num);
 
         for(int j = 0; j < 3; ++j){
@@ -489,7 +491,7 @@ namespace student {
         victim_list[curr_victim].first = maxIdx;
         curr_victim++;
 
-        std::cout << "Best fitting template: " << maxIdx << std::endl;
+        cout << "Best fitting template: " << maxIdx << endl;
         cv::waitKey(0);
     }
 
@@ -497,9 +499,9 @@ namespace student {
   }
 
   bool processMap(const cv::Mat& img_in, const double scale,
-                  std::vector<Polygon>& obstacle_list,
-                  std::vector<std::pair<int,Polygon>>& victim_list,
-                  Polygon& gate, const std::string& config_folder){
+                  vector<Polygon>& obstacle_list,
+                  vector<pair<int,Polygon>>& victim_list,
+                  Polygon& gate, const string& config_folder){
 
       // Convert to HSV for better color detection
       cv::Mat img_hsv;
@@ -524,8 +526,8 @@ namespace student {
     cy /=  static_cast<double>(polygon.size());
   }
 
-  bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle, double& x, double& y, double& theta, const std::string& config_folder){
-    //throw std::logic_error( "STUDENT FUNCTION - FIND ROBOT - NOT IMPLEMENTED" );
+  bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle, double& x, double& y, double& theta, const string& config_folder){
+    //throw logic_error( "STUDENT FUNCTION - FIND ROBOT - NOT IMPLEMENTED" );
     #define FIND_ROBOT_DEBUG_PLOT
 
     // Convert color space from BGR to HSV
@@ -540,7 +542,7 @@ namespace student {
     //cv::morphologyEx(blue_mask, blue_mask, cv::MORPH_OPEN, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5,5)));
 
     // find robot contours and approximate to triangle
-    std::vector<std::vector<cv::Point>> contours;
+    vector<vector<cv::Point>> contours;
     cv::findContours(blue_mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
     #ifdef FIND_ROBOT_DEBUG_PLOT // do this only if FIND_DEBUG_PLOT is defined
@@ -551,8 +553,8 @@ namespace student {
       //cv::drawContours(contours_img, contours, -1, cv::Scalar(0,0,0), 4, cv::LINE_AA);
     #endif
 
-    std::vector<cv::Point> approx_curve;
-    std::vector<std::vector<cv::Point>> contours_approx;
+    vector<cv::Point> approx_curve;
+    vector<vector<cv::Point>> contours_approx;
     bool found = false;
     for (int i=0; i<contours.size(); ++i)
     {
@@ -564,7 +566,7 @@ namespace student {
 
         // draw approximated contours
         #ifdef FIND_ROBOT_DEBUG_PLOT
-            //std::cout << "Approx contour count: " << approx_curve.size() << std::endl;
+            //cout << "Approx contour count: " << approx_curve.size() << endl;
             contours_approx = {approx_curve};
             cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
         #endif
@@ -613,7 +615,7 @@ namespace student {
         // Compute the robot orientation
         const double dx = cx - top_vertex.x;
         const double dy = cy - top_vertex.y;
-        theta = std::atan2(dy, dx);
+        theta = atan2(dy, dx);
 
         cv::Point cv_baricenter(x*scale, y*scale); // convert back m to px
         cv::Point cv_vertex(top_vertex.x*scale, top_vertex.y*scale); // convert back m to px
@@ -622,7 +624,7 @@ namespace student {
             cv::line(contours_img, cv_baricenter, cv_vertex, cv::Scalar(0,255,0), 3);
             cv::circle(contours_img, cv_baricenter, 5, cv::Scalar(0,0,255), -1);
             cv::circle(contours_img, cv_vertex, 5, cv::Scalar(0,255,0), -1);
-            std::cout << "(x, y, theta) = " << x << ", " << y << ", " << theta*180/M_PI << std::endl;
+            cout << "(x, y, theta) = " << x << ", " << y << ", " << theta*180/M_PI << endl;
         #endif
     }
 
@@ -695,21 +697,308 @@ namespace student {
     theta = angle;
   }
 
+  // choose the curve with the arrival angle that minimizes the length
+  dubins::Curve findBestAngle(double& th0, double& thf, double& x0, double& y0, double& xf, double& yf, double& Kmax, int& pidx){
 
-  bool planPath(const Polygon& borders, const std::vector<Polygon>& obstacle_list,
-                const std::vector<std::pair<int,Polygon>>& victim_list,
+    vector<double> angles;
+    double best_length = 100000;
+    dubins::Curve best_curve = dubins::Curve(0,0,0,0,0,0,0,0,0);
+
+    // check start angle, end angle and angle in between (can be refined with more angles)
+    angles.push_back(th0);
+    angles.push_back(thf);
+    angles.push_back((th0 + thf)/2);
+
+    for(int i = 0; i < angles.size(); i++){
+      dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, angles[i], Kmax, pidx);
+
+      if(curve.L < best_length){
+        best_length = curve.L;
+        thf = angles[i];
+        best_curve = curve;
+      }
+    }
+
+    return best_curve;
+  }
+
+   
+ bool isArcColliding(cv::Point2f center, bool clockwise, float radius, dubins::Arc a, Point pA, Point pB){
+    // get the center of the circle where the line lies
+    float xc = center.x;
+    float yc = center.y;
+
+    float x1 = pA.x*scale;
+    float y1 = pA.y*scale;
+    float x2 = pB.x*scale;
+    float y2 = pB.y*scale;
+
+    float p1 = 2 * x1 * x2; // intermediate variables
+    float p2 = 2 * y1 * y2;
+    float p3 = 2 * xc * x1;
+    float p4 = 2 * xc * x2;
+    float p5 = 2 * yc * y1;
+    float p6 = 2 * yc * y2;
+
+    // c1, c2 and c3 are the coefficients of the equation c1*t^2 + c2*t +c3 = 0
+    float c1 = x1*x1 + x2*x2 - p1 + y1*y1 + y2*y2 - p2;
+    float c2 = -2*x2*x2 + p1 - p3 + p4 - 2*y2*y2 + p2 - p5 + p6;
+    float c3 = x2*x2 - p4 + xc*xc + y2*y2 - p6 + yc*yc - radius*radius;
+
+    float delta = c2*c2 - 4 * c1 * c3; // calculate the delta of the equation
+    vector<float> t_vector = {};
+
+    // delta is less than 0, no intersection of this circle with the segment
+    if(delta < 0) {
+        return false;
+    } else if( delta*delta <= 0.000001) { // only one solution case
+        float t1 = (-c2) / (2*c1);
+
+        if(t1 >= 0 && t1 <= 1) {    // if t1 is in the t[0,1] interval the solution is in the segment
+            t_vector.push_back(1-t1);
+        }
+
+    } else { // two solutions
+        float t1 = (-c2 + sqrt( delta ) ) / (2*c1);
+        float t2 = (-c2 - sqrt( delta) ) / (2*c1);
+        if(t1 >= 0 && t1 <= 1) { // if t1 is in the t[0,1] interval the solution is in the segment
+            t_vector.push_back(1-t1);
+        }
+        if(t2 >= 0 && t2 <= 1) { // if t2 is in the t[0,1] interval the solution is in the segment
+            t_vector.push_back(1-t2);
+        }
+    }
+
+    for(unsigned int j = 0; j < t_vector.size(); j++) {
+
+        float x_intersection = x1 + t_vector[j]*(x2 - x1);
+        float y_intersection = y1 + t_vector[j]*(y2 - y1);
+
+        float thetat = atan2((y_intersection - yc),(x_intersection - xc));
+        float theta_start = atan2((pA.y - yc),(pA.x - xc));
+        float theta_finish = atan2((pB.y - yc),(pB.x - xc));
+        thetat = dubins::mod2pi(thetat);
+        theta_start = dubins::mod2pi(theta_start);
+        theta_finish = dubins::mod2pi(theta_finish);
+
+        if(clockwise) {
+            if(theta_finish >= theta_start && thetat >= theta_start && thetat <= theta_finish) {
+                return true;
+            } else if(theta_finish < theta_start && ( ( theta_start <= thetat) || (thetat <= theta_finish) ) ) {
+                return true;
+            }
+        } else {
+            if(theta_finish >= theta_start && (thetat <= theta_start || thetat >= theta_finish) ) {
+                return true;
+            } else if( theta_start > theta_finish && theta_finish <= thetat && thetat <= theta_start ) {
+                return true;
+            }
+        }
+
+    }
+    return false;
+}
+
+bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
+    float x1 = p1.x;
+    float y1 = p1.y;
+    float x2 = p2.x;
+    float y2 = p2.y;
+
+    // get curve segment coordinates
+    float x3 = a.x0;
+    float y3 = a.y0;
+    float x4 = a.xf;
+    float y4 = a.yf;
+
+    // calculate the determinant of the matrix that is the result of equating the equations of the two segments
+    float determinant = (x4 - x3) * (y1 - y2) - (x1 - x2) * (y4 - y3);
+
+    // the system have some solutions if det != 0
+    if(determinant != 0) {
+        float t = ( (y3 - y4)*(x1 - x3) +(x4 - x3)*(y1 - y3)  ) / determinant;
+        float u = ( (y1 - y2)*(x1 - x3) +(x2 - x1)*(y1 - y3)  ) / determinant;
+
+        if(t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        if(x2 - x1 != 0 && x4 != x3){
+            float q1 = y1 - ( x1 / (x2-x1) ) * (y2 - y1);
+            float q2 = y3 - ( x3 / (x4-x3) ) * (y4 - y3);
+
+            if( (q1-q2)*(q1-q2) < 0.00001) {
+
+                // calculate the t value of the second segment points
+                float t3 = (x3 - x1);
+                t3 = t3 / float(x2 - x1);
+                float t4 = (x4 - x1);
+                t4 = t4 / float(x2 - x1);
+
+                // calculate the u value of the first segment points
+                float u1 = (x1 - x3);
+                u1 = u1 / float(x4 - x3);
+                float u2 = (x2 - x3);
+                u2 = u2 / float(x4 - x3);
+
+                if( ( t3 >= 0 && t3 <= 1 ) || (t4 >= 0 && t4 <= 1) || (u1 >= 0 && u1 <= 1) || (u2 >= 0 && u2 <= 1) ){
+                    return true;
+                } else {
+                    return false;
+                }
+            // the segments are not on the same line if q1 != q2
+            } else {
+                return false;
+            }
+        } else { // these segments are vertical
+            if(x1 != x3) {
+                return false; // vertical segments but parallel
+            } else {    // vertial segments on the same line, check the y value                
+                float maxY, minY, arcmaxY, arcminY;
+                
+                if(p1.y > p2.y){
+                    maxY = p1.y;
+                    minY = p2.y;
+                } else{
+                    maxY = p2.y;
+                    minY = p1.y;
+                }
+
+                if(a.y0 > a.yf){
+                    arcmaxY = a.y0;
+                    arcminY = a.yf;
+                } else{
+                    arcmaxY = a.yf;
+                    arcminY = a.y0;
+                }
+                
+                if(maxY < arcminY) {
+                    return false;
+                } else if(minY > arcmaxY) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+
+        }
+    }
+    return false;
+}
+
+ bool isColliding(dubins::Arc& a, Polygon p){
+    float k = a.k;
+    bool isArc;
+    cv::Point2f p1 = cv::Point2f(a.x0, a.y0);
+    cv::Point2f p2 = cv::Point2f(a.xf, a.yf);
+    cv::Point2f center;
+    float radius;
+    bool clockwise;
+
+    // if k=0, a is a segment, else it is an arc
+    if(k == 0){
+        isArc = false;
+    } else {
+        radius = abs(1 / k);
+        if(a.k < 0) {
+            float xc = cos(a.th0 - M_PI/2) * radius; // xc = cos(th0 - Pi/2) * radius because th0 is perpendicular to the radius
+            float yc = sin(a.th0 - M_PI/2) * radius; // yc = sin(th0 - Pi/2) * radius
+            center = cv::Point2f(xc + a.x0,yc + a.y0);
+            clockwise = false;
+        } else {
+            float xc = cos(a.th0 + M_PI/2) * radius; // xc = cos(th0 + Pi/2) * radius because th0 is perpendicular to the radius
+            float yc = sin(a.th0 + M_PI/2) * radius; // yc = sin(th0 + Pi/2) * radius
+            center = cv::Point2f(xc + a.x0,yc + a.y0);
+            clockwise = true;
+        }
+
+        isArc = true;
+    }
+
+    // add first vertex again to check segment between first and last
+    p.push_back(p[0]);
+
+    for (int i = 0; i < p.size()-1; i++)
+    {
+        if(isArc){
+            if(isArcColliding(center, clockwise, radius, a, p[i], p[i+1])){
+                return true;
+            }
+        } else{
+            if(isSegmentColliding(a, p[i], p[i+1])){
+                return true;
+            }
+        }
+    }
+    return false;
+  }
+  
+  bool curveCollision(dubins::Curve& curve, const vector<Polygon>& obstacle_list){
+    //TODO: check collision also with borders 
+    for(Polygon p : obstacle_list){
+      if(isColliding(curve.a1, p)){
+        return true;
+      } else if(isColliding(curve.a2, p)){
+          return true;
+        } else if(isColliding(curve.a3, p)){
+            return true;
+          }
+    }
+    return false;
+  }
+  int c = 0;
+  bool recursiveMDP(int i, int j, double th0, double thf, vector<pair<double,double>>& vertices, vector<int>& path_idx, vector<dubins::Curve>& multipoint_dubins_path, double& Kmax, double& path_res, int& pidx, const vector<Polygon>& obstacle_list){
+    
+    double x0 = vertices[path_idx[i]].first/scale;
+    double y0 = vertices[path_idx[i]].second/scale;
+
+    double xf = vertices[path_idx[j]].first/scale;
+    double yf = vertices[path_idx[j]].second/scale;
+    
+    dubins::Curve curve = findBestAngle(th0, thf, x0, y0, xf, yf, Kmax, pidx);
+    
+    bool collision = curveCollision(curve, obstacle_list);
+
+    if(!collision){
+      // add curve to final path
+      multipoint_dubins_path.push_back(curve);
+      c++;
+    
+      return true;
+    } else{
+      int k = j/2;
+
+      if(j-i > 1){
+        bool r1 = recursiveMDP(i, k, th0, thf, vertices, path_idx, multipoint_dubins_path, Kmax, path_res, pidx, obstacle_list);
+        bool r2 = recursiveMDP(k, j, th0, thf, vertices, path_idx, multipoint_dubins_path, Kmax, path_res, pidx, obstacle_list);
+
+        return r1 && r2;
+      } else {
+        return false;
+      }
+    }
+  }
+
+
+  bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
+                const vector<pair<int,Polygon>>& victim_list,
                 const Polygon& gate, const float x, const float y, const float theta,
                 Path& path,
-                const std::string& config_folder){
+                const string& config_folder){
 
-    int scale = 200;
+    double xf, yf, thf;                   // Endpoint
+    center_gate(gate,borders,xf,yf,thf);  // Endpoint computation
+    double Kmax = 10.0;                   // Maximum curvature
+    double path_res = 0.01;               // Path resolution (sampling)
 
-    std::string vcd_dir = config_folder + "/../src/VCD";
+    string vcd_dir = config_folder + "/../src/VCD";
     
-    std::ofstream output(vcd_dir + "/i.txt");
+    ofstream output(vcd_dir + "/i.txt");
     
     if (!output.is_open()){
-      throw std::runtime_error("Cannot write file: " + vcd_dir + "/i.txt");
+      throw runtime_error("Cannot write file: " + vcd_dir + "/i.txt");
     }
     
     //write borders on first line
@@ -717,7 +1006,7 @@ namespace student {
         if(i < borders.size()-1){
             output << "(" << int(borders[i].x*scale) << ", " << int(borders[i].y*scale) << "),";
         } else {
-            output << "(" << int(borders[i].x*scale) << ", " << int(borders[i].y*scale) << ")" << std::endl;
+            output << "(" << int(borders[i].x*scale) << ", " << int(borders[i].y*scale) << ")" << endl;
         }
     }
     
@@ -739,35 +1028,108 @@ namespace student {
         if(i < obstacle_list.size()-1){
             output << "(" << pt_x << ", " << pt_y << "), ";
         } else {
-            output << "(" << pt_x << ", " << pt_y << ")" << std::endl;
+            output << "(" << pt_x << ", " << pt_y << ")" << endl;
         }
     }
     
     //write source and destination on third line
-    output << "(" << int(x*scale) << ", " << int(y*scale) << "), (10, 190)"; 
+    output << "(" << int(x*scale) << ", " << int(y*scale) << "), (" << int(xf*scale) << "," << int(yf*scale) << ")"; 
     
     output.close();
     
-    std::string cmd = "python " + vcd_dir + "/main.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt";
+    //writes in output.txt
+    //first line is centers of cells and midpoints sof vertical lines
+    //second line is path of ids of cells from the first line
+    string cmd = "python " + vcd_dir + "/main.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt";
     char str[cmd.size()+1];
     strcpy(str, cmd.c_str());
     system(str);
-    
+
+    //read vertices and path from output.txt
+    ifstream input(vcd_dir + "/output.txt");
+    vector<pair<double,double>> vertices;
+    vector<int> path_idx;
+
+    if(input.is_open()){
+      string line;
+
+      for(int i = 0; i < 2; i++){
+        input >> line;
+
+        if(i == 0){
+          istringstream ss(line);
+          string token;
+
+          int count = 0;
+          double v1, v2;
+
+          while(getline(ss, token, ',')){
+            if(count%2 == 0){
+              v1 = stod(token);
+            } else{
+              v2 = stod(token);
+              vertices.push_back(make_pair(v1,v2));
+            }
+            count++;
+          }
+        } else{
+          istringstream ss(line);
+          string token;
+          
+          int v;
+
+          while(getline(ss, token, ',')){
+              v = stoi(token);
+              path_idx.push_back(v);
+          }
+        }
+      }
+    }
+
     #ifdef PLAN_DEBUG
       printf("--------PLANNING WAS CALLED--------\n");
       fflush(stdout);
     #endif
 
-    double x0 = x, y0 = y, th0 = theta;   // Startpoint
-    double xf, yf, thf;                   // Endpoint
-    center_gate(gate,borders,xf,yf,thf);  // Endpoint computation
-    double Kmax = 10.0;                   // Maximum curvature
-    double path_res = 0.01;               // Path resolution (sampling)
-
     int pidx; // curve index
-    dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf,
-                                                       Kmax, pidx);
+    //dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx);
 
+    // multipoint dubins problem
+    int total_steps = path_idx.size();
+    cout << "Total steps in path: " << to_string(total_steps) << endl;
+
+    vector<dubins::Curve> multipoint_dubins_path;
+    // Startpoint
+    double x0 = vertices[path_idx[0]].first;
+    double y0 = vertices[path_idx[0]].second;
+    double th0 = theta;
+
+    bool path_planned = recursiveMDP(0, total_steps-1, th0, thf, vertices, path_idx, multipoint_dubins_path, Kmax, path_res, pidx, obstacle_list);
+
+    cout << "Path planned = " << to_string(path_planned) << endl;
+    cout << "Number of curves: " << to_string(c) << endl;
+
+    vector<Pose> points;
+
+    for(int i = 0; i < multipoint_dubins_path.size(); i++)
+    {
+      // Sample the curve with resolution @path_res
+      vector<dubins::Position> res = multipoint_dubins_path[i].discretizeSingleCurve(path_res);
+
+      // Path conversion into compatible output representation
+      for (dubins::Position p : res)
+      {
+        Pose pose(p.s,p.x,p.y,p.th,p.k);
+        points.push_back(pose);
+      }
+    }
+
+    //Set output
+    path.setPoints(points); 
+
+
+
+    /*
 #ifdef DUBINS_DEBUG
     printf("L: %f\n", curve.L);
     printf("a1: %f [%f,%f,%f]>>[%f,%f,%f]\n", curve.a1.L,
@@ -792,15 +1154,18 @@ namespace student {
       curve.a3.y0,
       curve.a3.thf);
 #endif
-    ////   Sample the curve with resolutioj @path_res
-    std::vector<dubins::Position> res = curve.discretizeSingleCurve(path_res);
+
+    ////   Sample the curve with resolution @path_res
+    vector<dubins::Position> res = curve.discretizeSingleCurve(path_res);
     ////   Path conversion into compatible output representation
-    std::vector<Pose> points;
+    vector<Pose> points;
     for (dubins::Position p : res){
       Pose pose(p.s,p.x,p.y,p.th,p.k);
       points.push_back(pose);
     }
     path.setPoints(points); //Set output
+    */
+
     return true;
   }
 }

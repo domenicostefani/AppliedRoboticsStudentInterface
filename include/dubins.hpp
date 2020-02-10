@@ -9,6 +9,8 @@
 
 namespace dubins{
 
+  double mod2pi(double ang);
+
   class Position{
   public:
     double s;
@@ -28,7 +30,9 @@ namespace dubins{
     double k;             // Arc curvature
     double L;             // Arc length
     double xf, yf, thf;   // Final position (x pos,y pos,yaw angle
+    
     Arc() {};
+    
     /*!
     * Set all class fields values at once
     * @param[in] x0        x position value of the start of the arc
@@ -37,6 +41,7 @@ namespace dubins{
     * @param[in] k         curvature of the arc
     * @param[in] L         arc length
     */
+    
     void set(double x0, double y0, double th0, double k, double L);
     std::vector<Position> discretizeArc(double delta, double& remainingDelta, double& last_s, bool add_endpoint);
   };

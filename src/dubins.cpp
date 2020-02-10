@@ -18,6 +18,10 @@ namespace dubins{
   void
   circline(double s, double x0, double y0, double th0, double k, double& x,
            double& y, double& th);
+          
+  double mod2pi(double ang);
+  
+  double sinc(double t);
 
   ///
   /// Class Methods
@@ -26,6 +30,8 @@ namespace dubins{
   /*!
   * Set all class fields values at once
   */
+  
+  /*
   void Arc::set(double x0, double y0, double th0, double k, double L) {
       this->x0 = x0;
       this->y0 = y0;
@@ -33,11 +39,24 @@ namespace dubins{
       this->k = k;
       this->L = L;
       circline(L, x0, y0, th0, k, xf, yf, thf);
-    }
+   }
+  */
+    
+  void Arc::set(double x0, double y0, double th0, double k, double L) {
+      this->x0 = x0;
+      this->y0 = y0;
+      this->th0 = th0;
+      this->k = k;
+      this->L = L;
+      this->xf = this->x0 + this->L * sinc(this->k *  this->L / 2.0) * cos(th0 + k * this->L / 2);
+	  this->yf = this->y0 + this->L * sinc(this->k *  this->L / 2.0) * sin(th0 + k * this->L / 2);
+	  this->thf = mod2pi(this->th0 + this->k * this->L);
+  };
 
   /*!
   * Compute the shortest path as a Dubin's maneuver.
   */
+  
   Curve::Curve(double x0, double y0, double th0, double s1, double s2,
                double s3, double k0, double k1, double k2) {
     a1.set(x0, y0, th0, k0, s1);

@@ -8,15 +8,16 @@ def write_to_file(planner,path_idx,fname):
 	with open(fname,'w+') as f:
 		for key in planner.roadmap.vertices_dict.keys():
 			if key != last_key:
-				f.write(str(key)+": ("+str(planner.roadmap.vertices_dict[key][0])+","+str(planner.roadmap.vertices_dict[key][1])+"), ")
+				f.write((str(planner.roadmap.vertices_dict[key][0])+","+str(planner.roadmap.vertices_dict[key][1])+","))
 			else:
-				f.write(str(key)+": ("+str(planner.roadmap.vertices_dict[key][0])+","+str(planner.roadmap.vertices_dict[key][1])+")")
+				f.write((str(planner.roadmap.vertices_dict[key][0])+","+str(planner.roadmap.vertices_dict[key][1])))
 		f.write("\n")
-		for i in range(1,len(path_idx)):
+		
+		for i in range(0,len(path_idx)):
 			if i != len(path_idx)-1:
-				f.write("("+str(path_idx[i-1])+","+str(path_idx[i])+"), ")
+				f.write(str(path_idx[i])+",")
 			else:
-				f.write("("+str(path_idx[i-1])+","+str(path_idx[i])+")")
+				f.write(str(path_idx[i]))
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
