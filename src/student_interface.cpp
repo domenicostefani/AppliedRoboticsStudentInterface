@@ -1100,23 +1100,42 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
     }
     return false;
   }
+
+  //TODO: fix problem with path too close to object (RRT case). Can't find curve that does not intersect obstacles
+
   int c = 0;
+
   bool recursiveMDP(int i, int j, double th0, double thf, vector<pair<double,double>>& vertices, vector<int>& path_idx, vector<dubins::Curve>& multipoint_dubins_path, double& Kmax, double& path_res, int& pidx, const vector<Polygon>& obstacle_list){
-    
+    c++;
+    if(c > 200){
+      return false;
+    }
+
     double x0 = vertices[path_idx[i]].first/scale;
     double y0 = vertices[path_idx[i]].second/scale;
 
     double xf = vertices[path_idx[j]].first/scale;
     double yf = vertices[path_idx[j]].second/scale;
     
-    dubins::Curve curve = findBestAngle(th0, thf, x0, y0, xf, yf, Kmax, pidx);
+    dubins::Curve curve = dubins::Curve(0,0,0,0,0,0,0,0,0);    
+    bool collision = true;
+    double alpha = th0;
+
+    for (int i = 0; i < 16; i++)
+    {
+      alpha += 360/16*i;
+      curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, th0 + alpha, Kmax, pidx);
+      collision = curveCollision(curve, obstacle_list);
+
+      if(!collision){
+        break;
+      }
+    }
     
-    bool collision = curveCollision(curve, obstacle_list);
 
     if(!collision){
       // add curve to final path
       multipoint_dubins_path.push_back(curve);
-      c++;
     
       return true;
     } else{
@@ -1141,12 +1160,17 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
                 const string& config_folder){
     // #define DUBINS_DEBUG
 
+    #ifdef PLAN_DEBUG
+      printf("--------PLANNING WAS CALLED--------\n");
+      fflush(stdout);
+    #endif
+
     double xf, yf, thf;                   // Endpoint
     center_gate(gate,borders,xf,yf,thf);  // Endpoint computation
     double Kmax = 10.0;                   // Maximum curvature
     double path_res = 0.01;               // Path resolution (sampling)
 
-    string vcd_dir = config_folder + "/../src/VCD";
+    string vcd_dir = config_folder + "/../src/path-planning";
     
     ofstream output(vcd_dir + "/i.txt");
     
@@ -1157,9 +1181,9 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
     //write borders on first line
     for(int i = 0; i < borders.size(); i++){
         if(i < borders.size()-1){
-            output << "(" << int(borders[i].x*scale) << ", " << int(borders[i].y*scale) << "),";
+            output << "(" << int(borders[i].x*scale) << "," << int(borders[i].y*scale) << "),";
         } else {
-            output << "(" << int(borders[i].x*scale) << ", " << int(borders[i].y*scale) << ")" << endl;
+            output << "(" << int(borders[i].x*scale) << "," << int(borders[i].y*scale) << ")" << endl;
         }
     }
     
@@ -1175,32 +1199,28 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
             pt_y = int(obstacle_list[i][j].y*scale);
 
             if(j < obstacle_list[i].size()-1){
-                output << "(" << pt_x << "," << pt_y << "),";
+                output << "(" << pt_x << ", " << pt_y << "), ";
             } else {
-                output << "(" << pt_x << "," << pt_y << ")" << endl;
+                output << "(" << pt_x << ", " << pt_y << ")" << endl;
             }
         }
         /*
         //add first point again
         pt_x = int(obstacle_list[i][0].x*scale);
         pt_y = int(obstacle_list[i][0].y*scale);
-        
-        if(i < obstacle_list.size()-1){
-            output << "(" << pt_x << "," << pt_y << "),";
-        } else {
-            output << "(" << pt_x << "," << pt_y << ")" << endl;
-        }*/
+        */
     }
     
     //write source and destination on third line
-    output << "(" << int(x*scale) << "," << int(y*scale) << "), (" << int(xf*scale) << "," << int(yf*scale) << ")"; 
+    output << "(" << int(x*scale) << "," << int(y*scale) << "),(" << int(xf*scale) << "," << int(yf*scale) << ")"; 
     
     output.close();
     
     //writes in output.txt
     //first line is centers of cells and midpoints sof vertical lines
     //second line is path of ids of cells from the first line
-    string cmd = "python " + vcd_dir + "/main.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt";
+    //string cmd = "python " + vcd_dir + "/main.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt -algo rrt";
+    string cmd = "python " + vcd_dir + "/rrt.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt";
     char str[cmd.size()+1];
     strcpy(str, cmd.c_str());
     system(str);
@@ -1210,32 +1230,35 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
     vector<pair<double,double>> vertices;
     vector<int> path_idx;
 
+    bool path_not_found = false;
+
     if(input.is_open()){
       string line;
 
       for(int i = 0; i < 2; i++){
         input >> line;
+        istringstream ss(line);
+        string token;
 
+        //first line is cell vertices list
         if(i == 0){
-          istringstream ss(line);
-          string token;
-
           int count = 0;
           double v1, v2;
 
           while(getline(ss, token, ',')){
-            if(count%2 == 0){
-              v1 = stod(token);
+            if(stoi(token) == -1){
+              path_not_found = true;
             } else{
-              v2 = stod(token);
-              vertices.push_back(make_pair(v1,v2));
+              if(count%2 == 0){
+                v1 = stod(token);
+              } else{
+                v2 = stod(token);
+                vertices.push_back(make_pair(v1,v2));
+              }
+              count++;
             }
-            count++;
           }
-        } else{
-          istringstream ss(line);
-          string token;
-          
+        } else{   //second line is path
           int v;
 
           while(getline(ss, token, ',')){
@@ -1246,10 +1269,9 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
       }
     }
 
-    #ifdef PLAN_DEBUG
-      printf("--------PLANNING WAS CALLED--------\n");
-      fflush(stdout);
-    #endif
+    if(path_not_found){
+        throw runtime_error("Path not found!");
+    }
 
     int pidx; // curve index
     //dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx);
@@ -1266,8 +1288,11 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
 
     bool path_planned = recursiveMDP(0, total_steps-1, th0, thf, vertices, path_idx, multipoint_dubins_path, Kmax, path_res, pidx, obstacle_list);
 
-    cout << "Path planned = " << to_string(path_planned) << endl;
-    cout << "Number of curves: " << to_string(c) << endl;
+    if(path_planned){
+      cout << "Path planned successfully! " << endl;
+    } else{
+      throw runtime_error("Could NOT plan path!");
+    }
 
     vector<Pose> points;
 

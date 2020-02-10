@@ -237,18 +237,21 @@ class VerticalCellDecomposition:
             
     def search(self,showPlot=False):
         ucs = Search(self.roadmap)
-        searchResult = ucs.perform_search()
-
-        if searchResult is None:
-            print "Path could not be found!"
-            sys.exit()
-
-        final_path, final_path_idx, path_cost = searchResult
-
+        searchResult = ucs.perform_search()   
+     
         self.plot_vcd()
 
-        for i in range(1,len(final_path)):
-            plt.plot([elem[0] for elem in final_path[i-1:i+1]],[elem[1] for elem in final_path[i-1:i+1]],color='brown')
+        if searchResult is None:
+            #print "Path could not be found!"
+            
+            final_path = None
+            final_path_idx = None
+            
+        else:
+            final_path, final_path_idx, path_cost = searchResult
+
+            for i in range(1,len(final_path)):
+                plt.plot([elem[0] for elem in final_path[i-1:i+1]],[elem[1] for elem in final_path[i-1:i+1]],color='brown')
 
         if showPlot:
             plt.show()
