@@ -310,7 +310,7 @@ namespace student {
     cv::solvePnP(object_points,corners, camera_matrix, nullmat, rvec, tvec);
 
     // Call the routine with gui to tune the color values
-    tune_color_parameters(img_in, config_folder);
+    //tune_color_parameters(img_in, config_folder);
   }
 
   void imageUndistort(const cv::Mat& img_in, cv::Mat& img_out,
@@ -876,31 +876,26 @@ namespace student {
 
    
  bool isArcColliding(cv::Point2f center, bool clockwise, float radius, dubins::Arc a, Point pA, Point pB){
-    // get the center of the circle where the line lies
-    float xc = center.x;
-    float yc = center.y;
-
-    float x1 = pA.x*scale;
-    float y1 = pA.y*scale;
-    float x2 = pB.x*scale;
-    float y2 = pB.y*scale;
+    float x1 = pA.x;
+    float y1 = pA.y;
+    float x2 = pB.x;
+    float y2 = pB.y;
 
     float p1 = 2 * x1 * x2; // intermediate variables
     float p2 = 2 * y1 * y2;
-    float p3 = 2 * xc * x1;
-    float p4 = 2 * xc * x2;
-    float p5 = 2 * yc * y1;
-    float p6 = 2 * yc * y2;
+    float p3 = 2 * center.x * x1;
+    float p4 = 2 * center.x * x2;
+    float p5 = 2 * center.y * y1;
+    float p6 = 2 * center.y * y2;
 
     // c1, c2 and c3 are the coefficients of the equation c1*t^2 + c2*t +c3 = 0
     float c1 = x1*x1 + x2*x2 - p1 + y1*y1 + y2*y2 - p2;
     float c2 = -2*x2*x2 + p1 - p3 + p4 - 2*y2*y2 + p2 - p5 + p6;
-    float c3 = x2*x2 - p4 + xc*xc + y2*y2 - p6 + yc*yc - radius*radius;
+    float c3 = x2*x2 - p4 + center.x*center.x + y2*y2 - p6 + center.y*center.y - radius*radius;
 
     float delta = c2*c2 - 4 * c1 * c3; // calculate the delta of the equation
     vector<float> t_vector = {};
 
-    // delta is less than 0, no intersection of this circle with the segment
     if(delta < 0) {
         return false;
     } else if( delta*delta <= 0.000001) { // only one solution case
@@ -926,9 +921,9 @@ namespace student {
         float x_intersection = x1 + t_vector[j]*(x2 - x1);
         float y_intersection = y1 + t_vector[j]*(y2 - y1);
 
-        float thetat = atan2((y_intersection - yc),(x_intersection - xc));
-        float theta_start = atan2((pA.y - yc),(pA.x - xc));
-        float theta_finish = atan2((pB.y - yc),(pB.x - xc));
+        float thetat = atan2((y_intersection - center.y),(x_intersection - center.x));
+        float theta_start = atan2((pA.y - center.y),(pA.x - center.x));
+        float theta_finish = atan2((pB.y - center.y),(pB.x - center.x));
         thetat = dubins::mod2pi(thetat);
         theta_start = dubins::mod2pi(theta_start);
         theta_finish = dubins::mod2pi(theta_finish);
@@ -951,22 +946,20 @@ namespace student {
     return false;
 }
 
-bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
+bool isSegmentColliding(Point a1, Point a2, Point p1, Point p2){
     float x1 = p1.x;
     float y1 = p1.y;
     float x2 = p2.x;
     float y2 = p2.y;
 
-    // get curve segment coordinates
-    float x3 = a.x0;
-    float y3 = a.y0;
-    float x4 = a.xf;
-    float y4 = a.yf;
+    float x3 = a1.x;
+    float y3 = a1.y;
+    float x4 = a2.x;
+    float y4 = a2.y;
 
-    // calculate the determinant of the matrix that is the result of equating the equations of the two segments
     float determinant = (x4 - x3) * (y1 - y2) - (x1 - x2) * (y4 - y3);
 
-    // the system have some solutions if det != 0
+    // solutions if det != 0
     if(determinant != 0) {
         float t = ( (y3 - y4)*(x1 - x3) +(x4 - x3)*(y1 - y3)  ) / determinant;
         float u = ( (y1 - y2)*(x1 - x3) +(x2 - x1)*(y1 - y3)  ) / determinant;
@@ -977,67 +970,8 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
             return false;
         }
     } else {
-        if(x2 - x1 != 0 && x4 != x3){
-            float q1 = y1 - ( x1 / (x2-x1) ) * (y2 - y1);
-            float q2 = y3 - ( x3 / (x4-x3) ) * (y4 - y3);
-
-            if( (q1-q2)*(q1-q2) < 0.00001) {
-
-                // calculate the t value of the second segment points
-                float t3 = (x3 - x1);
-                t3 = t3 / float(x2 - x1);
-                float t4 = (x4 - x1);
-                t4 = t4 / float(x2 - x1);
-
-                // calculate the u value of the first segment points
-                float u1 = (x1 - x3);
-                u1 = u1 / float(x4 - x3);
-                float u2 = (x2 - x3);
-                u2 = u2 / float(x4 - x3);
-
-                if( ( t3 >= 0 && t3 <= 1 ) || (t4 >= 0 && t4 <= 1) || (u1 >= 0 && u1 <= 1) || (u2 >= 0 && u2 <= 1) ){
-                    return true;
-                } else {
-                    return false;
-                }
-            // the segments are not on the same line if q1 != q2
-            } else {
-                return false;
-            }
-        } else { // these segments are vertical
-            if(x1 != x3) {
-                return false; // vertical segments but parallel
-            } else {    // vertial segments on the same line, check the y value                
-                float maxY, minY, arcmaxY, arcminY;
-                
-                if(p1.y > p2.y){
-                    maxY = p1.y;
-                    minY = p2.y;
-                } else{
-                    maxY = p2.y;
-                    minY = p1.y;
-                }
-
-                if(a.y0 > a.yf){
-                    arcmaxY = a.y0;
-                    arcminY = a.yf;
-                } else{
-                    arcmaxY = a.yf;
-                    arcminY = a.y0;
-                }
-                
-                if(maxY < arcminY) {
-                    return false;
-                } else if(minY > arcmaxY) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-
-        }
+      return false;
     }
-    return false;
 }
 
  bool isColliding(dubins::Arc& a, Polygon p){
@@ -1079,7 +1013,7 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
                 return true;
             }
         } else{
-            if(isSegmentColliding(a, p[i], p[i+1])){
+            if(isSegmentColliding(Point(a.x0, a.y0), Point(a.xf, a.yf), p[i], p[i+1])){
                 return true;
             }
         }
@@ -1088,7 +1022,6 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
   }
   
   bool curveCollision(dubins::Curve& curve, const vector<Polygon>& obstacle_list){
-    //TODO: check collision also with borders 
     for(Polygon p : obstacle_list){
       if(isColliding(curve.a1, p)){
         return true;
@@ -1101,21 +1034,99 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
     return false;
   }
 
-  //TODO: fix problem with path too close to object (RRT case). Can't find curve that does not intersect obstacles
 
-  int c = 0;
 
-  bool recursiveMDP(int i, int j, double th0, double thf, vector<pair<double,double>>& vertices, vector<int>& path_idx, vector<dubins::Curve>& multipoint_dubins_path, double& Kmax, double& path_res, int& pidx, const vector<Polygon>& obstacle_list){
-    c++;
-    if(c > 200){
-      return false;
+
+
+
+
+
+
+
+
+
+
+//-------------------DRAWING DUBINS CURVES-------------------
+
+cv::Mat img = cv::Mat(200, 250, CV_8UC3, cv::Scalar(0,0,0));
+
+// Method that draws a dubins arc
+void drawDubinsArc(dubins::Arc& da) {
+
+  cv::Point2f startf = cv::Point2f(da.x0*scale, da.y0*scale);
+  cv::Point2f finishf = cv::Point2f(da.xf*scale, da.yf*scale);
+
+  if(da.k == 0) {
+    cv::line(img, cv::Point(startf.x,startf.y), cv::Point(finishf.x,finishf.y), cv::Scalar(0,235,0),1); // draw the line
+  } else {
+    float radius = abs(1 / da.k)*scale; // radius is 1/k
+    cv::Point2f centerf;
+    
+    if( da.k < 0) {
+        float xc = cos( da.th0 - M_PI/2) * radius;
+        float yc = sin( da.th0 - M_PI/2) * radius;
+        centerf = cv::Point(xc + da.x0*scale,yc + da.y0*scale);
+    } else {
+        float xc = cos( da.th0 + M_PI/2) * radius;
+        float yc = sin( da.th0 + M_PI/2) * radius;
+        centerf = cv::Point(xc + da.x0*scale,yc + da.y0*scale);
+    }
+    cv::Point start = cv::Point(startf.x,startf.y);
+    cv::Point finish = cv::Point(finishf.x,finishf.y);
+
+    float thetastart = atan2((startf.y - centerf.y),(startf.x - centerf.x));
+    float thetafinish= atan2((finishf.y - centerf.y),(finishf.x - centerf.x));
+    thetastart = dubins::mod2pi(thetastart);
+    thetafinish = dubins::mod2pi(thetafinish);
+    float passo = 0.0174533; // a degree in radiants
+
+    if(da.k > 0) { // clockwise segment drawing
+      for(unsigned int i = 0; 0.01 < ((dubins::mod2pi(thetastart + passo*i) - thetafinish)*(dubins::mod2pi(thetastart + passo*i) -thetafinish)); i++) {
+        cv::Point startSegment = cv::Point( cos( thetastart + passo*i   )*radius + centerf.x,+ sin( thetastart + passo*i   )*radius + centerf.y);
+        cv::Point finishSegment = cv::Point( cos( thetastart + passo*(i+1)   )*radius + centerf.x, sin( thetastart + passo*(i+1) )*radius + centerf.y);
+        cv::line(img, startSegment, finishSegment, cv::Scalar(0,255,255),1); // draw the line
+      }
+    } else { // counter clockwise segment drawing
+      for(unsigned int i = 0; 0.01 < ((dubins::mod2pi(thetastart - passo*i) - thetafinish)*(dubins::mod2pi(thetastart - passo*i) - thetafinish)); i++) {
+        cv::Point startSegment = cv::Point( cos( thetastart - passo*i   )*radius + centerf.x,+ sin( thetastart - passo*i   )*radius + centerf.y);
+        cv::Point finishSegment = cv::Point( cos( thetastart - passo*(i+1)   )*radius + centerf.x, sin( thetastart - passo*(i+1) )*radius + centerf.y);
+        cv::line(img, startSegment, finishSegment, cv::Scalar(0,255,255),1); // draw the line
+      }
     }
 
-    double x0 = vertices[path_idx[i]].first/scale;
-    double y0 = vertices[path_idx[i]].second/scale;
+    cv::circle(img,start,2,cv::Scalar(0,255,255),1);
+    cv::circle(img,finish,2,cv::Scalar(0,255,255),1);
+  }
 
-    double xf = vertices[path_idx[j]].first/scale;
-    double yf = vertices[path_idx[j]].second/scale;
+}
+
+//-------------------end DRAWING DUBINS CURVES-------------------
+
+
+
+
+
+
+
+
+
+  //TODO: fix wrong thf angle
+
+  //int c = 0;
+  /*
+  bool recursiveMDP(int i, int j, double th0, double thf, vector<pair<double,double>>& vertices, vector<int>& path_idx, vector<dubins::Curve>& multipoint_dubins_path, double& Kmax, int& pidx, const vector<Polygon>& obstacle_list){
+    
+    //c++;
+    //if(c > 500){
+    //  return false;
+    //}
+    
+
+    double x0 = vertices[path_idx[i]].first;
+    double y0 = vertices[path_idx[i]].second;
+
+    double xf = vertices[path_idx[j]].first;
+    double yf = vertices[path_idx[j]].second;
     
     dubins::Curve curve = dubins::Curve(0,0,0,0,0,0,0,0,0);    
     bool collision = true;
@@ -1123,27 +1134,136 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
 
     for (int i = 0; i < 16; i++)
     {
-      alpha += 360/16*i;
-      curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, th0 + alpha, Kmax, pidx);
+      alpha += 6.28/16*i;
+      curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, alpha, Kmax, pidx);
       collision = curveCollision(curve, obstacle_list);
 
       if(!collision){
         break;
       }
-    }
-    
+    }    
 
     if(!collision){
       // add curve to final path
       multipoint_dubins_path.push_back(curve);
+      thf = alpha;
+
+      ///////////////////////
+      drawDubinsArc(curve.a1);
+      drawDubinsArc(curve.a2);
+      drawDubinsArc(curve.a3);
     
       return true;
     } else{
-      int k = j/2;
+      int k = (i+j)/2;
 
       if(j-i > 1){
-        bool r1 = recursiveMDP(i, k, th0, thf, vertices, path_idx, multipoint_dubins_path, Kmax, path_res, pidx, obstacle_list);
-        bool r2 = recursiveMDP(k, j, th0, thf, vertices, path_idx, multipoint_dubins_path, Kmax, path_res, pidx, obstacle_list);
+        bool r1 = recursiveMDP(i, k, th0, thf, vertices, path_idx, multipoint_dubins_path, Kmax, pidx, obstacle_list);
+        bool r2 = recursiveMDP(k, j, thf, thf, vertices, path_idx, multipoint_dubins_path, Kmax, pidx, obstacle_list);
+
+        return r1 && r2;
+      } else {
+        return false;
+      }
+    }
+  }
+  */
+
+  bool MDP(double th0, double thf, vector<pair<double,double>>& vertices, vector<int>& short_path, vector<dubins::Curve>& multipoint_dubins_path, double& Kmax, int& pidx, const vector<Polygon>& obstacle_list){
+    
+    bool collision = false;
+    dubins::Curve curve = dubins::Curve(0,0,0,0,0,0,0,0,0);
+    dubins::Curve best_curve = dubins::Curve(0,0,0,0,0,0,0,0,0);
+    double shortest_L = 10000;
+    double x0, y0, xf, yf;
+    double alpha = th0;
+
+    for (int i = 0; i < short_path.size()-1; i++)
+    {
+      x0 = vertices[short_path[i]].first;
+      y0 = vertices[short_path[i]].second;
+      xf = vertices[short_path[i+1]].first;
+      yf = vertices[short_path[i+1]].second;
+
+      if(i == short_path.size()-1){
+        curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx);
+        collision = curveCollision(curve, obstacle_list);
+      } else{
+        for (int j = 0; j < 16; j++)
+        {
+          alpha += 6.28/16*j; //radians
+          curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, alpha, Kmax, pidx);
+          collision = curveCollision(curve, obstacle_list);
+
+          if(!collision){
+            if(curve.L < shortest_L){
+              shortest_L = curve.L;
+              best_curve = curve;
+            }
+          }
+        }
+      }
+
+      if(!collision){
+        multipoint_dubins_path.push_back(best_curve);
+        drawDubinsArc(curve.a1);
+        drawDubinsArc(curve.a2);
+        drawDubinsArc(curve.a3);
+        th0 = best_curve.a3.thf;
+      } else{
+        cout << "ERROR" << endl;
+        return false;
+      }
+    }
+    return true;
+  }
+
+
+  bool pathSmoothing(int start_index, int finish_index, vector<pair<double,double>>& vertices, vector<int>& path_idx, vector<Polygon> obstacle_list, vector<int>& short_path){ 
+    //c++;
+    //cout << to_string(c) << " ";
+    //if(c > 500){
+    //  return false;
+    //}
+    
+    bool collision = false;
+    double x0, y0, xf, yf;
+    
+    x0 = vertices[path_idx[start_index]].first;
+    y0 = vertices[path_idx[start_index]].second;
+
+    xf = vertices[path_idx[finish_index]].first;
+    yf = vertices[path_idx[finish_index]].second;
+
+    for (Polygon p : obstacle_list)
+    {
+      for (int k = 0; k < p.size(); k++)
+      {
+        if(k == p.size()-1){
+          collision = isSegmentColliding(Point(x0,y0), Point(xf,yf), p[k], p[0]);
+        } else{
+          collision = isSegmentColliding(Point(x0,y0), Point(xf,yf), p[k], p[k+1]);
+        }
+
+        if(collision){
+          break;
+        }
+      }
+
+      if(collision){
+        break;
+      }
+    }
+
+    if(!collision){
+      short_path.push_back(finish_index);
+      return true;
+    } else{
+      int mid_point = (start_index + finish_index)/2;
+
+      if(finish_index-start_index > 1){
+        bool r1 = pathSmoothing(start_index, mid_point, vertices, path_idx, obstacle_list, short_path);
+        bool r2 = pathSmoothing(mid_point, finish_index, vertices, path_idx, obstacle_list, short_path);
 
         return r1 && r2;
       } else {
@@ -1177,7 +1297,7 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
     if (!output.is_open()){
       throw runtime_error("Cannot write file: " + vcd_dir + "/i.txt");
     }
-    
+
     //write borders on first line
     for(int i = 0; i < borders.size(); i++){
         if(i < borders.size()-1){
@@ -1204,11 +1324,6 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
                 output << "(" << pt_x << ", " << pt_y << ")" << endl;
             }
         }
-        /*
-        //add first point again
-        pt_x = int(obstacle_list[i][0].x*scale);
-        pt_y = int(obstacle_list[i][0].y*scale);
-        */
     }
     
     //write source and destination on third line
@@ -1253,7 +1368,7 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
                 v1 = stod(token);
               } else{
                 v2 = stod(token);
-                vertices.push_back(make_pair(v1,v2));
+                vertices.push_back(make_pair(v1/scale,v2/scale));
               }
               count++;
             }
@@ -1280,19 +1395,49 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
     int total_steps = path_idx.size();
     cout << "Total steps in path: " << to_string(total_steps) << endl;
 
+    vector<int> short_path;
+    short_path.push_back(path_idx[0]);
+    bool path_smoothed = pathSmoothing(0, total_steps-1, vertices, path_idx, obstacle_list, short_path);
+
+    cout << "SHORT PATH length: " << to_string(short_path.size()) << endl;
+    /*
+    for (int i = 0; i < short_path.size(); i++)
+    {
+      cout << to_string(i) << " ";
+      cout << to_string(short_path[i].x) << " " << to_string(short_path[i].y) << " ";
+    }
+    */
+
+
     vector<dubins::Curve> multipoint_dubins_path;
     // Startpoint
-    double x0 = vertices[path_idx[0]].first;
-    double y0 = vertices[path_idx[0]].second;
+    double x0 = vertices[short_path[0]].first;
+    double y0 = vertices[short_path[0]].second;
     double th0 = theta;
 
-    bool path_planned = recursiveMDP(0, total_steps-1, th0, thf, vertices, path_idx, multipoint_dubins_path, Kmax, path_res, pidx, obstacle_list);
+    
+    // add borders for collision check
+    vector<Polygon> boundaries = obstacle_list;
+    boundaries.push_back(borders);
+    //bool path_planned = recursiveMDP(0, total_steps-1, th0, thf, vertices, path_idx, multipoint_dubins_path, Kmax, pidx, boundaries);
+    bool path_planned = MDP(th0, thf, vertices, short_path, multipoint_dubins_path, Kmax, pidx, boundaries);
+
+    /*
+    for (int i = 0; i < borders.size(); i++)
+    {
+      cv::line(img, cv::Point(borders[i].x*scale, borders[i].y*scale), cv::Point(borders[i+1].x*scale,borders[i+1].y*scale), cv::Scalar(0,235,0),2); // draw the line
+    }
+    cv::flip(img, img, 0);
+    cv::imshow("curves",img); ///////////////////
+    cv::waitKey(0);
+    */
 
     if(path_planned){
       cout << "Path planned successfully! " << endl;
     } else{
       throw runtime_error("Could NOT plan path!");
     }
+    
 
     vector<Pose> points;
 
@@ -1311,8 +1456,6 @@ bool isSegmentColliding(dubins::Arc a, Point p1, Point p2){
 
     //Set output
     path.setPoints(points); 
-
-
 
     /*
 #ifdef DUBINS_DEBUG
