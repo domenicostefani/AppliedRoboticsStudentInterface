@@ -190,16 +190,17 @@ plt.show();
 # output into a file
 file_output = open(args['out'], "w" );
 str_to_write = "";
-for index in range(len(graph_vertices)):
-    if index == len(graph_vertices)-1:
-	    str_to_write = str_to_write + str(int(graph_vertices[index].x) )+  ","+ str(int(graph_vertices[index].y) )
-    else:
-        str_to_write = str_to_write + str(int(graph_vertices[index].x) )+  ","+ str(int(graph_vertices[index].y) ) + ","
+
+#for index in range(len(graph_vertices)):
+#    if index == len(graph_vertices)-1:
+#	    str_to_write = str_to_write + str(int(graph_vertices[index].x) )+  ","+ str(int(graph_vertices[index].y) )
+#    else:
+#        str_to_write = str_to_write + str(int(graph_vertices[index].x) )+  ","+ str(int(graph_vertices[index].y) ) + ","
 	
 #str_to_write = str_to_write[1:];
 
-total_write = str_to_write+"\n";
-str_to_write="";
+#total_write = str_to_write+"\n";
+#str_to_write="";
 
 #for i in graph:
 #	str_to_write = str_to_write + ",(";
@@ -212,11 +213,19 @@ str_to_write="";
 
 #total_write = total_write+ str_to_write + "\n";
 
-str_to_write = "";
-str_to_write =','.join(str(x) for x in path);
+#str_to_write = "";
+#str_to_write =','.join(str(x) for x in path);
 
-total_write = total_write + str_to_write;
+for index in range(len(path)):
+    if index == len(path)-1:
+        str_to_write = str_to_write + str(int(graph_vertices[path[index]].x) )+  "," + str(int(graph_vertices[path[index]].y) )
+    else:
+        str_to_write = str_to_write + str(int(graph_vertices[path[index]].x) )+  "," + str(int(graph_vertices[path[index]].y) ) + "\n"
+
+
+#total_write = total_write + str_to_write;
 
 print "Output written to file.. Drawing the result";
 
-file_output.write(total_write);
+#file_output.write(total_write);
+file_output.write(str_to_write);

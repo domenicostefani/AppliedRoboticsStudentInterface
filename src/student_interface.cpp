@@ -1114,7 +1114,7 @@ void drawDubinsArc(dubins::Arc& da) {
 
   //int c = 0;
   /*
-  bool recursiveMDP(int i, int j, double th0, double thf, vector<pair<double,double>>& vertices, vector<int>& path_idx, vector<dubins::Curve>& multipoint_dubins_path, double& Kmax, int& pidx, const vector<Polygon>& obstacle_list){
+  bool recursiveMDP(int i, int j, double th0, double thf, vector<Point>& short_path, vector<dubins::Curve>& multipoint_dubins_path, double& Kmax, int& pidx, const vector<Polygon>& obstacle_list){
     
     //c++;
     //if(c > 500){
@@ -1122,13 +1122,13 @@ void drawDubinsArc(dubins::Arc& da) {
     //}
     
 
-    double x0 = vertices[path_idx[i]].first;
-    double y0 = vertices[path_idx[i]].second;
+    double x0 = short_path[i].x;
+    double y0 = short_path[i].y;
 
-    double xf = vertices[path_idx[j]].first;
-    double yf = vertices[path_idx[j]].second;
+    double xf = short_path[j].x;
+    double yf = short_path[j].y;
     
-    dubins::Curve curve = dubins::Curve(0,0,0,0,0,0,0,0,0);    
+    dubins::Curve curve = dubins::Curve(0,0,0,0,0,0,0,0,0);
     bool collision = true;
     double alpha = th0;
 
@@ -1158,8 +1158,8 @@ void drawDubinsArc(dubins::Arc& da) {
       int k = (i+j)/2;
 
       if(j-i > 1){
-        bool r1 = recursiveMDP(i, k, th0, thf, vertices, path_idx, multipoint_dubins_path, Kmax, pidx, obstacle_list);
-        bool r2 = recursiveMDP(k, j, thf, thf, vertices, path_idx, multipoint_dubins_path, Kmax, pidx, obstacle_list);
+        bool r1 = recursiveMDP(i, k, th0, thf, short_path, multipoint_dubins_path, Kmax, pidx, obstacle_list);
+        bool r2 = recursiveMDP(k, j, thf, thf, short_path, multipoint_dubins_path, Kmax, pidx, obstacle_list);
 
         return r1 && r2;
       } else {
@@ -1169,7 +1169,7 @@ void drawDubinsArc(dubins::Arc& da) {
   }
   */
 
-  bool MDP(double th0, double thf, vector<pair<double,double>>& vertices, vector<int>& short_path, vector<dubins::Curve>& multipoint_dubins_path, double& Kmax, int& pidx, const vector<Polygon>& obstacle_list){
+  bool MDP(double th0, double thf, vector<Point>& short_path, vector<dubins::Curve>& multipoint_dubins_path, double& Kmax, int& pidx, const vector<Polygon>& obstacle_list){
     
     bool collision = false;
     dubins::Curve curve = dubins::Curve(0,0,0,0,0,0,0,0,0);
@@ -1180,10 +1180,10 @@ void drawDubinsArc(dubins::Arc& da) {
 
     for (int i = 0; i < short_path.size()-1; i++)
     {
-      x0 = vertices[short_path[i]].first;
-      y0 = vertices[short_path[i]].second;
-      xf = vertices[short_path[i+1]].first;
-      yf = vertices[short_path[i+1]].second;
+      x0 = short_path[i].x;
+      y0 = short_path[i].y;
+      xf = short_path[i+1].x;
+      yf = short_path[i+1].y;
 
       if(i == short_path.size()-1){
         curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx);
@@ -1209,9 +1209,9 @@ void drawDubinsArc(dubins::Arc& da) {
         drawDubinsArc(curve.a1);
         drawDubinsArc(curve.a2);
         drawDubinsArc(curve.a3);
-        th0 = best_curve.a3.thf;
+        th0 = alpha;
       } else{
-        cout << "ERROR" << endl;
+        cout << "ERROR: COLLISION" << endl;
         return false;
       }
     }
@@ -1219,7 +1219,7 @@ void drawDubinsArc(dubins::Arc& da) {
   }
 
 
-  bool pathSmoothing(int start_index, int finish_index, vector<pair<double,double>>& vertices, vector<int>& path_idx, vector<Polygon> obstacle_list, vector<int>& short_path){ 
+  bool pathSmoothing(int start_index, int finish_index, vector<Point> vertices, vector<Polygon> obstacle_list, vector<Point>& short_path){ 
     //c++;
     //cout << to_string(c) << " ";
     //if(c > 500){
@@ -1229,11 +1229,11 @@ void drawDubinsArc(dubins::Arc& da) {
     bool collision = false;
     double x0, y0, xf, yf;
     
-    x0 = vertices[path_idx[start_index]].first;
-    y0 = vertices[path_idx[start_index]].second;
+    x0 = vertices[start_index].x;
+    y0 = vertices[start_index].y;
 
-    xf = vertices[path_idx[finish_index]].first;
-    yf = vertices[path_idx[finish_index]].second;
+    xf = vertices[finish_index].x;
+    yf = vertices[finish_index].y;
 
     for (Polygon p : obstacle_list)
     {
@@ -1256,14 +1256,14 @@ void drawDubinsArc(dubins::Arc& da) {
     }
 
     if(!collision){
-      short_path.push_back(finish_index);
+      short_path.push_back(vertices[finish_index]);
       return true;
     } else{
       int mid_point = (start_index + finish_index)/2;
 
       if(finish_index-start_index > 1){
-        bool r1 = pathSmoothing(start_index, mid_point, vertices, path_idx, obstacle_list, short_path);
-        bool r2 = pathSmoothing(mid_point, finish_index, vertices, path_idx, obstacle_list, short_path);
+        bool r1 = pathSmoothing(start_index, mid_point, vertices, obstacle_list, short_path);
+        bool r2 = pathSmoothing(mid_point, finish_index, vertices, obstacle_list, short_path);
 
         return r1 && r2;
       } else {
@@ -1342,43 +1342,32 @@ void drawDubinsArc(dubins::Arc& da) {
 
     //read vertices and path from output.txt
     ifstream input(vcd_dir + "/output.txt");
-    vector<pair<double,double>> vertices;
-    vector<int> path_idx;
+    vector<Point> vertices;
 
     bool path_not_found = false;
 
     if(input.is_open()){
       string line;
 
-      for(int i = 0; i < 2; i++){
+      while(getline(input,line)){
         input >> line;
         istringstream ss(line);
         string token;
 
-        //first line is cell vertices list
-        if(i == 0){
-          int count = 0;
-          double v1, v2;
+        float v1, v2;
+        int count = 0;
 
-          while(getline(ss, token, ',')){
-            if(stoi(token) == -1){
-              path_not_found = true;
+        while(getline(ss, token, ',')){
+          if(stoi(token) == -1){
+            path_not_found = true;
+          } else{
+            if(count%2 == 0){
+              v1 = stod(token);
             } else{
-              if(count%2 == 0){
-                v1 = stod(token);
-              } else{
-                v2 = stod(token);
-                vertices.push_back(make_pair(v1/scale,v2/scale));
-              }
-              count++;
+              v2 = stod(token);
+              vertices.push_back(Point(v1/scale,v2/scale));
             }
-          }
-        } else{   //second line is path
-          int v;
-
-          while(getline(ss, token, ',')){
-              v = stoi(token);
-              path_idx.push_back(v);
+            count++;
           }
         }
       }
@@ -1391,46 +1380,49 @@ void drawDubinsArc(dubins::Arc& da) {
     int pidx; // curve index
     //dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx);
 
-    // multipoint dubins problem
-    int total_steps = path_idx.size();
-    cout << "Total steps in path: " << to_string(total_steps) << endl;
+    cout << "Total steps in path: " << to_string(vertices.size()) << endl;
 
-    vector<int> short_path;
-    short_path.push_back(path_idx[0]);
-    bool path_smoothed = pathSmoothing(0, total_steps-1, vertices, path_idx, obstacle_list, short_path);
+    vector<Point> short_path;
+    short_path.push_back(vertices[0]);
+    bool path_smoothed = pathSmoothing(0, vertices.size()-1, vertices, obstacle_list, short_path);
+    // TODO: repeat smoothing until length of path does not get smaller
 
     cout << "SHORT PATH length: " << to_string(short_path.size()) << endl;
-    /*
+    
+    for (int i = 0; i < borders.size(); i++)
+    {
+      cv::line(img, cv::Point(borders[i].x*scale, borders[i].y*scale), cv::Point(borders[i+1].x*scale,borders[i+1].y*scale), cv::Scalar(0,235,0),2); // draw the line
+    }
+
+/*
+    for (int i = 0; i < vertices.size(); i++)
+    {
+      cv::circle(img, cv::Point(vertices[i].x*scale, vertices[i].y*scale), 2, cv::Scalar(255,0,0),CV_FILLED);
+      cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
+    }
+
     for (int i = 0; i < short_path.size(); i++)
     {
-      cout << to_string(i) << " ";
-      cout << to_string(short_path[i].x) << " " << to_string(short_path[i].y) << " ";
+      cv::circle(img, cv::Point(short_path[i].x*scale, short_path[i].y*scale), 2, cv::Scalar(255,235,0),CV_FILLED);
+      cout << to_string(short_path[i].x) << "," << short_path[i].y << endl;
     }
+    cv::flip(img, img, 0);
+    cv::imshow("curves",img); ///////////////////
+    cv::waitKey(0);
     */
-
 
     vector<dubins::Curve> multipoint_dubins_path;
     // Startpoint
-    double x0 = vertices[short_path[0]].first;
-    double y0 = vertices[short_path[0]].second;
+    double x0 = short_path[0].x;
+    double y0 = short_path[0].y;
     double th0 = theta;
 
     
     // add borders for collision check
     vector<Polygon> boundaries = obstacle_list;
     boundaries.push_back(borders);
-    //bool path_planned = recursiveMDP(0, total_steps-1, th0, thf, vertices, path_idx, multipoint_dubins_path, Kmax, pidx, boundaries);
-    bool path_planned = MDP(th0, thf, vertices, short_path, multipoint_dubins_path, Kmax, pidx, boundaries);
-
-    /*
-    for (int i = 0; i < borders.size(); i++)
-    {
-      cv::line(img, cv::Point(borders[i].x*scale, borders[i].y*scale), cv::Point(borders[i+1].x*scale,borders[i+1].y*scale), cv::Scalar(0,235,0),2); // draw the line
-    }
-    cv::flip(img, img, 0);
-    cv::imshow("curves",img); ///////////////////
-    cv::waitKey(0);
-    */
+    //bool path_planned = recursiveMDP(0, total_steps-1, th0, thf, short_path, multipoint_dubins_path, Kmax, pidx, boundaries);
+    bool path_planned = MDP(th0, thf, short_path, multipoint_dubins_path, Kmax, pidx, boundaries);
 
     if(path_planned){
       cout << "Path planned successfully! " << endl;
