@@ -18,6 +18,14 @@
 using namespace std;
 
 const string COLOR_CONFIG_FILE = "/color_parameters.config";
+const int pythonUpscale = 200; // Scale factor used to convert parameters to a int represetation for the planning library
+const double debugImagesScale = 512.82; //This value is equivalent to the scale printed from a simulator run
+                                        //Since the correct scale is not available in many methods, it becomes difficult
+                                        //To draw points that are in meters to a debug image.
+                                        //Since it does not need to be the correct scale, it can be a constant
+
+namespace student {
+
 struct Color_config {
     tuple<int,int,int> victims_lowbound;
     tuple<int,int,int> victims_highbound;
@@ -28,10 +36,6 @@ struct Color_config {
     tuple<int,int,int> obstacle_lowbound2;
     tuple<int,int,int> obstacle_highbound2;
 };
-
-namespace student {
-int i = 0;
-int scale = 200;
 
 void loadImage(cv::Mat& img_out, const string& config_folder) {
     static bool initialized = false;
@@ -74,6 +78,9 @@ void loadImage(cv::Mat& img_out, const string& config_folder) {
 
 void genericImageListener(const cv::Mat& img_in, string topic,
                           const string& config_folder) {
+
+        static int imageCounter= 0;
+
         cv::imshow("current picture", img_in);
         char c = cv::waitKey(30);
         if (c == 's') {
@@ -87,7 +94,7 @@ void genericImageListener(const cv::Mat& img_in, string topic,
         string filename = config_folder;
         filename += topic;
         filename += "_";
-        filename += to_string(i++);
+        filename += to_string(imageCounter++);
         filename += ".jpg";
         cv::imwrite(filename, img_in);
         printf("Saved is '%s'\n", filename.c_str());
@@ -651,12 +658,31 @@ bool processMap(const cv::Mat& img_in, const double scale,
 * Finds the baricenter of a utils::Polygon
 */
 void baricenter(const Polygon& polygon, double& cx, double& cy) {
+    // #define BARICENTER_DEBUG
+
     for (auto vertex: polygon) {
         cx += vertex.x;
         cy += vertex.y;
     }
     cx /= static_cast<double>(polygon.size());
     cy /=  static_cast<double>(polygon.size());
+
+    #ifdef BARICENTER_DEBUG
+        printf("BARICENTER DEBUG called\n");
+
+        cv::Mat baricenter_debug_img = cv::Mat(600, 800, CV_8UC3, cv::Scalar(0,0,0));
+        // draw every point (red)
+        for (auto vertex: polygon) {
+            cv::Point center(vertex.x*debugImagesScale, vertex.y*debugImagesScale);
+            cv::circle(baricenter_debug_img, center, 5, cv::Scalar(0,0,255), -1);
+        }
+        // draw center point (green)
+        cv::Point center(cx*debugImagesScale, cy*debugImagesScale);
+        cv::circle(baricenter_debug_img, center, 5, cv::Scalar(0,255,0), -1);
+
+        cv::imshow("BaricenterDEBUG",baricenter_debug_img);
+        cv::waitKey(0);
+    #endif //BARICENTER_DEBUG
 }
 
 bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
@@ -782,7 +808,7 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
 * Find the arrival point
 * Returns the baricenter of the gate polygon with the correct arrival angle
 */
-void center_gate(const Polygon& gate, const Polygon& borders, double& x,
+void centerGate(const Polygon& gate, const Polygon& borders, double& x,
                  double& y, double& theta) {
 
     assert(gate.size() == 4);
@@ -841,7 +867,7 @@ void center_gate(const Polygon& gate, const Polygon& borders, double& x,
     theta = angle;
 }
 
-// choose the curve with the arrival angle that minimizes the length
+// choose the curve with the arrival angle that minimizes the length    //TODO: check why this is not called
 dubins::Curve findBestAngle(double& th0, double& thf, double& x0, double& y0,
                             double& xf, double& yf, double& Kmax, int& pidx) {
 
@@ -1028,28 +1054,28 @@ bool curveCollision(dubins::Curve& curve, const vector<Polygon>& obstacle_list) 
 
 //-------------------DRAWING DUBINS CURVES-------------------
 
-cv::Mat img = cv::Mat(200, 250, CV_8UC3, cv::Scalar(0,0,0));
+cv::Mat img = cv::Mat(200, 250, CV_8UC3, cv::Scalar(0,0,0));    //TODO: wise to have a global variable? is it for debug only?
 
 // Method that draws a dubins arc
 void drawDubinsArc(dubins::Arc& da) {
 
-    cv::Point2f startf = cv::Point2f(da.x0*scale, da.y0*scale);
-    cv::Point2f finishf = cv::Point2f(da.xf*scale, da.yf*scale);
+    cv::Point2f startf = cv::Point2f(da.x0*debugImagesScale, da.y0*debugImagesScale);
+    cv::Point2f finishf = cv::Point2f(da.xf*debugImagesScale, da.yf*debugImagesScale);
 
     if (da.k == 0) {
         cv::line(img, cv::Point(startf.x,startf.y), cv::Point(finishf.x,finishf.y), cv::Scalar(0,235,0),1); // draw the line
     } else {
-        float radius = abs(1 / da.k)*scale; // radius is 1/k
+        float radius = abs(1 / da.k)*debugImagesScale; // radius is 1/k
         cv::Point2f centerf;
 
         if (da.k < 0) {
             float xc = cos(da.th0 - M_PI/2) * radius;
             float yc = sin(da.th0 - M_PI/2) * radius;
-            centerf = cv::Point(xc + da.x0*scale,yc + da.y0*scale);
+            centerf = cv::Point(xc + da.x0*debugImagesScale,yc + da.y0*debugImagesScale);
         } else {
             float xc = cos(da.th0 + M_PI/2) * radius;
             float yc = sin(da.th0 + M_PI/2) * radius;
-            centerf = cv::Point(xc + da.x0*scale,yc + da.y0*scale);
+            centerf = cv::Point(xc + da.x0*debugImagesScale,yc + da.y0*debugImagesScale);
         }
         cv::Point start = cv::Point(startf.x,startf.y);
         cv::Point finish = cv::Point(finishf.x,finishf.y);
@@ -1140,7 +1166,7 @@ bool recursiveMDP(int i, int j, double th0, double thf, vector<Point>& short_pat
 */
 
 bool MDP(double th0, double thf, vector<Point>& short_path,
-         vector<dubins::Curve>& multipoint_dubins_path, double& Kmax, int& pidx,
+         vector<dubins::Curve>& multipoint_dubins_path, double Kmax, int& pidx,
          const vector<Polygon>& obstacle_list) {
 
     bool collision = false;
@@ -1243,6 +1269,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
               const float x, const float y, const float theta, Path& path,
               const string& config_folder) {
     // #define DUBINS_DEBUG
+    #define PLAN_DEBUG
 
     #ifdef PLAN_DEBUG
         printf("--------PLANNING WAS CALLED--------\n");
@@ -1250,38 +1277,42 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     #endif
 
     double xf, yf, thf;                   // Endpoint
-    center_gate(gate,borders,xf,yf,thf);  // Endpoint computation
-    double Kmax = 10.0;                   // Maximum curvature
-    double path_res = 0.01;               // Path resolution (sampling)
+    centerGate(gate,borders,xf,yf,thf);  // Endpoint computation
+    const double Kmax = 10.0;                   // Maximum curvature
+    const double path_res = 0.01;               // Path resolution (sampling)
 
-    string vcd_dir = config_folder + "/../src/path-planning";
+    //
+    // write the problem parameters to a file that will be fed to a planning lib
+    //
 
+    const string vcd_dir = config_folder + "/../src/path-planning";
     ofstream output(vcd_dir + "/i.txt");
-
     if (!output.is_open()) {
         throw runtime_error("Cannot write file: " + vcd_dir + "/i.txt");
     }
 
-    //write borders on first line
+    #ifdef PLAN_DEBUG
+        printf("Writing problem parameters to file\n");
+        printf("Measure are upscaled by a scale factor of: %d\n",pythonUpscale);
+    #endif
+
+    // write borders on the first line
     for (int i = 0; i < borders.size(); i++) {
         if (i < borders.size()-1) {
-            output << "(" << int(borders[i].x*scale) << "," << int(borders[i].y*scale) << "),";
+            output << "(" << int(borders[i].x*pythonUpscale) << "," << int(borders[i].y * pythonUpscale) << "),"; //TODO: URGENT! Shouldn't this scale parameter be a big number for our integer conversion, instead of the default scale?
         } else {
-            output << "(" << int(borders[i].x*scale) << "," << int(borders[i].y*scale) << ")" << endl;
+            output << "(" << int(borders[i].x*pythonUpscale) << "," << int(borders[i].y * pythonUpscale) << ")" << endl;
         }
     }
 
-    //write vertices on second line
-    int pt_x, pt_y;
-
-    //add each obstacle in a separate line
+    //  write vertices on the second line
     for (int i = 0; i < obstacle_list.size(); i++) {
         //add each vertex in (x,y) format
         for (int j = 0; j < obstacle_list[i].size(); j++) {
-            pt_x = int(obstacle_list[i][j].x*scale);
-            pt_y = int(obstacle_list[i][j].y*scale);
+            int pt_x = int(obstacle_list[i][j].x * pythonUpscale);
+            int pt_y = int(obstacle_list[i][j].y * pythonUpscale);
 
-            if (j < obstacle_list[i].size()-1) {
+            if (j < obstacle_list[i].size() - 1) {
                 output << "(" << pt_x << ", " << pt_y << "), ";
             } else {
                 output << "(" << pt_x << ", " << pt_y << ")" << endl;
@@ -1289,26 +1320,33 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         }
     }
 
-    //write source and destination on third line
-    output << "(" << int(x*scale) << "," << int(y*scale) << "),(" << int(xf*scale) << "," << int(yf*scale) << ")";
+    //write source and destination on the third line
+    output << "(" << int(x*pythonUpscale) << "," << int(y*pythonUpscale) << "),(" << int(xf*pythonUpscale) << "," << int(yf*pythonUpscale) << ")";
 
     output.close();
 
-    //writes in output.txt
-    //first line is centers of cells and midpoints sof vertical lines
-    //second line is path of ids of cells from the first line
-    //string cmd = "python " + vcd_dir + "/main.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt -algo rrt";
+    //
+    // The text file has ben prepared, now the external plan library is called
+    //
+
+    // NOTES:          //TODO: remove when not needed
+    // the script writes in output.txt:
+    // the first line contains the centers of cells and midpoints of vertical lines     //TODO: this actually changes with rrt so we may remove it right?
+    // the second line is the path of ids of cells from the first line
+    // string cmd = "python " + vcd_dir + "/main.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt -algo rrt";
+
+    // prepare script command
     string cmd = "python " + vcd_dir + "/rrt.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt";
     char str[cmd.size()+1];
     strcpy(str, cmd.c_str());
+    // call library script
     system(str);
 
-    //read vertices and path from output.txt
+    // read vertices and path from output.txt
     ifstream input(vcd_dir + "/output.txt");
     vector<Point> vertices;
 
     bool path_not_found = false;
-
     if (input.is_open()) {
         string line;
         while (getline(input,line)) {
@@ -1327,7 +1365,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
                         v1 = stod(token);
                     } else {
                         v2 = stod(token);
-                        vertices.push_back(Point(v1/scale,v2/scale));
+                        vertices.push_back(Point(v1/pythonUpscale,v2/pythonUpscale));   //Scaling back points using the scale factor for the library
                     }
                     count++;
                 }
@@ -1351,17 +1389,18 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
     cout << "SHORT PATH length: " << to_string(short_path.size()) << endl;
 
+    // TODO: here there is a problem. Scale was the int defined as global var, and not the correct pixel->meters scale. FIX URGENT!
     for (int i = 0; i < borders.size(); i++)
-        cv::line(img, cv::Point(borders[i].x*scale, borders[i].y*scale), cv::Point(borders[i+1].x*scale,borders[i+1].y*scale), cv::Scalar(0,235,0),2); // draw the line
+        cv::line(img, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,235,0),2); // draw the line
 
 /*      //TODO: keep or remove? decide
     for (int i = 0; i < vertices.size(); i++) {
-        cv::circle(img, cv::Point(vertices[i].x*scale, vertices[i].y*scale), 2, cv::Scalar(255,0,0),CV_FILLED);
+        cv::circle(img, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(255,0,0),CV_FILLED);
         cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
     }
 
     for (int i = 0; i < short_path.size(); i++) {
-        cv::circle(img, cv::Point(short_path[i].x*scale, short_path[i].y*scale), 2, cv::Scalar(255,235,0),CV_FILLED);
+        cv::circle(img, cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), 2, cv::Scalar(255,235,0),CV_FILLED);
         cout << to_string(short_path[i].x) << "," << short_path[i].y << endl;
     }
     cv::flip(img, img, 0);
