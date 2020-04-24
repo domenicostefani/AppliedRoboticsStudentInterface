@@ -19,7 +19,7 @@
 using namespace std;
 
 const string COLOR_CONFIG_FILE = "/color_parameters.config";
-const int pythonUpscale = 200; // Scale factor used to convert parameters to a int represetation for the planning library
+const int pythonUpscale = 1000; // Scale factor used to convert parameters to a int represetation for the planning library
 const double debugImagesScale = 512.82; //This value is equivalent to the scale printed from a simulator run
                                         //Since the correct scale is not available in many methods, it becomes difficult
                                         //To draw points that are in meters to a debug image.
@@ -1248,6 +1248,8 @@ bool pathSmoothing(int start_index, int finish_index, vector<Point> vertices,
     //  return false;
     // }
 
+    // TODO: recursion missing STOP condition, eg. start_index == finish_index then return false
+
     bool collision = false;
     double x0, y0, xf, yf;
 
@@ -1416,7 +1418,29 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
     vector<Point> short_path;
     short_path.push_back(vertices[0]);
-    bool path_smoothed = pathSmoothing(0, vertices.size()-1, vertices, obstacle_list, short_path);
+    bool is_path_smoothed = pathSmoothing(0, vertices.size()-1, vertices, obstacle_list, short_path);
+
+    if(is_path_smoothed){
+        cout << "Path was shortened without collisions" << endl << flush;
+        assert(short_path.front() == vertices.front());
+        assert(short_path.back() == vertices.back());
+    }else{
+        throw logic_error("ERROR: path cannot be shortened");
+        // TODO: Thie case might need to be handled in a better way:
+        // This occurs often if the scaling factor for the python script is too
+        // low. That causes approximation errors that result in RRT paths that
+        // do not collide according to the script, but collide accorting to the
+        // actual computations.
+
+        // However, the scaling determines the granularity of the algorithm
+        // (high scaling, longer output path) which means that the script could
+        // hit its ITERATION LIMIT. This along with the fact that it's slower.
+        // Either we handle the iteration limit case by taking the partial path
+        // provided and launching other instances of the script to complete it
+        // OR we go for a good floating point RRT library (elegant and fast).
+        // (Maybe http://ompl.kavrakilab.org/planners.html)
+    }
+
     // TODO: repeat smoothing until length of path does not get smaller
 
     cout << "SHORT PATH length: " << to_string(short_path.size()) << endl;
@@ -1427,6 +1451,13 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     //
 
     const bool VERBOSE_DEBUG_DRAWCURVE = false;
+
+    if (VERBOSE_DEBUG_DRAWCURVE)    // TODO: consider removing this probe since the exception and the assert used before should ensure equality between the last points or failure
+        cout << "RRT  path last point = (" << vertices[vertices.size()-1].x << "," << vertices[vertices.size()-1].y << ")\n";
+        cout << "smth path last point = (" << short_path[short_path.size()-1].x << "," << short_path[short_path.size()-1].y << ")\n";
+        cout << flush;
+    }
+
     // draw borders
     for (int i = 0; i < borders.size(); i++)
         cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,235,0),2); // draw the line
@@ -1434,6 +1465,9 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     for (int i = 0; i < vertices.size(); i++) {
         cv::circle(dcImg, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(255,0,0),CV_FILLED);
         if(VERBOSE_DEBUG_DRAWCURVE) cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
+        if(i > 0)
+            cv::line(dcImg, cv::Point(vertices[i-1].x*debugImagesScale, vertices[i-1].y*debugImagesScale),
+                     cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), cv::Scalar(255,0,0),2);
     }
     //Draw Smothed path Dots and lines
     for (int i = 0; i < short_path.size(); i++) {
