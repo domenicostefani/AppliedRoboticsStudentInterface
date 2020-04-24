@@ -77,7 +77,7 @@ Curve::Curve(double x0, double y0, double th0, double s1, double s2,
 double sinc(double t) {
     double s = (double) 0.0;
     if (fabs(t) < 0.002) { // for small values of t use Taylor series approx.
-        s = 1 - pow(t, 2.0 / 6.0) * (1 - pow(t, 2.0 / 20.0));
+        s = 1 - pow(t, 2.0) / 6.0 * (1 - pow(t, 2.0) / 20.0);
     } else {
         s = sin(t) / t;
     }
