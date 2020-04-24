@@ -867,10 +867,15 @@ void centerGate(const Polygon& gate, const Polygon& borders, double& x,
     theta = angle;
 }
 
-// choose the curve with the arrival angle that minimizes the length    //TODO: check why this is not called
+// choose the curve with the arrival angle that minimizes the length    //TODO: check why this is not called by any function
 dubins::Curve findBestAngle(double& th0, double& thf, double& x0, double& y0,
                             double& xf, double& yf, double& Kmax, int& pidx) {
-
+    #define FINDBESTANGLE_DEBUG
+#ifdef FINDBESTANGLE_DEBUG
+    static int fba_counter = 0;
+    fba_counter++;
+    cout << "findBestAngle() called #" << fba_counter << endl;
+#endif
     vector<double> angles;
     double best_length = 100000;
     dubins::Curve best_curve = dubins::Curve(0,0,0,0,0,0,0,0,0);
@@ -881,6 +886,9 @@ dubins::Curve findBestAngle(double& th0, double& thf, double& x0, double& y0,
     angles.push_back((th0 + thf)/2);
 
     for (int i = 0; i < angles.size(); i++) {
+        #ifdef FINDBESTANGLE_DEBUG
+            cout << "dubins_shortest_path called from findBestAngle #" << fba_counter << endl;
+        #endif
         dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, angles[i], Kmax, pidx);
         if (curve.L < best_length) {
             best_length = curve.L;
@@ -1052,9 +1060,12 @@ bool curveCollision(dubins::Curve& curve, const vector<Polygon>& obstacle_list) 
     return false;
 }
 
-//-------------------DRAWING DUBINS CURVES-------------------
+#define DEBUG_DRAWCURVE //TODO: move to better place
 
-cv::Mat img = cv::Mat(200, 250, CV_8UC3, cv::Scalar(0,0,0));    //TODO: wise to have a global variable? is it for debug only?
+#ifdef DEBUG_DRAWCURVE
+
+//-------------------DRAWING DUBINS CURVES-------------------
+cv::Mat dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(0,0,0)); //TODO: wise to have a global variable? is it for debug only?
 
 // Method that draws a dubins arc
 void drawDubinsArc(dubins::Arc& da) {
@@ -1063,7 +1074,7 @@ void drawDubinsArc(dubins::Arc& da) {
     cv::Point2f finishf = cv::Point2f(da.xf*debugImagesScale, da.yf*debugImagesScale);
 
     if (da.k == 0) {
-        cv::line(img, cv::Point(startf.x,startf.y), cv::Point(finishf.x,finishf.y), cv::Scalar(0,235,0),1); // draw the line
+        cv::line(dcImg, cv::Point(startf.x,startf.y), cv::Point(finishf.x,finishf.y), cv::Scalar(0,235,0),1); // draw the line
     } else {
         float radius = abs(1 / da.k)*debugImagesScale; // radius is 1/k
         cv::Point2f centerf;
@@ -1090,20 +1101,21 @@ void drawDubinsArc(dubins::Arc& da) {
             for (unsigned int i = 0; 0.01 < ((dubins::mod2pi(thetastart + passo*i) - thetafinish)*(dubins::mod2pi(thetastart + passo*i) -thetafinish)); i++) {
                 cv::Point startSegment = cv::Point(cos(thetastart + passo*i  )*radius + centerf.x,+ sin(thetastart + passo*i  )*radius + centerf.y);
                 cv::Point finishSegment = cv::Point(cos(thetastart + passo*(i+1)  )*radius + centerf.x, sin(thetastart + passo*(i+1))*radius + centerf.y);
-                cv::line(img, startSegment, finishSegment, cv::Scalar(0,255,255),1); // draw the line
+                cv::line(dcImg, startSegment, finishSegment, cv::Scalar(0,255,255),1); // draw the line
             }
         } else { // counter clockwise segment drawing
             for (unsigned int i = 0; 0.01 < ((dubins::mod2pi(thetastart - passo*i) - thetafinish)*(dubins::mod2pi(thetastart - passo*i) - thetafinish)); i++) {
                 cv::Point startSegment = cv::Point(cos(thetastart - passo*i  )*radius + centerf.x,+ sin(thetastart - passo*i  )*radius + centerf.y);
                 cv::Point finishSegment = cv::Point(cos(thetastart - passo*(i+1)  )*radius + centerf.x, sin(thetastart - passo*(i+1))*radius + centerf.y);
-                cv::line(img, startSegment, finishSegment, cv::Scalar(0,255,255),1); // draw the line
+                cv::line(dcImg, startSegment, finishSegment, cv::Scalar(0,255,255),1); // draw the line
            }
         }
 
-        cv::circle(img,start,2,cv::Scalar(0,255,255),1);
-        cv::circle(img,finish,2,cv::Scalar(0,255,255),1);
+        cv::circle(dcImg,start,2,cv::Scalar(0,255,255),1);
+        cv::circle(dcImg,finish,2,cv::Scalar(0,255,255),1);
     }
 }
+#endif
 
 //-------------------end DRAWING DUBINS CURVES-------------------
 
@@ -1168,6 +1180,13 @@ bool recursiveMDP(int i, int j, double th0, double thf, vector<Point>& short_pat
 bool MDP(double th0, double thf, vector<Point>& short_path,
          vector<dubins::Curve>& multipoint_dubins_path, double Kmax, int& pidx,
          const vector<Polygon>& obstacle_list) {
+    // #define MDP_DEBUG
+
+#ifdef MDP_DEBUG
+    static int mdp_counter = 0;
+    mdp_counter++;
+    cout << "MDP() called #" << mdp_counter << endl;
+#endif
 
     bool collision = false;
     dubins::Curve curve = dubins::Curve(0,0,0,0,0,0,0,0,0);
@@ -1183,11 +1202,17 @@ bool MDP(double th0, double thf, vector<Point>& short_path,
         yf = short_path[i+1].y;
 
         if (i == short_path.size()-1) {
+            #ifdef MDP_DEBUG
+                    cout << "call to dubins (from MDP) #" << mdp_counter << endl;
+            #endif
             curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx);
             collision = curveCollision(curve, obstacle_list);
         } else {
             for (int j = 0; j < 16; j++) {
                 alpha += 6.28/16*j; //radians
+                #ifdef MDP_DEBUG
+                        cout << "call to dubins (from MDP) #" << mdp_counter << endl;
+                #endif
                 curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, alpha, Kmax, pidx);
                 collision = curveCollision(curve, obstacle_list);
 
@@ -1200,9 +1225,11 @@ bool MDP(double th0, double thf, vector<Point>& short_path,
 
         if (!collision) {
             multipoint_dubins_path.push_back(best_curve);
+#ifdef DEBUG_DRAWCURVE
             drawDubinsArc(curve.a1);
             drawDubinsArc(curve.a2);
             drawDubinsArc(curve.a3);
+#endif
             th0 = alpha;
         } else {
             cout << "ERROR: COLLISION" << endl;
@@ -1299,7 +1326,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     // write borders on the first line
     for (int i = 0; i < borders.size(); i++) {
         if (i < borders.size()-1) {
-            output << "(" << int(borders[i].x*pythonUpscale) << "," << int(borders[i].y * pythonUpscale) << "),"; //TODO: URGENT! Shouldn't this scale parameter be a big number for our integer conversion, instead of the default scale?
+            output << "(" << int(borders[i].x*pythonUpscale) << "," << int(borders[i].y * pythonUpscale) << "),";
         } else {
             output << "(" << int(borders[i].x*pythonUpscale) << "," << int(borders[i].y * pythonUpscale) << ")" << endl;
         }
@@ -1342,6 +1369,10 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     // call library script
     system(str);
 
+    //
+    // Read the resulting path
+    //
+
     // read vertices and path from output.txt
     ifstream input(vcd_dir + "/output.txt");
     vector<Point> vertices;
@@ -1377,7 +1408,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         throw runtime_error("Path not found!");
     }
 
-    int pidx; // curve index
+    int pidx; // curve index //TODO: move down near usage? decide
     //dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx); //TODO: keep or remove? decide
 
     cout << "Total steps in path: " << to_string(vertices.size()) << endl;
@@ -1389,24 +1420,31 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
     cout << "SHORT PATH length: " << to_string(short_path.size()) << endl;
 
-    // TODO: here there is a problem. Scale was the int defined as global var, and not the correct pixel->meters scale. FIX URGENT!
-    for (int i = 0; i < borders.size(); i++)
-        cv::line(img, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,235,0),2); // draw the line
+#ifdef DEBUG_DRAWCURVE
+    //
+    //  Draw Curves to debug errors
+    //
 
-/*      //TODO: keep or remove? decide
+    for (int i = 0; i < borders.size(); i++)
+        cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,235,0),2); // draw the line
+
     for (int i = 0; i < vertices.size(); i++) {
-        cv::circle(img, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(255,0,0),CV_FILLED);
+        cv::circle(dcImg, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(255,0,0),CV_FILLED);
         cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
     }
 
     for (int i = 0; i < short_path.size(); i++) {
-        cv::circle(img, cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), 2, cv::Scalar(255,235,0),CV_FILLED);
+        cv::circle(dcImg, cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), 2, cv::Scalar(255,235,0),CV_FILLED);
         cout << to_string(short_path[i].x) << "," << short_path[i].y << endl;
     }
-    cv::flip(img, img, 0);
-    cv::imshow("curves",img); ///////////////////
+
+    for (int i = 1; i < short_path.size(); i++)
+            cv::line(dcImg, cv::Point(short_path[i-1].x*debugImagesScale, short_path[i-1].y*debugImagesScale),
+                     cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), cv::Scalar(255,235,0),2);
+    cv::flip(dcImg, dcImg, 0);
+    cv::imshow("Curves",dcImg); ///////////////////
     cv::waitKey(0);
-    */
+#endif
 
     vector<dubins::Curve> multipoint_dubins_path;
     // Startpoint
