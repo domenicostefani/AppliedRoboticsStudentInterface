@@ -14,6 +14,7 @@
 // #define COLOR_RANGE_DEBUG // Prints info about HSV ranges used for colors
 #define DUBINS_DEBUG false
 //#define IMSHOW_DEBUG
+#define DEBUG_DRAWCURVE //TODO: move to better place
 
 using namespace std;
 
@@ -36,6 +37,11 @@ struct Color_config {
     tuple<int,int,int> obstacle_lowbound2;
     tuple<int,int,int> obstacle_highbound2;
 };
+
+#ifdef DEBUG_DRAWCURVE
+//-------------------DRAWING DUBINS CURVES-------------------
+cv::Mat dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255)); //TODO: wise to have a global variable?
+#endif
 
 void loadImage(cv::Mat& img_out, const string& config_folder) {
     static bool initialized = false;
@@ -1060,12 +1066,7 @@ bool curveCollision(dubins::Curve& curve, const vector<Polygon>& obstacle_list) 
     return false;
 }
 
-#define DEBUG_DRAWCURVE //TODO: move to better place
-
 #ifdef DEBUG_DRAWCURVE
-
-//-------------------DRAWING DUBINS CURVES-------------------
-cv::Mat dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(0,0,0)); //TODO: wise to have a global variable? is it for debug only?
 
 // Method that draws a dubins arc
 void drawDubinsArc(dubins::Arc& da) {
@@ -1425,22 +1426,31 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     //  Draw Curves to debug errors
     //
 
+    const bool VERBOSE_DEBUG_DRAWCURVE = false;
+    // draw borders
     for (int i = 0; i < borders.size(); i++)
         cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,235,0),2); // draw the line
-
+    // draw original path
     for (int i = 0; i < vertices.size(); i++) {
         cv::circle(dcImg, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(255,0,0),CV_FILLED);
-        cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
+        if(VERBOSE_DEBUG_DRAWCURVE) cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
     }
-
+    //Draw Smothed path Dots and lines
     for (int i = 0; i < short_path.size(); i++) {
         cv::circle(dcImg, cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), 2, cv::Scalar(255,235,0),CV_FILLED);
-        cout << to_string(short_path[i].x) << "," << short_path[i].y << endl;
-    }
-
-    for (int i = 1; i < short_path.size(); i++)
+        if(VERBOSE_DEBUG_DRAWCURVE) cout << to_string(short_path[i].x) << "," << short_path[i].y << endl;
+        if(i > 0)
             cv::line(dcImg, cv::Point(short_path[i-1].x*debugImagesScale, short_path[i-1].y*debugImagesScale),
                      cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), cv::Scalar(255,235,0),2);
+    }
+    //Draw obstacles
+    for (const Polygon &pol : obstacle_list){
+        for (int i=1; i<pol.size(); ++i){
+            cv::line(dcImg, cv::Point(pol[i-1].x*debugImagesScale, pol[i-1].y*debugImagesScale),
+                     cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(255,0,0),3);
+        }
+    }
+
     cv::flip(dcImg, dcImg, 0);
     cv::imshow("Curves",dcImg); ///////////////////
     cv::waitKey(0);
