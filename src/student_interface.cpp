@@ -1453,6 +1453,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     const bool VERBOSE_DEBUG_DRAWCURVE = false;
 
     if (VERBOSE_DEBUG_DRAWCURVE)    // TODO: consider removing this probe since the exception and the assert used before should ensure equality between the last points or failure
+    {
         cout << "RRT  path last point = (" << vertices[vertices.size()-1].x << "," << vertices[vertices.size()-1].y << ")\n";
         cout << "smth path last point = (" << short_path[short_path.size()-1].x << "," << short_path[short_path.size()-1].y << ")\n";
         cout << flush;
