@@ -33,3 +33,5 @@ build/
 *.exe
 *.out
 *.app
+
+src/path-planning/*.txt
