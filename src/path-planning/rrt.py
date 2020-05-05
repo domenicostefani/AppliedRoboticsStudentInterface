@@ -7,13 +7,15 @@ from helpers.geometry import *
 import matplotlib.pyplot as plt
 import argparse
 
+SHOW_PLOT = False
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-in",help="input file (default: input.txt)",default="input.txt")
 parser.add_argument("-out",help="output file (default: output.txt)",default="output.txt")
 
 args = vars(parser.parse_args())
-	
+
 # Check for empty lines
 file_handler = open(args['in'],"r");
 raw_data = file_handler.read();
@@ -38,7 +40,7 @@ def parse_input_line(line):
 		if(index%2 != 0):
 			temp2.append(vertex);
 			vertex = [];
-	return temp2;	
+	return temp2;
 
 
 # Draw the obstacles and point the source and the destination----------------------------------------------
@@ -52,13 +54,13 @@ def draw_problem():
 
 	# Draw the boundary
 	plt.plot(bnd_x, bnd_y);
-	
+
 	for index, i in enumerate(obstacles):
 		poly_x.append([p[0] for p in i]);
 		poly_y.append([p[1] for p in i]);
-	
+
 		plt.fill( poly_x[index], poly_y[index], color="#512DA8");
-	
+
 	plt.plot(source.x, source.y, marker="o");
 	plt.plot(dest.x, dest.y, marker="o");
 	plt.annotate('Source', xy=(source.x, source.y), xytext=(source.x+5, source.y-6) );
@@ -93,7 +95,7 @@ for index, i in enumerate(temp_obstacles):
 	for j in i:
 		temp = point(j[0], j[1], index);
 		temp_obs.append(temp);
-	obstacles.append(temp_obs);	
+	obstacles.append(temp_obs);
 
 #-----------------------------------------------------------
 graph_vertices = [];
@@ -110,28 +112,28 @@ found = False;
 # Run the algorithm ! ---------------------------------------------
 # Find the path and save in a graph
 while(found is False):
-	
+
 	if( len(graph_vertices)>=1500 ):
 		print "Iteration limit Reached";
 		break;
 	graph.append([]);
-	
+
 	potential_next_vertex = choose_target();
 	if(potential_next_vertex.inside_polygon(obstacles) is True ):
 		graph = graph[:-1];
 		continue;
-	
+
 	vertex_index = potential_next_vertex.find_closest_point(graph_vertices);
 
 	if(graph_vertices[vertex_index].equals(potential_next_vertex)):
 		graph = graph[:-1];
 		continue;
-	
+
 	# temp_vertex = find_point_on_line(graph_vertices[vertex_index], potential_next_vertex, step_size);
 	temp_vertex = step_from_to(graph_vertices[vertex_index], potential_next_vertex, step_size);
-	
+
 	if(temp_vertex.inside_polygon(obstacles) is True ):
-		
+
 		graph = graph[:-1];
 		continue;
 	else:
@@ -154,8 +156,8 @@ while(found is False):
 
 			graph[n-1].append(n);
 			graph[n].append(n-1);
-			break;		
-		else:		
+			break;
+		else:
 			graph_vertices.append(potential_next_vertex);
 			n = len(graph_vertices)-1;
 
@@ -169,7 +171,7 @@ for index, i in enumerate(obstacles):
 	poly_x.append([p.x for p in i]);
 	poly_y.append([p.y for p in i]);
 
-	plt.fill( poly_x[index], poly_y[index], color="#512DA8");	
+	plt.fill( poly_x[index], poly_y[index], color="#512DA8");
 
 for index,i in enumerate(graph):
 	for j in i:
@@ -184,7 +186,8 @@ plt.plot(x_array, y_array, color="#000000", linewidth=2);
 plt.plot(graph_vertices[0].x, graph_vertices[0].y, marker="o")
 plt.plot(graph_vertices[-1].x, graph_vertices[-1].y, marker="o")
 
-plt.show();
+if SHOW_PLOT:
+    plt.show();
 
 #----------------------------------------------------
 # output into a file
@@ -196,7 +199,7 @@ str_to_write = "";
 #	    str_to_write = str_to_write + str(int(graph_vertices[index].x) )+  ","+ str(int(graph_vertices[index].y) )
 #    else:
 #        str_to_write = str_to_write + str(int(graph_vertices[index].x) )+  ","+ str(int(graph_vertices[index].y) ) + ","
-	
+
 #str_to_write = str_to_write[1:];
 
 #total_write = str_to_write+"\n";

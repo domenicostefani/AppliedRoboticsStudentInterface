@@ -55,7 +55,18 @@ void Arc::set(double x0, double y0, double th0, double k, double L) {
 };
 
 /*!
-* Compute the shortest path as a Dubin's maneuver.
+* Curve constructor 1
+*/
+
+Curve::Curve() {
+    a1.set(0.0,0.0,0.0,0.0,0.0);
+    a2.set(a1.xf, a1.yf, a1.thf, 0.0, 0.0);
+    a3.set(a2.xf, a2.yf, a2.thf, 0.0, 0.0);
+    L = a1.L + a2.L + a3.L;
+};
+
+/*!
+* Curve constructor 2
 */
 
 Curve::Curve(double x0, double y0, double th0, double s1, double s2,

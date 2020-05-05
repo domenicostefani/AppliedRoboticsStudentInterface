@@ -30,9 +30,9 @@ namespace dubins{
     double k;             // Arc curvature
     double L;             // Arc length
     double xf, yf, thf;   // Final position (x pos,y pos,yaw angle
-    
+
     Arc() {};
-    
+
     /*!
     * Set all class fields values at once
     * @param[in] x0        x position value of the start of the arc
@@ -41,7 +41,7 @@ namespace dubins{
     * @param[in] k         curvature of the arc
     * @param[in] L         arc length
     */
-    
+
     void set(double x0, double y0, double th0, double k, double L);
     std::vector<Position> discretizeArc(double delta, double& remainingDelta, double& last_s, bool add_endpoint);
   };
@@ -54,7 +54,11 @@ namespace dubins{
     Arc a1, a2, a3; // arcs
     double L;       // path length
     /*!
-    * Class constructor
+    * Class constructor 1
+    */
+    Curve();
+    /*!
+    * Class constructor 2
     * @param[in] x0        x position value of the start of the maneuver
     * @param[in] y0        y position value of the start of the maneuver
     * @param[in] th0       orientation angle of the start of the maneuver
