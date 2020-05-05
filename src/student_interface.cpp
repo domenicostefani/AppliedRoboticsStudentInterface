@@ -1123,7 +1123,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
                                                const vector<Polygon>& obstacle_list){
     /* ----------------------------- PARAMETERS ----------------------------- */
     const unsigned short NUM_ANGLES = 4;   // Number of angles to test for each free point
-    const bool MDP_VERBOSE = true;        // Setting this to true prints additional info for debug (Warning: it can get verbose)
+    const bool MDP_VERBOSE = false;        // Setting this to true prints additional info for debug (Warning: it can get verbose)
     const bool USE_ANGLE_HEURISTIC = true; // Setting this to true tries to improve the way that free angles are chosen
 
     /* ------------------------- RECURSIVE ALGORITHM ------------------------ */
@@ -1310,6 +1310,30 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
     return std::make_pair(!allAnglesResultInCollision,bestRecursivePath);  // Return true if the path does not collide
 }
 
+bool isPathColliding(vector<Point> vertices, vector<Polygon> obstacle_list){
+    for (int i = 1; i < vertices.size(); ++i) {
+        double x0, y0, xf, yf;
+        x0 = vertices[i-1].x;
+        y0 = vertices[i-1].y;
+        xf = vertices[i].x;
+        yf = vertices[i].y;
+
+        for (Polygon p : obstacle_list) {
+            for (int k = 0; k < p.size(); k++) {
+                bool collision = false;
+                if (k == p.size()-1)
+                    collision = isSegmentColliding(Point(x0,y0), Point(xf,yf), p[k], p[0]);
+                else
+                    collision = isSegmentColliding(Point(x0,y0), Point(xf,yf), p[k], p[k+1]);
+
+                if (collision)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool pathSmoothing(int start_index, int finish_index, vector<Point> vertices,
                    vector<Polygon> obstacle_list, vector<Point>& short_path) {
     // c++;
@@ -1474,6 +1498,8 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     if (path_not_found) {
         throw runtime_error("Path not found!");
     }
+
+    assert(!isPathColliding(vertices, obstacle_list));  // If the rrt path collides there is an error in the python script or conversion
 
     cout << "------------------------------------------------------------" << endl;
     cout << "STEP 1: Path Obtained (Steps in path: " << to_string(vertices.size()) << ")" << endl;
