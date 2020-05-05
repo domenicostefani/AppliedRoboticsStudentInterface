@@ -8,13 +8,14 @@
 #include <stdlib.h>
 #include <vector>
 #include <math.h>
+#include <limits>
 
 #define AUTO_CORNER_DETECTION false
 
 // #define COLOR_RANGE_DEBUG // Prints info about HSV ranges used for colors
 #define DUBINS_DEBUG false
 //#define IMSHOW_DEBUG
-#define DEBUG_DRAWCURVE //TODO: move to better place
+#define DEBUG_DRAWCURVE
 
 using namespace std;
 
@@ -40,7 +41,7 @@ struct Color_config {
 
 #ifdef DEBUG_DRAWCURVE
 //-------------------DRAWING DUBINS CURVES-------------------
-cv::Mat dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255)); //TODO: wise to have a global variable?
+cv::Mat dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255));
 #endif
 
 void loadImage(cv::Mat& img_out, const string& config_folder) {
@@ -385,8 +386,6 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     cv::Mat red_hue_image;
     cv::addWeighted(lower_red_hue_range, 1.0, upper_red_hue_range, 1.0, 0.0, red_hue_image);
     //This can reduce false positives
-    // cv::GaussianBlur(red_hue_image, red_hue_image, cv::Size(9, 9), 2, 2); //TODO: keep or remove? decide
-
 
     // compute robot dimension from barycenter for obstacle dilation
     // distance between robot triangle front vertex and barycenter is triangle height/3*2
@@ -724,12 +723,9 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
     vector<vector<cv::Point>> contours;
     cv::findContours(blue_mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-    #ifdef FIND_ROBOT_DEBUG_PLOT // do this only if FIND_DEBUG_PLOT is defined
-        //cv::imshow("findRobotHsv", hsv_img);          //TODO: keep or remove? decide
-        //cv::imshow("findRobotMask", blue_mask);
+    #ifdef FIND_ROBOT_DEBUG_PLOT
         cv::Mat contours_img;
         contours_img = img_in.clone();
-        //cv::drawContours(contours_img, contours, -1, cv::Scalar(0,0,0), 4, cv::LINE_AA);
     #endif
 
     vector<cv::Point> approx_curve;
@@ -1120,124 +1116,198 @@ void drawDubinsArc(dubins::Arc& da) {
 
 //-------------------end DRAWING DUBINS CURVES-------------------
 
-/*  TODO: keep or remove? decide
-// TODO: fix wrong thf angle
-//
-// int c = 0;
+std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
+                                               unsigned int startIdx, unsigned int arriveIdx,
+                                               double startAngle, double arriveAngle,
+                                               double& returnedLength, const double Kmax,
+                                               const vector<Polygon>& obstacle_list){
+    /* ----------------------------- PARAMETERS ----------------------------- */
+    const unsigned short NUM_ANGLES = 4;   // Number of angles to test for each free point
+    const bool MDP_VERBOSE = true;        // Setting this to true prints additional info for debug (Warning: it can get verbose)
+    const bool USE_ANGLE_HEURISTIC = true; // Setting this to true tries to improve the way that free angles are chosen
 
-bool recursiveMDP(int i, int j, double th0, double thf, vector<Point>& short_path, vector<dubins::Curve>& multipoint_dubins_path, double& Kmax, int& pidx, const vector<Polygon>& obstacle_list) {
+    /* ------------------------- RECURSIVE ALGORITHM ------------------------ */
+    if (MDP_VERBOSE) cout << "called with indexes " << startIdx << ", "<< arriveIdx << endl;
 
-    //c++;
-    //if (c > 500) {
-    //  return false;
-    //}
+    // RECURSION ERROR CASES:
+    if(arriveIdx == startIdx)
+        throw std::invalid_argument("Error: arriveIdx cannot be equal to startIdx");
+    if(arriveIdx < startIdx)
+        throw std::invalid_argument("Error: arriveIdx cannot be smaller than startIdx");
 
-    double x0 = short_path[i].x;
-    double y0 = short_path[i].y;
+    // RECURSION BASE CASE 1: Called on two points, the function computes the connecting Dubins path
+    //           o---o
+    // nodes:    1   2
+    // segments:   A
+    if(arriveIdx-startIdx == 1){
+        if(MDP_VERBOSE) cout << "MDP(): Recursion BASE Case 1" << endl;
+        // Compute the curve for segment A and check for collisions
+        int pidx = 0;
+        double x1 = path[startIdx].x;
+        double y1 = path[startIdx].y;
+        double theta1 = startAngle;
+        double x2 = path[arriveIdx].x;
+        double y2 = path[arriveIdx].y;
+        double theta2 = arriveAngle;
+        dubins::Curve curve = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
+        bool isColliding = curveCollision(curve, obstacle_list);
 
-    double xf = short_path[j].x;
-    double yf = short_path[j].y;
+        returnedLength = isColliding ? std::numeric_limits<double>::max() : curve.L;
+        std::vector<dubins::Curve> multipointPath(path.size()-1);    // segments are one less than the num of points
+        if(!isColliding)
+            multipointPath.at(startIdx) = curve; //ERRORE?
 
-    dubins::Curve curve = dubins::Curve(0,0,0,0,0,0,0,0,0);
-    bool collision = true;
-    double alpha = th0;
-
-    for (int i = 0; i < 16; i++) {
-        alpha += 6.28/16*i;
-        curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, alpha, Kmax, pidx);
-        collision = curveCollision(curve, obstacle_list);
-
-        if (!collision) {
-            break;
-        }
+        return std::make_pair(!isColliding,multipointPath);  // Return true if the path does not collide
     }
 
-    if (!collision) {
-        // add curve to final path
-        multipoint_dubins_path.push_back(curve);
-        thf = alpha;
+    // RECURSION BASE CASE 2: Called on three points it checks for NUM_ANGLES for the middle point
+    //            o---o---o
+    // nodes:     1   2   3
+    // segments:    A   B
+    if(arriveIdx-startIdx == 2){
+        if(MDP_VERBOSE) cout << "MDP(): Recursion BASE Case 2" << endl;
+        std::pair<dubins::Curve,dubins::Curve> bestCurves;
+        double bestLength =  std::numeric_limits<double>::max();
+        bool allAnglesResultInCollision = true; // If no angle choice provides a non-colliding path, the call must fail
 
-        ///////////////////////
-        drawDubinsArc(curve.a1);
-        drawDubinsArc(curve.a2);
-        drawDubinsArc(curve.a3);
+        for(int i = 0; i < NUM_ANGLES; ++i){
+            double alpha_middlepoint = (2*M_PI)/NUM_ANGLES * i;
+            if(USE_ANGLE_HEURISTIC)
+                alpha_middlepoint += (startAngle + arriveAngle)/2;   // adding the average of the other angles should improve the angle choice
 
-        return true;
-    } else {
-        int k = (i+j)/2;
+            double x1, y1, theta1, x2, y2, theta2;
+            int pidx;
+            // Compute the curve for segment A and check for collisions
+            // A: starts from startIdx, angle: startAngle | ends in startIdx+1, angle: alpha_middlepoint
+            pidx = 0;
+            x1 = path[startIdx].x;
+            y1 = path[startIdx].y;
+            theta1 = startAngle;
+            x2 = path[startIdx+1].x;
+            y2 = path[startIdx+1].y;
+            theta2 = alpha_middlepoint;
+            dubins::Curve curveA = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
+            bool isAColliding = curveCollision(curveA, obstacle_list);
+            // Compute the curve for segment B and check for collisions
+            // B: starts from arriveIdx-1, angle: alpha_middlepoint | ends in arriveIdx, angle: arriveAngle
+            pidx = 0;
+            x1 = path[arriveIdx-1].x;
+            y1 = path[arriveIdx-1].y;
+            theta1 = alpha_middlepoint;
+            x2 = path[arriveIdx].x;
+            y2 = path[arriveIdx].y;
+            theta2 = arriveAngle;
+            dubins::Curve curveB = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
+            bool isBColliding = curveCollision(curveB, obstacle_list);
 
-        if (j-i > 1) {
-            bool r1 = recursiveMDP(i, k, th0, thf, short_path, multipoint_dubins_path, Kmax, pidx, obstacle_list);
-            bool r2 = recursiveMDP(k, j, thf, thf, short_path, multipoint_dubins_path, Kmax, pidx, obstacle_list);
+            double lengthAB = curveA.L + curveB.L;
 
-            return r1 && r2;
-        } else {
-            return false;
-        }
-    }
-}
-*/
-
-bool MDP(double th0, double thf, vector<Point>& short_path,
-         vector<dubins::Curve>& multipoint_dubins_path, double Kmax, int& pidx,
-         const vector<Polygon>& obstacle_list) {
-    // #define MDP_DEBUG
-
-#ifdef MDP_DEBUG
-    static int mdp_counter = 0;
-    mdp_counter++;
-    cout << "MDP() called #" << mdp_counter << endl;
-#endif
-
-    bool collision = false;
-    dubins::Curve curve = dubins::Curve(0,0,0,0,0,0,0,0,0);
-    dubins::Curve best_curve = dubins::Curve(0,0,0,0,0,0,0,0,0);
-    double shortest_L = 10000;
-    double x0, y0, xf, yf;
-    double alpha = th0;
-
-    for (int i = 0; i < short_path.size()-1; i++) {
-        x0 = short_path[i].x;
-        y0 = short_path[i].y;
-        xf = short_path[i+1].x;
-        yf = short_path[i+1].y;
-
-        if (i == short_path.size()-1) {
-            #ifdef MDP_DEBUG
-                    cout << "call to dubins (from MDP) #" << mdp_counter << endl;
-            #endif
-            curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx);
-            collision = curveCollision(curve, obstacle_list);
-        } else {
-            for (int j = 0; j < 16; j++) {
-                alpha += 6.28/16*j; //radians
-                #ifdef MDP_DEBUG
-                        cout << "call to dubins (from MDP) #" << mdp_counter << endl;
-                #endif
-                curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, alpha, Kmax, pidx);
-                collision = curveCollision(curve, obstacle_list);
-
-                if ((!collision) && (curve.L < shortest_L)) {
-                    shortest_L = curve.L;
-                    best_curve = curve;
-                }
+            if((!isAColliding) && (!isBColliding) && (lengthAB < bestLength)){
+                allAnglesResultInCollision = false;
+                bestLength = lengthAB;
+                bestCurves = std::make_pair(curveA,curveB);
             }
         }
+        std::vector<dubins::Curve> multipointPath(path.size()-1);    // segments are one less than the num of points
+        if (!allAnglesResultInCollision){    //push best curves in path IF !allAnglesResultInCollision
+            assert(bestLength == bestCurves.first.L + bestCurves.second.L);    // sanity check
+            multipointPath.at(startIdx) = bestCurves.first;
+            multipointPath.at(arriveIdx-1) = bestCurves.second;
+        }
 
-        if (!collision) {
-            multipoint_dubins_path.push_back(best_curve);
-#ifdef DEBUG_DRAWCURVE
-            drawDubinsArc(curve.a1);
-            drawDubinsArc(curve.a2);
-            drawDubinsArc(curve.a3);
-#endif
-            th0 = alpha;
-        } else {
-            cout << "ERROR: COLLISION" << endl;
-            return false;
+        returnedLength = allAnglesResultInCollision ? std::numeric_limits<double>::max() : bestLength;  //Return best length
+        return std::make_pair(!allAnglesResultInCollision,multipointPath);  // Return true if the path does not collide
+    }
+
+    // RECURSION STEP: for more than 3 points (2 segments)
+    //              o---o [...] o---o
+    // nodes:       1   2      n-1  n
+    // segments:      A           B
+    // the solution corresponds to the sum of the initial segment, the recursive
+    // path for indexes in the middle and the final segment.
+    // The initial and final angles are fixed (exit angle from node 1 and
+    // arrival angle in node n. The arrival angle in node 2 and the exit angle
+    // from node n-1 are free and they are chosen from a pool of NUM_ANGLES
+    // according to which ones correspond to the shortest non-colliding path.
+    // NOTE: the arrival angle for node 2 is called alpha_first and the exit
+    // angle from node n-1 is called alpha_second
+    if(MDP_VERBOSE) cout << "MDP(): RECURSIVE step" << endl;
+
+    std::pair<dubins::Curve,dubins::Curve> bestCurves;  // best dubins curves yet
+    double bestLength = std::numeric_limits<double>::max();
+    std::vector<dubins::Curve> bestRecursivePath;
+    bool allAnglesResultInCollision = true; // If no angle choice provides a non-colliding path, the call must fail
+
+    for(int i = 0; i < NUM_ANGLES; ++i){
+        for(int j = 0; j < NUM_ANGLES; ++j){
+            double alpha_first = (2*M_PI)/NUM_ANGLES * i;
+            double alpha_second = (2*M_PI)/NUM_ANGLES * j;
+
+            if(USE_ANGLE_HEURISTIC){
+                alpha_first += startAngle;
+                alpha_second += arriveAngle;
+            }
+
+            double x1, y1, theta1, x2, y2, theta2;
+            int pidx;
+            // Compute the curve for segment A and check for collisions
+            // A: starts from startIdx, angle: startAngle | ends in startIdx+1, angle: alpha_first
+            pidx = 0;
+            x1 = path[startIdx].x;
+            y1 = path[startIdx].y;
+            theta1 = startAngle;
+            x2 = path[startIdx+1].x;
+            y2 = path[startIdx+1].y;
+            theta2 = alpha_first;
+            dubins::Curve curveA = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
+            bool isAColliding = curveCollision(curveA, obstacle_list);
+            // Compute the curve for segment B and check for collisions
+            // B: starts from arriveIdx-1, angle: alpha_second | ends in arriveIdx, angle: arriveAngle
+            pidx = 0;
+            x1 = path[arriveIdx-1].x;
+            y1 = path[arriveIdx-1].y;
+            theta1 = alpha_second;
+            x2 = path[arriveIdx].x;
+            y2 = path[arriveIdx].y;
+            theta2 = arriveAngle;
+            dubins::Curve curveB = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
+            bool isBColliding = curveCollision(curveB, obstacle_list);
+
+            double recursivelyReturnedLength = -1;
+
+            bool result = false;
+            std::vector<dubins::Curve> recursiveReturnedPath;
+            if ((!isAColliding) && (!isBColliding)){
+                std::pair<bool,std::vector<dubins::Curve>> tuple;
+                tuple = MDP(path, startIdx+1,arriveIdx-1,
+                            alpha_first,alpha_second,
+                            recursivelyReturnedLength,
+                            Kmax, obstacle_list);
+                result = tuple.first;
+                recursiveReturnedPath = tuple.second;
+            }
+
+            double totLength = curveA.L + recursivelyReturnedLength + curveB.L;
+
+            if(result)
+                assert(recursivelyReturnedLength != std::numeric_limits<double>::max());    // sanity check
+            if((result) && (totLength < bestLength)){
+                allAnglesResultInCollision = false;
+                bestLength = totLength;
+                bestCurves = std::make_pair(curveA,curveB);
+                bestRecursivePath = recursiveReturnedPath;
+            }
         }
     }
-    return true;
+
+    if (!allAnglesResultInCollision){    //push best curves in path IF !allAnglesResultInCollision
+        assert(bestLength > bestCurves.first.L + bestCurves.second.L);    // sanity check
+        bestRecursivePath.at(startIdx) = bestCurves.first;
+        bestRecursivePath.at(arriveIdx-1) = bestCurves.second;
+    }
+
+    returnedLength = allAnglesResultInCollision ? std::numeric_limits<double>::max() : bestLength;  //Return best length
+    return std::make_pair(!allAnglesResultInCollision,bestRecursivePath);  // Return true if the path does not collide
 }
 
 bool pathSmoothing(int start_index, int finish_index, vector<Point> vertices,
@@ -1359,12 +1429,6 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     // The text file has ben prepared, now the external plan library is called
     //
 
-    // NOTES:          //TODO: remove when not needed
-    // the script writes in output.txt:
-    // the first line contains the centers of cells and midpoints of vertical lines     //TODO: this actually changes with rrt so we may remove it right?
-    // the second line is the path of ids of cells from the first line
-    // string cmd = "python " + vcd_dir + "/main.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt -algo rrt";
-
     // prepare script command
     string cmd = "python " + vcd_dir + "/rrt.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt";
     char str[cmd.size()+1];
@@ -1411,20 +1475,22 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         throw runtime_error("Path not found!");
     }
 
-    int pidx; // curve index //TODO: move down near usage? decide
-    //dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, thf, Kmax, pidx); //TODO: keep or remove? decide
-
-    cout << "Total steps in path: " << to_string(vertices.size()) << endl;
+    cout << "------------------------------------------------------------" << endl;
+    cout << "STEP 1: Path Obtained (Steps in path: " << to_string(vertices.size()) << ")" << endl;
+    cout << "------------------------------------------------------------" << endl;
 
     vector<Point> short_path;
     short_path.push_back(vertices[0]);
     bool is_path_smoothed = pathSmoothing(0, vertices.size()-1, vertices, obstacle_list, short_path);
 
     if(is_path_smoothed){
-        cout << "Path was shortened without collisions" << endl << flush;
+        cout << "STEP 2: Path Shortened (Steps in path: " << to_string(short_path.size()) << ")" << endl;
+        cout << "------------------------------------------------------------" << endl;
         assert(short_path.front() == vertices.front());
         assert(short_path.back() == vertices.back());
     }else{
+        cout << "STEP 2: FAILED! Collision in path shortening" << endl;
+        cout << "------------------------------------------------------------" << endl;
         throw logic_error("ERROR: path cannot be shortened");
         // TODO: Thie case might need to be handled in a better way:
         // This occurs often if the scaling factor for the python script is too
@@ -1443,21 +1509,12 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
     // TODO: repeat smoothing until length of path does not get smaller
 
-    cout << "SHORT PATH length: " << to_string(short_path.size()) << endl;
-
 #ifdef DEBUG_DRAWCURVE
     //
     //  Draw Curves to debug errors
     //
 
     const bool VERBOSE_DEBUG_DRAWCURVE = false;
-
-    if (VERBOSE_DEBUG_DRAWCURVE)    // TODO: consider removing this probe since the exception and the assert used before should ensure equality between the last points or failure
-    {
-        cout << "RRT  path last point = (" << vertices[vertices.size()-1].x << "," << vertices[vertices.size()-1].y << ")\n";
-        cout << "smth path last point = (" << short_path[short_path.size()-1].x << "," << short_path[short_path.size()-1].y << ")\n";
-        cout << flush;
-    }
 
     // draw borders
     for (int i = 0; i < borders.size(); i++)
@@ -1491,7 +1548,6 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     cv::waitKey(0);
 #endif
 
-    vector<dubins::Curve> multipoint_dubins_path;
     // Startpoint
     double x0 = short_path[0].x;
     double y0 = short_path[0].y;
@@ -1500,20 +1556,32 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     // add borders for collision check
     vector<Polygon> boundaries = obstacle_list;
     boundaries.push_back(borders);
-    //bool path_planned = recursiveMDP(0, total_steps-1, th0, thf, short_path, multipoint_dubins_path, Kmax, pidx, boundaries);
-    bool path_planned = MDP(th0, thf, short_path, multipoint_dubins_path, Kmax, pidx, boundaries);
+
+    double returnedLength = 0;  // unused here, just for recursion
+    cout << "Computing Dubins path..." << endl;
+    std::pair<bool,vector<dubins::Curve>> multipointResult;
+    multipointResult = MDP(short_path,
+                           0, short_path.size()-1,   // start and arrival indexes
+                           th0, thf,                 // start and arrive angles
+                           returnedLength, Kmax,
+                           boundaries);
+    bool path_planned = multipointResult.first;
+    vector<dubins::Curve> multipointPath = multipointResult.second;
 
     if (path_planned) {
-        cout << "Path planned successfully! " << endl;
+        cout << "STEP 3: Multipoint dubins curve planned successfully" << endl;
+        cout << "------------------------------------------------------------" << endl;
     } else {
+        cout << "STEP 3: FAILED multipoint dubins curve planning" << endl;
+        cout << "------------------------------------------------------------" << endl;
         throw runtime_error("Could NOT plan path!");
     }
 
     vector<Pose> points;
 
-    for (int i = 0; i < multipoint_dubins_path.size(); i++) {
+    for (int i = 0; i < multipointPath.size(); i++) {
         // Sample the curve with resolution @path_res
-        vector<dubins::Position> res = multipoint_dubins_path[i].discretizeSingleCurve(path_res);
+        vector<dubins::Position> res = multipointPath[i].discretizeSingleCurve(path_res);   //TODO: change to discretizeCurve() and manage carry values (remainders of the discretization used to have equal distance between points)
 
         // Path conversion into compatible output representation
         for (dubins::Position p : res) {
@@ -1524,45 +1592,6 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
     //Set output
     path.setPoints(points);
-
-    /* //TODO: keep or remove? decide
-    #ifdef DUBINS_DEBUG
-        printf("L: %f\n", curve.L);
-        printf("a1: %f [%f,%f,%f]>>[%f,%f,%f]\n", curve.a1.L,
-          curve.a1.x0,
-          curve.a1.y0,
-          curve.a1.th0,
-          curve.a1.xf,
-          curve.a1.y0,
-          curve.a1.thf);
-        printf("a2: %f [%f,%f,%f]>>[%f,%f,%f]\n", curve.a2.L,
-          curve.a2.x0,
-          curve.a2.y0,
-          curve.a2.th0,
-          curve.a2.xf,
-          curve.a2.y0,
-          curve.a2.thf);
-        printf("a3: %f [%f,%f,%f]>>[%f,%f,%f]\n", curve.a3.L,
-          curve.a3.x0,
-          curve.a3.y0,
-          curve.a3.th0,
-          curve.a3.xf,
-          curve.a3.y0,
-          curve.a3.thf);
-    #endif
-
-    ////   Sample the curve with resolution @path_res
-    vector<dubins::Position> res = curve.discretizeSingleCurve(path_res);
-    ////   Path conversion into compatible output representation
-    vector<Pose> points;
-    for (dubins::Position p : res) {
-        Pose pose(p.s,p.x,p.y,p.th,p.k);
-        points.push_back(pose);
-    }
-    path.setPoints(points); //Set output
-
-    */
-
     return true;
   }
 }
