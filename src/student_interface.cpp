@@ -9,6 +9,7 @@
 #include <vector>
 #include <math.h>
 #include <limits>
+#include <algorithm>
 
 #define AUTO_CORNER_DETECTION false
 
@@ -902,21 +903,39 @@ dubins::Curve findBestAngle(double& th0, double& thf, double& x0, double& y0,
     return best_curve;
   }
 
-bool isArcColliding(cv::Point2f center, bool clockwise, float radius,
-                    dubins::Arc a, Point pA, Point pB) {
+bool isArcColliding(dubins::Arc a, Point pA, Point pB) {
+    cv::Point2f center;
+    float radius = abs(1 / a.k);
+    bool clockwise;
+    float xc, yc;
+
+    if (a.k < 0) {
+        xc = cos(a.th0 - M_PI/2) * radius; //(th0 is perpendicular to the radius)
+        yc = sin(a.th0 - M_PI/2) * radius;
+
+        clockwise = false;
+    } else {
+        xc = cos(a.th0 + M_PI/2) * radius;
+        yc = sin(a.th0 + M_PI/2) * radius;
+        
+        clockwise = true;
+    }
+
+    center = cv::Point2f(xc + a.x0,yc + a.y0);
+
     float x1 = pA.x;
     float y1 = pA.y;
     float x2 = pB.x;
     float y2 = pB.y;
 
-    float p1 = 2 * x1 * x2; // intermediate variables
+    float p1 = 2 * x1 * x2;
     float p2 = 2 * y1 * y2;
     float p3 = 2 * center.x * x1;
     float p4 = 2 * center.x * x2;
     float p5 = 2 * center.y * y1;
     float p6 = 2 * center.y * y2;
 
-    // c1, c2 and c3 are the coefficients of the equation c1*t^2 + c2*t +c3 = 0
+    // c1*t^2 + c2*t + c3 = 0
     float c1 = x1*x1 + x2*x2 - p1 + y1*y1 + y2*y2 - p2;
     float c2 = -2*x2*x2 + p1 - p3 + p4 - 2*y2*y2 + p2 - p5 + p6;
     float c3 = x2*x2 - p4 + center.x*center.x + y2*y2 - p6 + center.y*center.y - radius*radius;
@@ -1005,43 +1024,20 @@ bool isSegmentColliding(Point a1, Point a2, Point p1, Point p2) {
 
 bool isColliding(dubins::Arc& a, Polygon p) {
     float k = a.k;
-    bool isArc;
-    cv::Point2f p1 = cv::Point2f(a.x0, a.y0);
-    cv::Point2f p2 = cv::Point2f(a.xf, a.yf);
-    cv::Point2f center;
-    float radius;
-    bool clockwise;
-
-    // if k=0, a is a segment, else it is an arc
-    if (k == 0) {
-        isArc = false;
-    } else {
-        radius = abs(1 / k);
-        if (a.k < 0) {
-            float xc = cos(a.th0 - M_PI/2) * radius; // xc = cos(th0 - Pi/2) * radius because th0 is perpendicular to the radius
-            float yc = sin(a.th0 - M_PI/2) * radius; // yc = sin(th0 - Pi/2) * radius
-            center = cv::Point2f(xc + a.x0,yc + a.y0);
-            clockwise = false;
-        } else {
-            float xc = cos(a.th0 + M_PI/2) * radius; // xc = cos(th0 + Pi/2) * radius because th0 is perpendicular to the radius
-            float yc = sin(a.th0 + M_PI/2) * radius; // yc = sin(th0 + Pi/2) * radius
-            center = cv::Point2f(xc + a.x0,yc + a.y0);
-            clockwise = true;
-        }
-
-        isArc = true;
-    }
 
     // add first vertex again to check segment between first and last
     p.push_back(p[0]);
 
+    // if k=0 a is a segment, else it is an arc
+
+    // check each segment in polygon p
     for (int i = 0; i < p.size()-1; i++) {
-        if (isArc) {
-            if (isArcColliding(center, clockwise, radius, a, p[i], p[i+1])) {
+        if (k == 0) {
+            if (isSegmentColliding(Point(a.x0, a.y0), Point(a.xf, a.yf), p[i], p[i+1])) {
                 return true;
             }
         } else {
-            if (isSegmentColliding(Point(a.x0, a.y0), Point(a.xf, a.yf), p[i], p[i+1])) {
+            if (isArcColliding(a, p[i], p[i+1])) {
                 return true;
             }
         }
@@ -1336,11 +1332,6 @@ bool isPathColliding(vector<Point> vertices, vector<Polygon> obstacle_list){
 
 bool pathSmoothing(int start_index, int finish_index, vector<Point> vertices,
                    vector<Polygon> obstacle_list, vector<Point>& short_path) {
-    // c++;
-    // cout << to_string(c) << " ";
-    // if (c > 500) {
-    //  return false;
-    // }
 
     // TODO: recursion missing STOP condition, eg. start_index == finish_index then return false
 
@@ -1523,10 +1514,21 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
             }
         }while(additional_shortening);
 
+        // additional iteration on reversed path
+        vector<Point> shorter_path;
+        std::reverse(short_path.begin(), short_path.end());
+        shorter_path.push_back(vertices[vertices.size()-1]);
+        bool reverse_smoothing = pathSmoothing(0, short_path.size()-1, short_path, obstacle_list, shorter_path);
+        if (reverse_smoothing){
+            cout << "\t>Path shortened AGAIN (size: " << short_path.size() << "->" << shorter_path.size() << ")" << endl;
+            std::reverse(shorter_path.begin(), shorter_path.end());
+            short_path = shorter_path;
+        }
+
         cout << "STEP 2: Path Shortened (Steps in path: " << to_string(short_path.size()) << ")" << endl;
         cout << "------------------------------------------------------------" << endl;
-        assert(short_path.front() == vertices.front());
-        assert(short_path.back() == vertices.back());
+        //assert(short_path.front() == vertices.front());
+        //assert(short_path.back() == vertices.back());
     }else{
         cout << "STEP 2: FAILED! Collision in path shortening" << endl;
         cout << "------------------------------------------------------------" << endl;
@@ -1578,6 +1580,8 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
             cv::line(dcImg, cv::Point(pol[i-1].x*debugImagesScale, pol[i-1].y*debugImagesScale),
                      cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(255,0,0),3);
         }
+        cv::line(dcImg, cv::Point(pol[0].x*debugImagesScale, pol[0].y*debugImagesScale),
+                     cv::Point(pol[pol.size()-1].x*debugImagesScale, pol[pol.size()-1].y*debugImagesScale), cv::Scalar(255,0,0),3);
     }
 
     cv::flip(dcImg, dcImg, 0);
