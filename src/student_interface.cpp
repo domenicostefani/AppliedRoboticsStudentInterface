@@ -1510,6 +1510,19 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     bool is_path_smoothed = pathSmoothing(0, vertices.size()-1, vertices, obstacle_list, short_path);
 
     if(is_path_smoothed){
+        cout << "\t>Path shortened ONCE  (size: " << short_path.size() << ")" << endl;
+        bool additional_shortening;
+        do{
+            vector<Point> shorter_path;
+            shorter_path.push_back(vertices[0]);
+            bool success = pathSmoothing(0, short_path.size()-1, short_path, obstacle_list, shorter_path);
+            additional_shortening = success && (shorter_path.size() < short_path.size());
+            if (additional_shortening){
+                cout << "\t>Path shortened AGAIN (size: " << short_path.size() << "->" << shorter_path.size() << ")" << endl;
+                short_path = shorter_path;
+            }
+        }while(additional_shortening);
+
         cout << "STEP 2: Path Shortened (Steps in path: " << to_string(short_path.size()) << ")" << endl;
         cout << "------------------------------------------------------------" << endl;
         assert(short_path.front() == vertices.front());
@@ -1532,9 +1545,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         // OR we go for a good floating point RRT library (elegant and fast).
         // (Maybe http://ompl.kavrakilab.org/planners.html)
     }
-
-    // TODO: repeat smoothing until length of path does not get smaller
-
+    
 #ifdef DEBUG_DRAWCURVE
     //
     //  Draw Curves to debug errors
