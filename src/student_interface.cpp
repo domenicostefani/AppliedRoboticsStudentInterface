@@ -1022,7 +1022,7 @@ bool isSegmentColliding(Point a1, Point a2, Point p1, Point p2) {
     return isSegColliding;
 }
 
-bool isColliding(dubins::Arc& a, Polygon p) {
+bool isCollidingWithPolygon(dubins::Arc& a, Polygon p) {
     float k = a.k;
 
     // add first vertex again to check segment between first and last
@@ -1045,29 +1045,28 @@ bool isColliding(dubins::Arc& a, Polygon p) {
     return false;
 }
 
-bool curveCollision(dubins::Curve& curve, const vector<Polygon>& obstacle_list) {
-    for (Polygon p : obstacle_list) {
-        if (isColliding(curve.a1, p)) {
+bool isCurveColliding(dubins::Curve& curve, const vector<Polygon>& obstacle_list) {
+    /*for (Polygon p : obstacle_list) {
+        if (isCollidingWithPolygon(curve.a1, p)) {
             return true;
-        } else if (isColliding(curve.a2, p)) {
+        } else if (isCollidingWithPolygon(curve.a2, p)) {
             return true;
-        } else if (isColliding(curve.a3, p)) {
+        } else if (isCollidingWithPolygon(curve.a3, p)) {
             return true;
         }
-    }
+    }*/
     return false;
 }
 
 #ifdef DEBUG_DRAWCURVE
 
-// Method that draws a dubins arc
 void drawDubinsArc(dubins::Arc& da) {
 
     cv::Point2f startf = cv::Point2f(da.x0*debugImagesScale, da.y0*debugImagesScale);
     cv::Point2f finishf = cv::Point2f(da.xf*debugImagesScale, da.yf*debugImagesScale);
 
     if (da.k == 0) {
-        cv::line(dcImg, cv::Point(startf.x,startf.y), cv::Point(finishf.x,finishf.y), cv::Scalar(0,235,0),1); // draw the line
+        cv::line(dcImg, cv::Point(startf.x,startf.y), cv::Point(finishf.x,finishf.y), cv::Scalar(255,200,0),2); // draw the line
     } else {
         float radius = abs(1 / da.k)*debugImagesScale; // radius is 1/k
         cv::Point2f centerf;
@@ -1094,23 +1093,22 @@ void drawDubinsArc(dubins::Arc& da) {
             for (unsigned int i = 0; 0.01 < ((dubins::mod2pi(thetastart + passo*i) - thetafinish)*(dubins::mod2pi(thetastart + passo*i) -thetafinish)); i++) {
                 cv::Point startSegment = cv::Point(cos(thetastart + passo*i  )*radius + centerf.x,+ sin(thetastart + passo*i  )*radius + centerf.y);
                 cv::Point finishSegment = cv::Point(cos(thetastart + passo*(i+1)  )*radius + centerf.x, sin(thetastart + passo*(i+1))*radius + centerf.y);
-                cv::line(dcImg, startSegment, finishSegment, cv::Scalar(0,255,255),1); // draw the line
+                cv::line(dcImg, startSegment, finishSegment, cv::Scalar(255,200,0),2); // draw the line
             }
         } else { // counter clockwise segment drawing
             for (unsigned int i = 0; 0.01 < ((dubins::mod2pi(thetastart - passo*i) - thetafinish)*(dubins::mod2pi(thetastart - passo*i) - thetafinish)); i++) {
                 cv::Point startSegment = cv::Point(cos(thetastart - passo*i  )*radius + centerf.x,+ sin(thetastart - passo*i  )*radius + centerf.y);
                 cv::Point finishSegment = cv::Point(cos(thetastart - passo*(i+1)  )*radius + centerf.x, sin(thetastart - passo*(i+1))*radius + centerf.y);
-                cv::line(dcImg, startSegment, finishSegment, cv::Scalar(0,255,255),1); // draw the line
+                cv::line(dcImg, startSegment, finishSegment, cv::Scalar(255,200,0),2); // draw the line
            }
         }
 
-        cv::circle(dcImg,start,2,cv::Scalar(0,255,255),1);
-        cv::circle(dcImg,finish,2,cv::Scalar(0,255,255),1);
+        cv::circle(dcImg,start,2,cv::Scalar(0,0,0),3);
+        cv::circle(dcImg,finish,2,cv::Scalar(0,0,0),3);
     }
 }
-#endif
 
-//-------------------end DRAWING DUBINS CURVES-------------------
+#endif
 
 std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
                                                unsigned int startIdx, unsigned int arriveIdx,
@@ -1146,7 +1144,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
         double y2 = path[arriveIdx].y;
         double theta2 = arriveAngle;
         dubins::Curve curve = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
-        bool isColliding = curveCollision(curve, obstacle_list);
+        bool isColliding = isCurveColliding(curve, obstacle_list);
 
         returnedLength = isColliding ? std::numeric_limits<double>::max() : curve.L;
         std::vector<dubins::Curve> multipointPath(path.size()-1);    // segments are one less than the num of points
@@ -1183,7 +1181,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
             y2 = path[startIdx+1].y;
             theta2 = alpha_middlepoint;
             dubins::Curve curveA = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
-            bool isAColliding = curveCollision(curveA, obstacle_list);
+            bool isAColliding = isCurveColliding(curveA, obstacle_list);
             // Compute the curve for segment B and check for collisions
             // B: starts from arriveIdx-1, angle: alpha_middlepoint | ends in arriveIdx, angle: arriveAngle
             pidx = 0;
@@ -1194,7 +1192,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
             y2 = path[arriveIdx].y;
             theta2 = arriveAngle;
             dubins::Curve curveB = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
-            bool isBColliding = curveCollision(curveB, obstacle_list);
+            bool isBColliding = isCurveColliding(curveB, obstacle_list);
 
             double lengthAB = curveA.L + curveB.L;
 
@@ -1256,7 +1254,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
             y2 = path[startIdx+1].y;
             theta2 = alpha_first;
             dubins::Curve curveA = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
-            bool isAColliding = curveCollision(curveA, obstacle_list);
+            bool isAColliding = isCurveColliding(curveA, obstacle_list);
             // Compute the curve for segment B and check for collisions
             // B: starts from arriveIdx-1, angle: alpha_second | ends in arriveIdx, angle: arriveAngle
             pidx = 0;
@@ -1267,7 +1265,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
             y2 = path[arriveIdx].y;
             theta2 = arriveAngle;
             dubins::Curve curveB = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
-            bool isBColliding = curveCollision(curveB, obstacle_list);
+            bool isBColliding = isCurveColliding(curveB, obstacle_list);
 
             double recursivelyReturnedLength = -1;
 
@@ -1557,7 +1555,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
     // draw borders
     for (int i = 0; i < borders.size(); i++)
-        cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,235,0),2); // draw the line
+        cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,0,0),3); // draw the line
     // draw original path
     for (int i = 0; i < vertices.size(); i++) {
         cv::circle(dcImg, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(255,0,0),CV_FILLED);
@@ -1566,6 +1564,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
             cv::line(dcImg, cv::Point(vertices[i-1].x*debugImagesScale, vertices[i-1].y*debugImagesScale),
                      cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), cv::Scalar(255,0,0),2);
     }
+    /*
     //Draw Smothed path Dots and lines
     for (int i = 0; i < short_path.size(); i++) {
         cv::circle(dcImg, cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), 2, cv::Scalar(255,235,0),CV_FILLED);
@@ -1574,19 +1573,16 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
             cv::line(dcImg, cv::Point(short_path[i-1].x*debugImagesScale, short_path[i-1].y*debugImagesScale),
                      cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), cv::Scalar(255,235,0),2);
     }
+    */
     //Draw obstacles
     for (const Polygon &pol : obstacle_list){
         for (int i=1; i<pol.size(); ++i){
             cv::line(dcImg, cv::Point(pol[i-1].x*debugImagesScale, pol[i-1].y*debugImagesScale),
-                     cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(255,0,0),3);
+                     cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(0,0,255),2);
         }
         cv::line(dcImg, cv::Point(pol[0].x*debugImagesScale, pol[0].y*debugImagesScale),
-                     cv::Point(pol[pol.size()-1].x*debugImagesScale, pol[pol.size()-1].y*debugImagesScale), cv::Scalar(255,0,0),3);
+                     cv::Point(pol[pol.size()-1].x*debugImagesScale, pol[pol.size()-1].y*debugImagesScale), cv::Scalar(0,0,255),2);
     }
-
-    cv::flip(dcImg, dcImg, 0);
-    cv::imshow("Curves",dcImg); ///////////////////
-    cv::waitKey(0);
 #endif
 
     // Startpoint
@@ -1608,6 +1604,21 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
                            boundaries);
     bool path_planned = multipointResult.first;
     vector<dubins::Curve> multipointPath = multipointResult.second;
+
+#ifdef DEBUG_DRAWCURVE
+
+    for (int i = 0; i < multipointPath.size(); i++)
+    {
+        drawDubinsArc(multipointPath[i].a1);
+        drawDubinsArc(multipointPath[i].a2);
+        drawDubinsArc(multipointPath[i].a3);
+    }
+
+    cv::flip(dcImg, dcImg, 0);
+    cv::imshow("Curves",dcImg); ///////////////////
+    cv::waitKey(0);
+
+#endif
 
     if (path_planned) {
         cout << "STEP 3: Multipoint dubins curve planned successfully" << endl;
@@ -1633,6 +1644,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
     //Set output
     path.setPoints(points);
+   
     return true;
   }
 }
