@@ -17,6 +17,7 @@
 #define DUBINS_DEBUG false
 //#define IMSHOW_DEBUG
 #define DEBUG_DRAWCURVE
+#define PLAN_DEBUG
 
 using namespace std;
 
@@ -691,6 +692,12 @@ void baricenter(const Polygon& polygon, double& cx, double& cy) {
     #endif //BARICENTER_DEBUG
 }
 
+Point baricenter(const Polygon& polygon){
+    double cx,cy;
+    baricenter(polygon,cx,cy);
+    return Point(cx,cy);
+}
+
 bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
                double& x, double& y, double& theta,
                const string& config_folder) {
@@ -917,7 +924,7 @@ bool isArcColliding(dubins::Arc a, Point pA, Point pB) {
     } else {
         xc = cos(a.th0 + M_PI/2) * radius;
         yc = sin(a.th0 + M_PI/2) * radius;
-        
+
         clockwise = true;
     }
 
@@ -1376,23 +1383,9 @@ bool pathSmoothing(int start_index, int finish_index, vector<Point> vertices,
     }
 }
 
-
-bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
-              const vector<pair<int,Polygon>>& victim_list, const Polygon& gate,
-              const float x, const float y, const float theta, Path& path,
-              const string& config_folder) {
-    // #define DUBINS_DEBUG
-    #define PLAN_DEBUG
-
-    #ifdef PLAN_DEBUG
-        printf("--------PLANNING WAS CALLED--------\n");
-        fflush(stdout);
-    #endif
-
-    double xf, yf, thf;                   // Endpoint
-    centerGate(gate,borders,xf,yf,thf);  // Endpoint computation
-    const double Kmax = 10.0;                   // Maximum curvature
-    const double path_res = 0.01;               // Path resolution (sampling)
+vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle_list,
+                  const float x0, const float y0, const float xf, const float yf,
+                  const string& config_folder){
 
     //
     // write the problem parameters to a file that will be fed to a planning lib
@@ -1434,7 +1427,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     }
 
     //write source and destination on the third line
-    output << "(" << int(x*pythonUpscale) << "," << int(y*pythonUpscale) << "),(" << int(xf*pythonUpscale) << "," << int(yf*pythonUpscale) << ")";
+    output << "(" << int(x0*pythonUpscale) << "," << int(y0*pythonUpscale) << "),(" << int(xf*pythonUpscale) << "," << int(yf*pythonUpscale) << ")";
 
     output.close();
 
@@ -1486,6 +1479,59 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
     if (path_not_found) {
         throw runtime_error("Path not found!");
+    }
+
+    return vertices;
+}
+
+bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
+              const vector<pair<int,Polygon>>& victim_list, const Polygon& gate,
+              const float x, const float y, const float theta, Path& path,
+              const string& config_folder) {
+    // #define DUBINS_DEBUG
+
+    #ifdef PLAN_DEBUG
+        printf("--------PLANNING WAS CALLED--------\n");
+        fflush(stdout);
+    #endif
+
+    double xf, yf, thf;                   // Endpoint
+    centerGate(gate,borders,xf,yf,thf);  // Endpoint computation
+    const double Kmax = 10.0;                   // Maximum curvature
+    const double path_res = 0.01;               // Path resolution (sampling)
+
+    //
+    // Sort Victims by ID
+    //
+
+    vector<pair<int,Polygon>> orderedVictimList = victim_list;
+    sort(orderedVictimList.begin(), orderedVictimList.end(), [](const pair<int,Polygon>& lhs, const pair<int,Polygon>& rhs) {
+      return lhs.first < rhs.first;
+    });
+
+    //
+    // Create a vector of crucial points (start, victims, end);
+    //
+    vector<Point> pathObjectives;
+    pathObjectives.push_back(Point(x,y));              // push initial point
+    for(const pair<int,Polygon>& victim : orderedVictimList)
+        pathObjectives.push_back(baricenter(victim.second));  //push each victim center
+    pathObjectives.push_back(Point(xf,yf));            // push final point
+
+    //
+    // Call a path planner for each segment to plan
+    //
+
+    vector<Point> vertices;
+    for(int i = 1; i < pathObjectives.size(); ++i){
+        float x1,y1,x2,y2;
+        x1 = pathObjectives[i-1].x;
+        y1 = pathObjectives[i-1].y;
+        x2 = pathObjectives[i].x;
+        y2 = pathObjectives[i].y;
+        vector<Point> partial = RRTplanner(borders,obstacle_list,x1,y1,x2,y2,config_folder);    //TODO: change vertices name with something more appropriate?
+        vertices.insert(vertices.end(),partial.begin(),partial.end());
+        //TODO URGENT: move smoothing inside here
     }
 
     assert(!isPathColliding(vertices, obstacle_list));  // If the rrt path collides there is an error in the python script or conversion
@@ -1545,7 +1591,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         // OR we go for a good floating point RRT library (elegant and fast).
         // (Maybe http://ompl.kavrakilab.org/planners.html)
     }
-    
+
 #ifdef DEBUG_DRAWCURVE
     //
     //  Draw Curves to debug errors
@@ -1644,7 +1690,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
     //Set output
     path.setPoints(points);
-   
+
     return true;
   }
 }
