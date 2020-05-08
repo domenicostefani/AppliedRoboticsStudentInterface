@@ -17,7 +17,9 @@
 #define DUBINS_DEBUG false
 //#define IMSHOW_DEBUG
 #define DEBUG_DRAWCURVE
-#define PLAN_DEBUG
+// #define DEBUG_PLANPATH
+// #define DEBUG_RRT
+constexpr bool DEBUG_PATH_SMOOTHING = false;
 
 using namespace std;
 
@@ -1397,7 +1399,7 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
         throw runtime_error("Cannot write file: " + vcd_dir + "/i.txt");
     }
 
-    #ifdef PLAN_DEBUG
+    #ifdef DEBUG_RRT
         printf("Writing problem parameters to file\n");
         printf("Measure are upscaled by a scale factor of: %d\n",pythonUpscale);
     #endif
@@ -1484,13 +1486,74 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     return vertices;
 }
 
+vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>& obstacle_list){ //TODO: change name
+    vector<Point> smoothedPath; //TODO: change name
+    smoothedPath.push_back(path[0]);
+    bool is_path_smoothed = pathSmoothing(0, path.size()-1, path, obstacle_list, smoothedPath);
+
+    if(is_path_smoothed){
+        if(DEBUG_PATH_SMOOTHING) cout << "\t>Path shortened ONCE  (size: " << smoothedPath.size() << ")" << endl;
+        bool additional_shortening;
+        do{
+            vector<Point> shorter_path;
+            shorter_path.push_back(path[0]);
+            bool success = pathSmoothing(0, smoothedPath.size()-1, smoothedPath, obstacle_list, shorter_path);
+            additional_shortening = success && (shorter_path.size() < smoothedPath.size());
+            if (additional_shortening){
+                if(DEBUG_PATH_SMOOTHING) cout << "\t>Path shortened AGAIN (size: " << smoothedPath.size() << "->" << shorter_path.size() << ")" << endl;
+                smoothedPath = shorter_path;
+            }
+        }while(additional_shortening);
+
+        assert(smoothedPath.front() == path.front());
+        assert(smoothedPath.back() == path.back());
+
+        {
+            // additional iteration on reversed path
+            vector<Point> shorter_path;
+            std::reverse(smoothedPath.begin(), smoothedPath.end());
+            shorter_path.push_back(path[path.size()-1]);
+            bool reverse_smoothing = pathSmoothing(0, smoothedPath.size()-1, smoothedPath, obstacle_list, shorter_path);
+            if (reverse_smoothing){
+                if(DEBUG_PATH_SMOOTHING) cout << "Reverse smoothing SUCCESS" << endl;
+                if(DEBUG_PATH_SMOOTHING) cout << "\t>Path shortened AGAIN (size: " << smoothedPath.size() << "->" << shorter_path.size() << ")" << endl;
+                std::reverse(shorter_path.begin(), shorter_path.end());
+                smoothedPath = shorter_path;
+            }else{
+                if(DEBUG_PATH_SMOOTHING) cout << "Reverse smoothing FAIL" << endl;
+            }
+        }
+
+        assert(smoothedPath.front() == path.front());
+        assert(smoothedPath.back() == path.back());
+        return smoothedPath;
+
+    }else{
+        if(DEBUG_PATH_SMOOTHING) cout << "Path smoothing FAILED! Collision detected" << endl;
+        throw logic_error("ERROR: path cannot be shortened");
+        // TODO: Thie case might need to be handled in a better way:
+        // This occurs often if the scaling factor for the python script is too
+        // low. That causes approximation errors that result in RRT paths that
+        // do not collide according to the script, but collide accorting to the
+        // actual computations.
+
+        // However, the scaling determines the granularity of the algorithm
+        // (high scaling, longer output path) which means that the script could
+        // hit its ITERATION LIMIT. This along with the fact that it's slower.
+        // Either we handle the iteration limit case by taking the partial path
+        // provided and launching other instances of the script to complete it
+        // OR we go for a good floating point RRT library (elegant and fast).
+        // (Maybe http://ompl.kavrakilab.org/planners.html)
+    }
+}
+
 bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
               const vector<pair<int,Polygon>>& victim_list, const Polygon& gate,
               const float x, const float y, const float theta, Path& path,
               const string& config_folder) {
     // #define DUBINS_DEBUG
 
-    #ifdef PLAN_DEBUG
+    #ifdef DEBUG_PLANPATH
         printf("--------PLANNING WAS CALLED--------\n");
         fflush(stdout);
     #endif
@@ -1523,74 +1586,41 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     //
 
     vector<Point> vertices;
+    vertices.push_back(Point(x,y));
+    vector<Point> short_path;
+    short_path.push_back(Point(x,y));
     for(int i = 1; i < pathObjectives.size(); ++i){
+        #ifdef DEBUG_PLANPATH
+            cout << "Planning segment " << i << "/" << pathObjectives.size() << endl;
+        #endif
+        //
+        // PLANNING Step 1: Call RRT planner
+        //
         float x1,y1,x2,y2;
         x1 = pathObjectives[i-1].x;
         y1 = pathObjectives[i-1].y;
         x2 = pathObjectives[i].x;
         y2 = pathObjectives[i].y;
-        vector<Point> partial = RRTplanner(borders,obstacle_list,x1,y1,x2,y2,config_folder);    //TODO: change vertices name with something more appropriate?
-        vertices.insert(vertices.end(),partial.begin(),partial.end());
-        //TODO URGENT: move smoothing inside here
+        vector<Point> partialPath = RRTplanner(borders,obstacle_list,x1,y1,x2,y2,config_folder);    //TODO: change vertices name with something more appropriate?
+        vertices.insert(vertices.end(),partialPath.begin()+1,partialPath.end());    // begin()+1 not to repeat points
+        assert(!isPathColliding(partialPath, obstacle_list));  // If the rrt path collides there is an error in the python script or conversion
+
+        //
+        // PLANNING Step 2: Smoothing/Shortcutting
+        //
+        vector<Point> partialShortPath = completeSmoothing(partialPath,obstacle_list);
+        short_path.insert(short_path.end(), partialShortPath.begin()+1, partialShortPath.end());    // begin()+1 not to repeat points
     }
+    assert(short_path.front() == vertices.front());
+    assert(short_path.back() == vertices.back());
 
-    assert(!isPathColliding(vertices, obstacle_list));  // If the rrt path collides there is an error in the python script or conversion
-
-    cout << "------------------------------------------------------------" << endl;
-    cout << "STEP 1: Path Obtained (Steps in path: " << to_string(vertices.size()) << ")" << endl;
-    cout << "------------------------------------------------------------" << endl;
-
-    vector<Point> short_path;
-    short_path.push_back(vertices[0]);
-    bool is_path_smoothed = pathSmoothing(0, vertices.size()-1, vertices, obstacle_list, short_path);
-
-    if(is_path_smoothed){
-        cout << "\t>Path shortened ONCE  (size: " << short_path.size() << ")" << endl;
-        bool additional_shortening;
-        do{
-            vector<Point> shorter_path;
-            shorter_path.push_back(vertices[0]);
-            bool success = pathSmoothing(0, short_path.size()-1, short_path, obstacle_list, shorter_path);
-            additional_shortening = success && (shorter_path.size() < short_path.size());
-            if (additional_shortening){
-                cout << "\t>Path shortened AGAIN (size: " << short_path.size() << "->" << shorter_path.size() << ")" << endl;
-                short_path = shorter_path;
-            }
-        }while(additional_shortening);
-
-        // additional iteration on reversed path
-        vector<Point> shorter_path;
-        std::reverse(short_path.begin(), short_path.end());
-        shorter_path.push_back(vertices[vertices.size()-1]);
-        bool reverse_smoothing = pathSmoothing(0, short_path.size()-1, short_path, obstacle_list, shorter_path);
-        if (reverse_smoothing){
-            cout << "\t>Path shortened AGAIN (size: " << short_path.size() << "->" << shorter_path.size() << ")" << endl;
-            std::reverse(shorter_path.begin(), shorter_path.end());
-            short_path = shorter_path;
-        }
-
-        cout << "STEP 2: Path Shortened (Steps in path: " << to_string(short_path.size()) << ")" << endl;
+    #ifdef DEBUG_PLANPATH
         cout << "------------------------------------------------------------" << endl;
-        //assert(short_path.front() == vertices.front());
-        //assert(short_path.back() == vertices.back());
-    }else{
-        cout << "STEP 2: FAILED! Collision in path shortening" << endl;
+        cout << "> Planning Step 1: planned RRT path ("<< vertices.size() <<" steps)" << endl;
         cout << "------------------------------------------------------------" << endl;
-        throw logic_error("ERROR: path cannot be shortened");
-        // TODO: Thie case might need to be handled in a better way:
-        // This occurs often if the scaling factor for the python script is too
-        // low. That causes approximation errors that result in RRT paths that
-        // do not collide according to the script, but collide accorting to the
-        // actual computations.
-
-        // However, the scaling determines the granularity of the algorithm
-        // (high scaling, longer output path) which means that the script could
-        // hit its ITERATION LIMIT. This along with the fact that it's slower.
-        // Either we handle the iteration limit case by taking the partial path
-        // provided and launching other instances of the script to complete it
-        // OR we go for a good floating point RRT library (elegant and fast).
-        // (Maybe http://ompl.kavrakilab.org/planners.html)
-    }
+        cout << "> Planning Step 2: smoothed path ("<< short_path.size() <<" steps)" << endl;
+        cout << "------------------------------------------------------------" << endl;
+    #endif
 
 #ifdef DEBUG_DRAWCURVE
     //
@@ -1641,7 +1671,9 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     boundaries.push_back(borders);
 
     double returnedLength = 0;  // unused here, just for recursion
-    cout << "Computing Dubins path..." << endl;
+    #ifdef DEBUG_PLANPATH
+        cout << "Computing Multi Point Dubins path..." << endl;
+    #endif
     std::pair<bool,vector<dubins::Curve>> multipointResult;
     multipointResult = MDP(short_path,
                            0, short_path.size()-1,   // start and arrival indexes
@@ -1667,11 +1699,15 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 #endif
 
     if (path_planned) {
-        cout << "STEP 3: Multipoint dubins curve planned successfully" << endl;
-        cout << "------------------------------------------------------------" << endl;
+        #ifdef DEBUG_PLANPATH
+            cout << "> Planning Step 3: Multipoint dubins curve planned successfully" << endl;
+            cout << "------------------------------------------------------------" << endl;
+        #endif
     } else {
-        cout << "STEP 3: FAILED multipoint dubins curve planning" << endl;
-        cout << "------------------------------------------------------------" << endl;
+        #ifdef DEBUG_PLANPATH
+            cout << "> Planning Step 3: Multipoint dubins curve planning" << endl;
+            cout << "------------------------------------------------------------" << endl;
+        #endif
         throw runtime_error("Could NOT plan path!");
     }
 
