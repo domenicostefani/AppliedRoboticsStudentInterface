@@ -17,6 +17,7 @@
 #define DUBINS_DEBUG false
 //#define IMSHOW_DEBUG
 #define DEBUG_DRAWCURVE
+//#define DEBUG_COLLISION
 
 using namespace std;
 
@@ -1022,6 +1023,51 @@ bool isSegmentColliding(Point a1, Point a2, Point p1, Point p2) {
     return isSegColliding;
 }
 
+// approximate approach to check for collisions between arc and segment using discretized arc
+bool isDiscretizedArcColliding(dubins::Arc& a, Point pA, Point pB) {
+    Polygon d_arc;
+
+    #ifdef DEBUG_COLLISION
+        cv::Mat img = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255));
+    #endif
+
+    double remainingDelta = 0.0;
+    double last_s = 0.0;
+    vector<dubins::Position> res = a.discretizeArc(0.01, remainingDelta, last_s, true);
+
+    for (const auto& pt: res) {
+        d_arc.emplace_back(pt.x, pt.y);
+    }
+
+    #ifdef DEBUG_COLLISION
+        for (int j = 0; j < d_arc.size()-1; j++)
+        {
+            cv::line(img, cv::Point(d_arc[j].x*debugImagesScale, d_arc[j].y*debugImagesScale),
+                cv::Point(d_arc[j+1].x*debugImagesScale, d_arc[j+1].y*debugImagesScale), cv::Scalar(255,200,0),1); // draw the line
+        }
+    #endif
+
+    #ifdef DEBUG_COLLISION
+        cv::line(img, cv::Point(p[i].x*debugImagesScale, p[i].y*debugImagesScale),
+            cv::Point(p[i+1].x*debugImagesScale, p[i+1].y*debugImagesScale), cv::Scalar(0,0,255),1); // draw the line
+    #endif
+
+    for (int j = 0; j < d_arc.size()-1; j++)
+    {
+        if(isSegmentColliding(d_arc[j], d_arc[j+1], pA, pB)){
+
+            #ifdef DEBUG_COLLISION
+                cv::imshow("arc pol", img);
+                cv::waitKey(0);
+            #endif
+            
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool isCollidingWithPolygon(dubins::Arc& a, Polygon p) {
     float k = a.k;
 
@@ -1037,16 +1083,20 @@ bool isCollidingWithPolygon(dubins::Arc& a, Polygon p) {
                 return true;
             }
         } else {
-            if (isArcColliding(a, p[i], p[i+1])) {
+            if (isDiscretizedArcColliding(a, p[i], p[i+1])) {
                 return true;
             }
+
+            /*if (isArcColliding(a, p[i], p[i+1])) {
+                return true;
+            }*/
         }
     }
     return false;
 }
 
 bool isCurveColliding(dubins::Curve& curve, const vector<Polygon>& obstacle_list) {
-    /*for (Polygon p : obstacle_list) {
+    for (Polygon p : obstacle_list) {
         if (isCollidingWithPolygon(curve.a1, p)) {
             return true;
         } else if (isCollidingWithPolygon(curve.a2, p)) {
@@ -1054,7 +1104,7 @@ bool isCurveColliding(dubins::Curve& curve, const vector<Polygon>& obstacle_list
         } else if (isCollidingWithPolygon(curve.a3, p)) {
             return true;
         }
-    }*/
+    }
     return false;
 }
 
@@ -1558,7 +1608,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,0,0),3); // draw the line
     // draw original path
     for (int i = 0; i < vertices.size(); i++) {
-        cv::circle(dcImg, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(255,0,0),CV_FILLED);
+        cv::circle(dcImg, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(0,0,0),CV_FILLED);
         if(VERBOSE_DEBUG_DRAWCURVE) cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
         if(i > 0)
             cv::line(dcImg, cv::Point(vertices[i-1].x*debugImagesScale, vertices[i-1].y*debugImagesScale),
