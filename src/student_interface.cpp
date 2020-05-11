@@ -61,6 +61,10 @@ struct Color_config {
 cv::Mat dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255));
 #endif
 
+bool pointsEquals(Point pa, Point pb){
+    return ((pa.x == pb.x)&&(pa.y == pb.y));
+}
+
 void loadImage(cv::Mat& img_out, const string& config_folder) {
     static bool initialized = false;
     static vector<cv::String> img_list; // list of images to load
@@ -1548,8 +1552,8 @@ vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>&
             }
         }while(additional_shortening);
 
-        assert(smoothedPath.front() == path.front());
-        assert(smoothedPath.back() == path.back());
+        assert(pointsEquals(smoothedPath.front(),path.front()));
+        assert(pointsEquals(smoothedPath.back(),path.back()));
 
         {
             // additional iteration on reversed path
@@ -1571,8 +1575,8 @@ vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>&
             }
         }
 
-        assert(smoothedPath.front() == path.front());
-        assert(smoothedPath.back() == path.back());
+        assert(pointsEquals(smoothedPath.front(),path.front()));
+        assert(pointsEquals(smoothedPath.back(),path.back()));
         return smoothedPath;
 
     }else{
@@ -1659,8 +1663,8 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         vector<Point> partialShortPath = completeSmoothing(partialPath,obstacle_list);
         short_path.insert(short_path.end(), partialShortPath.begin()+1, partialShortPath.end());    // begin()+1 not to repeat points
     }
-    assert(short_path.front() == vertices.front());
-    assert(short_path.back() == vertices.back());
+    assert(pointsEquals(short_path.front(),vertices.front()));
+    assert(pointsEquals(short_path.back(),vertices.back()));
 
     #ifdef DEBUG_PLANPATH
         cout << "------------------------------------------------------------" << endl;
