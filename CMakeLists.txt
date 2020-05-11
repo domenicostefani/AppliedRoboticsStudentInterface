@@ -52,6 +52,10 @@ target_link_libraries(student
   hsvpanel
 )
 
+target_link_libraries(student
+    clipperlib
+)
+
 
 ### DEMO for Clipper library
 
