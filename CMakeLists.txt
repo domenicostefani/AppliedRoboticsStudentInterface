@@ -56,17 +56,6 @@ target_link_libraries(student
     clipperlib
 )
 
-
-### DEMO for Clipper library
-
-add_executable(clipperdemo
-    src/clipper_console_demo.cpp
-)
-target_link_libraries(clipperdemo
-    clipperlib
-)
-
-
 ### DEMO for Hsv panel
 ## add_executable(dumbcaller
 ##  src/dumbcaller.cpp
