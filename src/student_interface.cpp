@@ -10,6 +10,7 @@
 #include <math.h>
 #include <limits>
 #include <algorithm>
+#include "clipper_helper.hpp"
 
 #define AUTO_CORNER_DETECTION false
 
@@ -43,6 +44,12 @@ const int pythonUpscale = 1000; // scale factor used to convert parameters to a
                                 // int represetation for the planning library
 const double debugImagesScale = 512.82; // arbitrary scale factor used for
                                         // displaying debug images
+const float obstaclesInflationAmount = 0.001; // (Note: value in meters)
+                                              // obstacles are slightly inflated
+                                              // by this amount to account for
+                                              // approximation errors in the
+                                              // computation of // collisions
+                                              // (in the RRT script)
 
 namespace student {
 
@@ -1442,8 +1449,14 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     }
 
     #ifdef DEBUG_RRT
+        printf("To avoid approximation errors, obstacles are inflated by %f meters (%f cm)\n",obstaclesInflationAmount,obstaclesInflationAmount*100);
+    #endif
+
+    vector<Polygon> inflated_obstacle_list = ClipperHelper::inflatePolygons(obstacle_list,obstaclesInflationAmount);
+
+    #ifdef DEBUG_RRT
         printf("Writing problem parameters to file\n");
-        printf("Measure are upscaled by a scale factor of: %d\n",pythonUpscale);
+        printf("Measures are upscaled by a scale factor of: %d\n",pythonUpscale);
     #endif
 
     // write borders on the first line
@@ -1456,13 +1469,13 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     }
 
     //  write vertices on the second line
-    for (int i = 0; i < obstacle_list.size(); i++) {
+    for (int i = 0; i < inflated_obstacle_list.size(); i++) {
         //add each vertex in (x,y) format
-        for (int j = 0; j < obstacle_list[i].size(); j++) {
-            int pt_x = int(obstacle_list[i][j].x * pythonUpscale);
-            int pt_y = int(obstacle_list[i][j].y * pythonUpscale);
+        for (int j = 0; j < inflated_obstacle_list[i].size(); j++) {
+            int pt_x = int(inflated_obstacle_list[i][j].x * pythonUpscale);
+            int pt_y = int(inflated_obstacle_list[i][j].y * pythonUpscale);
 
-            if (j < obstacle_list[i].size() - 1) {
+            if (j < inflated_obstacle_list[i].size() - 1) {
                 output << "(" << pt_x << ", " << pt_y << "), ";
             } else {
                 output << "(" << pt_x << ", " << pt_y << ")" << endl;
