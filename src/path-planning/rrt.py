@@ -7,7 +7,8 @@ from helpers.geometry import *
 import matplotlib.pyplot as plt
 import argparse
 
-SHOW_PLOT = False
+SHOW_PLOT = False;
+PRINT_INFO = False;
 
 parser = argparse.ArgumentParser()
 
@@ -143,7 +144,8 @@ while(found is False):
 			continue;
 		if(check_obstruction(obstacles,[dest, potential_next_vertex]) is True):
 			found = True;
-			print("Reached..!!");
+			if(PRINT_INFO):
+				print("Reached..!!");
 			graph_vertices.append(potential_next_vertex);
 			n = len(graph_vertices)-1;
 
@@ -187,7 +189,7 @@ plt.plot(graph_vertices[0].x, graph_vertices[0].y, marker="o")
 plt.plot(graph_vertices[-1].x, graph_vertices[-1].y, marker="o")
 
 if SHOW_PLOT:
-    plt.show();
+	plt.show();
 
 #----------------------------------------------------
 # output into a file
@@ -220,15 +222,16 @@ str_to_write = "";
 #str_to_write =','.join(str(x) for x in path);
 
 for index in range(len(path)):
-    if index == len(path)-1:
-        str_to_write = str_to_write + str(int(graph_vertices[path[index]].x) )+  "," + str(int(graph_vertices[path[index]].y) )
-    else:
-        str_to_write = str_to_write + str(int(graph_vertices[path[index]].x) )+  "," + str(int(graph_vertices[path[index]].y) ) + "\n"
+	if index == len(path)-1:
+		str_to_write = str_to_write + str(int(graph_vertices[path[index]].x) )+  "," + str(int(graph_vertices[path[index]].y) )
+	else:
+		str_to_write = str_to_write + str(int(graph_vertices[path[index]].x) )+  "," + str(int(graph_vertices[path[index]].y) ) + "\n"
 
 
 #total_write = total_write + str_to_write;
 
-print "Output written to file.. Drawing the result";
+if PRINT_INFO:
+	print "Output written to file.. Drawing the result";
 
 #file_output.write(total_write);
 file_output.write(str_to_write);
