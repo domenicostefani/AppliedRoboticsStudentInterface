@@ -1707,6 +1707,19 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         cv::line(dcImg, cv::Point(pol[0].x*debugImagesScale, pol[0].y*debugImagesScale),
                      cv::Point(pol[pol.size()-1].x*debugImagesScale, pol[pol.size()-1].y*debugImagesScale), cv::Scalar(0,0,255),2);
     }
+    //Draw victims
+    for (const pair<int, Polygon> victim : orderedVictimList) {
+        const Polygon &pol = victim.second;
+        for (int i=1; i<pol.size(); ++i) {
+            cv::line(dcImg, cv::Point(pol[i-1].x*debugImagesScale, pol[i-1].y*debugImagesScale),
+                     cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(0,255,0),2);
+        }
+        cv::line(dcImg, cv::Point(pol[0].x*debugImagesScale, pol[0].y*debugImagesScale),
+                     cv::Point(pol[pol.size()-1].x*debugImagesScale, pol[pol.size()-1].y*debugImagesScale), cv::Scalar(0,255,0),2);
+
+        Point center = baricenter(pol);
+        cv::putText(dcImg, std::to_string(victim.first), cv::Point(center.x*debugImagesScale, center.y*debugImagesScale), cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,0), 2);
+    }
 #endif
 
     // Startpoint
