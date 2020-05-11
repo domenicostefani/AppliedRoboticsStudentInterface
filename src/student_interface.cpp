@@ -13,23 +13,35 @@
 
 #define AUTO_CORNER_DETECTION false
 
-// #define COLOR_RANGE_DEBUG // Prints info about HSV ranges used for colors
-#define DUBINS_DEBUG false
-//#define IMSHOW_DEBUG
-#define DEBUG_DRAWCURVE
-// #define DEBUG_PLANPATH
-// #define DEBUG_RRT
-constexpr bool DEBUG_PATH_SMOOTHING = false;
-//#define DEBUG_COLLISION
+// -------------------------------- DEBUG FLAGS --------------------------------
+// - Configuration Debug flags - //
+// #define DEBUG_COLOR_RANGE // Prints info about HSV ranges used for colors
+// #define DEBUG_COLOR_CONFIG
+
+// - Calibration Debug flags - //
+// #define DEBUG_ESTRINISIC_CALIB
+
+// - Image Analysis Debug flags - //
+// #define DEBUG_FINDOBSTACLES
+// #define DEBUG_FINDGATE
+// #define DEBUG_FINDVICTIMS
+// #define DEBUG_FINDROBOT
+
+// - Planning Debug flags - //
+// #define DEBUG_PLANPATH            // generic info about the whole planner
+// #define DEBUG_RRT                 // inner planning algorithm
+// #define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
+#define DEBUG_DRAWCURVE             // dubins path plotting
+// #define DEBUG_COLLISION           // plot for collision detection
 
 using namespace std;
 
+// --------------------------------- CONSTANTS ---------------------------------
 const string COLOR_CONFIG_FILE = "/color_parameters.config";
-const int pythonUpscale = 1000; // Scale factor used to convert parameters to a int represetation for the planning library
-const double debugImagesScale = 512.82; //This value is equivalent to the scale printed from a simulator run
-                                        //Since the correct scale is not available in many methods, it becomes difficult
-                                        //To draw points that are in meters to a debug image.
-                                        //Since it does not need to be the correct scale, it can be a constant
+const int pythonUpscale = 1000; // scale factor used to convert parameters to a
+                                // int represetation for the planning library
+const double debugImagesScale = 512.82; // arbitrary scale factor used for
+                                        // displaying debug images
 
 namespace student {
 
@@ -198,7 +210,7 @@ Color_config read_colors(const string& config_folder) {
     file_path += COLOR_CONFIG_FILE;
 
     if (experimental::filesystem::exists(file_path)) {
-        #ifdef COLOR_CONFIG_DEBUG
+        #ifdef DEBUG_COLOR_CONFIG
             printf("Reading color configuration\n");
         #endif
 
@@ -217,7 +229,7 @@ Color_config read_colors(const string& config_folder) {
                     throw runtime_error("Malformed file: " + file_path);
             }
 
-            #ifdef COLOR_CONFIG_DEBUG
+            #ifdef DEBUG_COLOR_CONFIG
                 printf("---> Reading %s : %d,%d,%d\n",name.c_str(),v1,v2,v3);
             #endif
 
@@ -249,8 +261,6 @@ Color_config read_colors(const string& config_folder) {
 * Open a series of panels to tune the color threshold for better detection
 */
 void tune_color_parameters(const cv::Mat &image, const string& config_folder) {
-    // #define COLOR_CONFIG_DEBUG
-
     // Set destination file
     string file_path = config_folder;
     file_path += "/";
@@ -262,7 +272,6 @@ void tune_color_parameters(const cv::Mat &image, const string& config_folder) {
 bool extrinsicCalib(const cv::Mat& img_in, vector<cv::Point3f> object_points,
                     const cv::Mat& camera_matrix, cv::Mat& rvec,
                     cv::Mat& tvec, const string& config_folder) {
-    // #define ESTRINISIC_CALIB_DEBUG
     vector<cv::Point2f> corners;
 
     if (AUTO_CORNER_DETECTION)
@@ -304,7 +313,7 @@ bool extrinsicCalib(const cv::Mat& img_in, vector<cv::Point3f> object_points,
         }
     }
 
-    #ifdef ESTRINISIC_CALIB_DEBUG
+    #ifdef DEBUG_ESTRINISIC_CALIB
         cv::line(img_in, corners[0], corners[1], cv::Scalar(0,0,255));
         cv::line(img_in, corners[1], corners[2], cv::Scalar(0,0,255));
         cv::line(img_in, corners[2], corners[3], cv::Scalar(0,0,255));
@@ -369,7 +378,7 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     int highH1 = get<0>(t);
     int highS1 = get<1>(t);
     int highV1 = get<2>(t);
-    #ifdef COLOR_RANGE_DEBUG
+    #ifdef DEBUG_COLOR_RANGE
         printf("Using RED bound 1 (%d,%d,%d)-(%d,%d,%d)\n", lowH1, lowS1, lowV1, highH1, highS1, highV1);
     #endif
 
@@ -381,7 +390,7 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     int highH2 = get<0>(t);
     int highS2 = get<1>(t);
     int highV2 = get<2>(t);
-    #ifdef COLOR_RANGE_DEBUG
+    #ifdef DEBUG_COLOR_RANGE
         printf("Using RED bound 2 (%d,%d,%d)-(%d,%d,%d)\n", lowH2, lowS2,  lowV2, highH2, highS2, highV2);
     #endif
     cv::inRange(hsv_img, cv::Scalar(lowH1, lowS1, lowV1), cv::Scalar(highH1, highS1, highV1), lower_red_hue_range);
@@ -428,7 +437,7 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
         cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
     }
 
-    #ifdef IMSHOW_DEBUG
+    #ifdef DEBUG_FINDOBSTACLES
         imshow("obstacles", contours_img);
         cv::waitKey(0);
     #endif
@@ -447,7 +456,7 @@ bool findGate(const cv::Mat& hsv_img, const double scale, Polygon& gate,
     int highS = get<1>(t);
     int highV = get<2>(t);
 
-    #ifdef COLOR_RANGE_DEBUG
+    #ifdef DEBUG_COLOR_RANGE
         printf("Using GREEN bound  (%d,%d,%d)-(%d,%d,%d)\n", lowH, lowS, lowV, highH, highS, highV);
     #endif
 
@@ -482,7 +491,7 @@ bool findGate(const cv::Mat& hsv_img, const double scale, Polygon& gate,
         res = true;
     }
 
-    #ifdef IMSHOW_DEBUG
+    #ifdef DEBUG_FINDGATE
         cv::imshow("findGate", contours_img);
         cv::waitKey(0);
     #endif
@@ -505,7 +514,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
     int highS = get<1>(t);
     int highV = get<2>(t);
 
-    #ifdef COLOR_RANGE_DEBUG
+    #ifdef DEBUG_COLOR_RANGE
         printf("Using GREEN bound  (%d,%d,%d)-(%d,%d,%d)\n", lowH, lowS, lowV, highH, highS, highV);
     #endif
 
@@ -540,7 +549,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
         }
     }
 
-    #ifdef IMSHOW_DEBUG
+    #ifdef DEBUG_FINDVICTIMS
         cv::imshow("findVictims", contours_img);
         cv::waitKey(0);
     #endif
@@ -553,7 +562,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
     cv::Mat green_mask_inv, filtered(img.rows, img.cols, CV_8UC3, cv::Scalar(255,255,255));
     cv::bitwise_not(green_mask, green_mask_inv);
 
-    #ifdef IMSHOW_DEBUG
+    #ifdef DEBUG_FINDVICTIMS
         cv::imshow("Numbers", green_mask_inv);
         cv::waitKey(0);
     #endif
@@ -618,7 +627,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
         cv::cvtColor(processROI, processROI, cv::COLOR_GRAY2BGR);
 
         // Show the actual image used for the template matching
-        #ifdef IMSHOW_DEBUG
+        #ifdef DEBUG_FINDVICTIMS
             cv::imshow("ROI", processROI);
         #endif
 
@@ -668,34 +677,15 @@ bool processMap(const cv::Mat& img_in, const double scale,
 * Finds the baricenter of a utils::Polygon
 */
 void baricenter(const Polygon& polygon, double& cx, double& cy) {
-    // #define BARICENTER_DEBUG
-
     for (auto vertex: polygon) {
         cx += vertex.x;
         cy += vertex.y;
     }
     cx /= static_cast<double>(polygon.size());
     cy /=  static_cast<double>(polygon.size());
-
-    #ifdef BARICENTER_DEBUG
-        printf("BARICENTER DEBUG called\n");
-
-        cv::Mat baricenter_debug_img = cv::Mat(600, 800, CV_8UC3, cv::Scalar(0,0,0));
-        // draw every point (red)
-        for (auto vertex: polygon) {
-            cv::Point center(vertex.x*debugImagesScale, vertex.y*debugImagesScale);
-            cv::circle(baricenter_debug_img, center, 5, cv::Scalar(0,0,255), -1);
-        }
-        // draw center point (green)
-        cv::Point center(cx*debugImagesScale, cy*debugImagesScale);
-        cv::circle(baricenter_debug_img, center, 5, cv::Scalar(0,255,0), -1);
-
-        cv::imshow("BaricenterDEBUG",baricenter_debug_img);
-        cv::waitKey(0);
-    #endif //BARICENTER_DEBUG
 }
 
-Point baricenter(const Polygon& polygon){
+Point baricenter(const Polygon& polygon) {
     double cx,cy;
     baricenter(polygon,cx,cy);
     return Point(cx,cy);
@@ -704,7 +694,6 @@ Point baricenter(const Polygon& polygon){
 bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
                double& x, double& y, double& theta,
                const string& config_folder) {
-    // #define FIND_ROBOT_DEBUG_PLOT
     Color_config color_config = read_colors(config_folder);
 
     // Convert color space from BGR to HSV
@@ -721,7 +710,7 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
     int highS = get<1>(t);
     int highV = get<2>(t);
 
-    #ifdef COLOR_RANGE_DEBUG
+    #ifdef DEBUG_COLOR_RANGE
         printf("Using BLUE bound  (%d,%d,%d)-(%d,%d,%d)\n", lowH, lowS, lowV, highH, highS, highV);
     #endif
     cv::Mat blue_mask;
@@ -734,7 +723,7 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
     vector<vector<cv::Point>> contours;
     cv::findContours(blue_mask, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-    #ifdef FIND_ROBOT_DEBUG_PLOT
+    #ifdef DEBUG_FINDROBOT
         cv::Mat contours_img;
         contours_img = img_in.clone();
     #endif
@@ -750,7 +739,7 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
         if (approx_curve.size() != 3) continue;
 
         // draw approximated contours
-        #ifdef FIND_ROBOT_DEBUG_PLOT
+        #ifdef DEBUG_FINDROBOT
             //cout << "Approx contour count: " << approx_curve.size() << endl;
             contours_approx = {approx_curve};
             cv::drawContours(contours_img, contours_approx, -1, cv::Scalar(0,0,255), 1, cv::LINE_AA);
@@ -800,7 +789,7 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
 
         cv::Point cv_baricenter(x*scale, y*scale); // convert back m to px
         cv::Point cv_vertex(top_vertex.x*scale, top_vertex.y*scale); // convert back m to px
-        #ifdef FIND_ROBOT_DEBUG_PLOT
+        #ifdef DEBUG_FINDROBOT
             // Draw over the image
             cv::line(contours_img, cv_baricenter, cv_vertex, cv::Scalar(0,255,0), 3);
             cv::circle(contours_img, cv_baricenter, 5, cv::Scalar(0,0,255), -1);
@@ -809,7 +798,7 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
         #endif
     }
 
-    #ifdef IMSHOW_DEBUG
+    #ifdef DEBUG_FINDROBOT
         cv::imshow("findRobot", contours_img);
         cv::waitKey(0);
     #endif
@@ -826,7 +815,7 @@ void centerGate(const Polygon& gate, const Polygon& borders, double& x,
 
     assert(gate.size() == 4);
     assert(borders.size() == 4);
-    #ifdef GATE_DEBUG
+    #ifdef DEBUG_GATE
         printf("---Center gate called---\n");
         printf("There are %zd points\n", gate.size());
     #endif
@@ -864,7 +853,7 @@ void centerGate(const Polygon& gate, const Polygon& borders, double& x,
     double ac_x = 0, ac_y = 0;
     baricenter(borders,ac_x,ac_y);
 
-    #ifdef GATE_DEBUG
+    #ifdef DEBUG_GATE
         printf("Gate baricenter %f,%f\n",gc_x,gc_y);
         printf("Arena baricenter %f,%f\n",ac_x,ac_y);
     #endif
@@ -883,8 +872,8 @@ void centerGate(const Polygon& gate, const Polygon& borders, double& x,
 // choose the curve with the arrival angle that minimizes the length    //TODO: check why this is not called by any function
 dubins::Curve findBestAngle(double& th0, double& thf, double& x0, double& y0,
                             double& xf, double& yf, double& Kmax, int& pidx) {
-    #define FINDBESTANGLE_DEBUG
-#ifdef FINDBESTANGLE_DEBUG
+    #define DEBUG_FINDBESTANGLE
+#ifdef DEBUG_FINDBESTANGLE
     static int fba_counter = 0;
     fba_counter++;
     cout << "findBestAngle() called #" << fba_counter << endl;
@@ -899,7 +888,7 @@ dubins::Curve findBestAngle(double& th0, double& thf, double& x0, double& y0,
     angles.push_back((th0 + thf)/2);
 
     for (int i = 0; i < angles.size(); i++) {
-        #ifdef FINDBESTANGLE_DEBUG
+        #ifdef DEBUG_FINDBESTANGLE
             cout << "dubins_shortest_path called from findBestAngle #" << fba_counter << endl;
         #endif
         dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, angles[i], Kmax, pidx);
@@ -1063,13 +1052,13 @@ bool isDiscretizedArcColliding(dubins::Arc& a, Point pA, Point pB) {
 
     for (int j = 0; j < d_arc.size()-1; j++)
     {
-        if(isSegmentColliding(d_arc[j], d_arc[j+1], pA, pB)){
+        if (isSegmentColliding(d_arc[j], d_arc[j+1], pA, pB)) {
 
             #ifdef DEBUG_COLLISION
                 cv::imshow("arc pol", img);
                 cv::waitKey(0);
             #endif
-            
+
             return true;
         }
     }
@@ -1173,7 +1162,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
                                                unsigned int startIdx, unsigned int arriveIdx,
                                                double startAngle, double arriveAngle,
                                                double& returnedLength, const double Kmax,
-                                               const vector<Polygon>& obstacle_list){
+                                               const vector<Polygon>& obstacle_list) {
     /* ----------------------------- PARAMETERS ----------------------------- */
     const unsigned short NUM_ANGLES = 4;   // Number of angles to test for each free point
     const bool MDP_VERBOSE = false;        // Setting this to true prints additional info for debug (Warning: it can get verbose)
@@ -1183,17 +1172,17 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
     if (MDP_VERBOSE) cout << "called with indexes " << startIdx << ", "<< arriveIdx << endl;
 
     // RECURSION ERROR CASES:
-    if(arriveIdx == startIdx)
+    if (arriveIdx == startIdx)
         throw std::invalid_argument("Error: arriveIdx cannot be equal to startIdx");
-    if(arriveIdx < startIdx)
+    if (arriveIdx < startIdx)
         throw std::invalid_argument("Error: arriveIdx cannot be smaller than startIdx");
 
     // RECURSION BASE CASE 1: Called on two points, the function computes the connecting Dubins path
     //           o---o
     // nodes:    1   2
     // segments:   A
-    if(arriveIdx-startIdx == 1){
-        if(MDP_VERBOSE) cout << "MDP(): Recursion BASE Case 1" << endl;
+    if (arriveIdx-startIdx == 1) {
+        if (MDP_VERBOSE) cout << "MDP(): Recursion BASE Case 1" << endl;
         // Compute the curve for segment A and check for collisions
         int pidx = 0;
         double x1 = path[startIdx].x;
@@ -1207,7 +1196,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
 
         returnedLength = isColliding ? std::numeric_limits<double>::max() : curve.L;
         std::vector<dubins::Curve> multipointPath(path.size()-1);    // segments are one less than the num of points
-        if(!isColliding)
+        if (!isColliding)
             multipointPath.at(startIdx) = curve; //ERRORE?
 
         return std::make_pair(!isColliding,multipointPath);  // Return true if the path does not collide
@@ -1217,15 +1206,15 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
     //            o---o---o
     // nodes:     1   2   3
     // segments:    A   B
-    if(arriveIdx-startIdx == 2){
-        if(MDP_VERBOSE) cout << "MDP(): Recursion BASE Case 2" << endl;
+    if (arriveIdx-startIdx == 2) {
+        if (MDP_VERBOSE) cout << "MDP(): Recursion BASE Case 2" << endl;
         std::pair<dubins::Curve,dubins::Curve> bestCurves;
         double bestLength =  std::numeric_limits<double>::max();
         bool allAnglesResultInCollision = true; // If no angle choice provides a non-colliding path, the call must fail
 
-        for(int i = 0; i < NUM_ANGLES; ++i){
+        for(int i = 0; i < NUM_ANGLES; ++i) {
             double alpha_middlepoint = (2*M_PI)/NUM_ANGLES * i;
-            if(USE_ANGLE_HEURISTIC)
+            if (USE_ANGLE_HEURISTIC)
                 alpha_middlepoint += (startAngle + arriveAngle)/2;   // adding the average of the other angles should improve the angle choice
 
             double x1, y1, theta1, x2, y2, theta2;
@@ -1255,14 +1244,14 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
 
             double lengthAB = curveA.L + curveB.L;
 
-            if((!isAColliding) && (!isBColliding) && (lengthAB < bestLength)){
+            if ((!isAColliding) && (!isBColliding) && (lengthAB < bestLength)) {
                 allAnglesResultInCollision = false;
                 bestLength = lengthAB;
                 bestCurves = std::make_pair(curveA,curveB);
             }
         }
         std::vector<dubins::Curve> multipointPath(path.size()-1);    // segments are one less than the num of points
-        if (!allAnglesResultInCollision){    //push best curves in path IF !allAnglesResultInCollision
+        if (!allAnglesResultInCollision) {    //push best curves in path IF !allAnglesResultInCollision
             assert(bestLength == bestCurves.first.L + bestCurves.second.L);    // sanity check
             multipointPath.at(startIdx) = bestCurves.first;
             multipointPath.at(arriveIdx-1) = bestCurves.second;
@@ -1284,19 +1273,19 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
     // according to which ones correspond to the shortest non-colliding path.
     // NOTE: the arrival angle for node 2 is called alpha_first and the exit
     // angle from node n-1 is called alpha_second
-    if(MDP_VERBOSE) cout << "MDP(): RECURSIVE step" << endl;
+    if (MDP_VERBOSE) cout << "MDP(): RECURSIVE step" << endl;
 
     std::pair<dubins::Curve,dubins::Curve> bestCurves;  // best dubins curves yet
     double bestLength = std::numeric_limits<double>::max();
     std::vector<dubins::Curve> bestRecursivePath;
     bool allAnglesResultInCollision = true; // If no angle choice provides a non-colliding path, the call must fail
 
-    for(int i = 0; i < NUM_ANGLES; ++i){
-        for(int j = 0; j < NUM_ANGLES; ++j){
+    for(int i = 0; i < NUM_ANGLES; ++i) {
+        for(int j = 0; j < NUM_ANGLES; ++j) {
             double alpha_first = (2*M_PI)/NUM_ANGLES * i;
             double alpha_second = (2*M_PI)/NUM_ANGLES * j;
 
-            if(USE_ANGLE_HEURISTIC){
+            if (USE_ANGLE_HEURISTIC) {
                 alpha_first += startAngle;
                 alpha_second += arriveAngle;
             }
@@ -1330,7 +1319,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
 
             bool result = false;
             std::vector<dubins::Curve> recursiveReturnedPath;
-            if ((!isAColliding) && (!isBColliding)){
+            if ((!isAColliding) && (!isBColliding)) {
                 std::pair<bool,std::vector<dubins::Curve>> tuple;
                 tuple = MDP(path, startIdx+1,arriveIdx-1,
                             alpha_first,alpha_second,
@@ -1342,9 +1331,9 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
 
             double totLength = curveA.L + recursivelyReturnedLength + curveB.L;
 
-            if(result)
+            if (result)
                 assert(recursivelyReturnedLength != std::numeric_limits<double>::max());    // sanity check
-            if((result) && (totLength < bestLength)){
+            if ((result) && (totLength < bestLength)) {
                 allAnglesResultInCollision = false;
                 bestLength = totLength;
                 bestCurves = std::make_pair(curveA,curveB);
@@ -1353,7 +1342,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
         }
     }
 
-    if (!allAnglesResultInCollision){    //push best curves in path IF !allAnglesResultInCollision
+    if (!allAnglesResultInCollision) {    //push best curves in path IF !allAnglesResultInCollision
         assert(bestLength > bestCurves.first.L + bestCurves.second.L);    // sanity check
         bestRecursivePath.at(startIdx) = bestCurves.first;
         bestRecursivePath.at(arriveIdx-1) = bestCurves.second;
@@ -1363,7 +1352,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
     return std::make_pair(!allAnglesResultInCollision,bestRecursivePath);  // Return true if the path does not collide
 }
 
-bool isPathColliding(vector<Point> vertices, vector<Polygon> obstacle_list){
+bool isPathColliding(vector<Point> vertices, vector<Polygon> obstacle_list) {
     for (int i = 1; i < vertices.size(); ++i) {
         double x0, y0, xf, yf;
         x0 = vertices[i-1].x;
@@ -1437,7 +1426,7 @@ bool pathSmoothing(int start_index, int finish_index, vector<Point> vertices,
 
 vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle_list,
                   const float x0, const float y0, const float xf, const float yf,
-                  const string& config_folder){
+                  const string& config_folder) {
 
     //
     // write the problem parameters to a file that will be fed to a planning lib
@@ -1536,21 +1525,25 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     return vertices;
 }
 
-vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>& obstacle_list){ //TODO: change name
+vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>& obstacle_list) { //TODO: change name
     vector<Point> smoothedPath; //TODO: change name
     smoothedPath.push_back(path[0]);
     bool is_path_smoothed = pathSmoothing(0, path.size()-1, path, obstacle_list, smoothedPath);
 
-    if(is_path_smoothed){
-        if(DEBUG_PATH_SMOOTHING) cout << "\t>Path shortened ONCE  (size: " << smoothedPath.size() << ")" << endl;
+    if (is_path_smoothed) {
+        #ifdef DEBUG_PATH_SMOOTHING
+            cout << "\t>Path shortened ONCE  (size: " << smoothedPath.size() << ")" << endl;
+        #endif
         bool additional_shortening;
         do{
             vector<Point> shorter_path;
             shorter_path.push_back(path[0]);
             bool success = pathSmoothing(0, smoothedPath.size()-1, smoothedPath, obstacle_list, shorter_path);
             additional_shortening = success && (shorter_path.size() < smoothedPath.size());
-            if (additional_shortening){
-                if(DEBUG_PATH_SMOOTHING) cout << "\t>Path shortened AGAIN (size: " << smoothedPath.size() << "->" << shorter_path.size() << ")" << endl;
+            if (additional_shortening) {
+                #ifdef DEBUG_PATH_SMOOTHING
+                    cout << "\t>Path shortened AGAIN (size: " << smoothedPath.size() << "->" << shorter_path.size() << ")" << endl;
+                #endif
                 smoothedPath = shorter_path;
             }
         }while(additional_shortening);
@@ -1564,13 +1557,17 @@ vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>&
             std::reverse(smoothedPath.begin(), smoothedPath.end());
             shorter_path.push_back(path[path.size()-1]);
             bool reverse_smoothing = pathSmoothing(0, smoothedPath.size()-1, smoothedPath, obstacle_list, shorter_path);
-            if (reverse_smoothing){
-                if(DEBUG_PATH_SMOOTHING) cout << "Reverse smoothing SUCCESS" << endl;
-                if(DEBUG_PATH_SMOOTHING) cout << "\t>Path shortened AGAIN (size: " << smoothedPath.size() << "->" << shorter_path.size() << ")" << endl;
+            if (reverse_smoothing) {
+                #ifdef DEBUG_PATH_SMOOTHING
+                    cout << "Reverse smoothing SUCCESS" << endl;
+                    cout << "\t>Path shortened AGAIN (size: " << smoothedPath.size() << "->" << shorter_path.size() << ")" << endl;
+                #endif
                 std::reverse(shorter_path.begin(), shorter_path.end());
                 smoothedPath = shorter_path;
             }else{
-                if(DEBUG_PATH_SMOOTHING) cout << "Reverse smoothing FAIL" << endl;
+                #ifdef DEBUG_PATH_SMOOTHING
+                    cout << "Reverse smoothing FAIL" << endl;
+                #endif
             }
         }
 
@@ -1579,7 +1576,9 @@ vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>&
         return smoothedPath;
 
     }else{
-        if(DEBUG_PATH_SMOOTHING) cout << "Path smoothing FAILED! Collision detected" << endl;
+        #ifdef DEBUG_PATH_SMOOTHING
+            cout << "Path smoothing FAILED! Collision detected" << endl;
+        #endif
         throw logic_error("ERROR: path cannot be shortened");
         // TODO: Thie case might need to be handled in a better way:
         // This occurs often if the scaling factor for the python script is too
@@ -1601,7 +1600,6 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
               const vector<pair<int,Polygon>>& victim_list, const Polygon& gate,
               const float x, const float y, const float theta, Path& path,
               const string& config_folder) {
-    // #define DUBINS_DEBUG
 
     #ifdef DEBUG_PLANPATH
         printf("--------PLANNING WAS CALLED--------\n");
@@ -1639,7 +1637,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     vertices.push_back(Point(x,y));
     vector<Point> short_path;
     short_path.push_back(Point(x,y));
-    for(int i = 1; i < pathObjectives.size(); ++i){
+    for(int i = 1; i < pathObjectives.size(); ++i) {
         #ifdef DEBUG_PLANPATH
             cout << "Planning segment " << i << "/" << pathObjectives.size() << endl;
         #endif
@@ -1685,8 +1683,8 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     // draw original path
     for (int i = 0; i < vertices.size(); i++) {
         cv::circle(dcImg, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(0,0,0),CV_FILLED);
-        if(VERBOSE_DEBUG_DRAWCURVE) cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
-        if(i > 0)
+        if (VERBOSE_DEBUG_DRAWCURVE) cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
+        if (i > 0)
             cv::line(dcImg, cv::Point(vertices[i-1].x*debugImagesScale, vertices[i-1].y*debugImagesScale),
                      cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), cv::Scalar(255,0,0),2);
     }
@@ -1694,15 +1692,15 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     //Draw Smothed path Dots and lines
     for (int i = 0; i < short_path.size(); i++) {
         cv::circle(dcImg, cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), 2, cv::Scalar(255,235,0),CV_FILLED);
-        if(VERBOSE_DEBUG_DRAWCURVE) cout << to_string(short_path[i].x) << "," << short_path[i].y << endl;
-        if(i > 0)
+        if (VERBOSE_DEBUG_DRAWCURVE) cout << to_string(short_path[i].x) << "," << short_path[i].y << endl;
+        if (i > 0)
             cv::line(dcImg, cv::Point(short_path[i-1].x*debugImagesScale, short_path[i-1].y*debugImagesScale),
                      cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), cv::Scalar(255,235,0),2);
     }
     */
     //Draw obstacles
-    for (const Polygon &pol : obstacle_list){
-        for (int i=1; i<pol.size(); ++i){
+    for (const Polygon &pol : obstacle_list) {
+        for (int i=1; i<pol.size(); ++i) {
             cv::line(dcImg, cv::Point(pol[i-1].x*debugImagesScale, pol[i-1].y*debugImagesScale),
                      cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(0,0,255),2);
         }
