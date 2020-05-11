@@ -31,7 +31,8 @@
 // #define DEBUG_PLANPATH            // generic info about the whole planner
 // #define DEBUG_RRT                 // inner planning algorithm
 // #define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
-#define DEBUG_DRAWCURVE             // dubins path plotting
+// #define DEBUG_DRAWCURVE             // dubins path plotting
+#define DEBUG_SCORES              // track times and scores of victims to collect
 // #define DEBUG_COLLISION           // plot for collision detection
 
 using namespace std;
@@ -56,10 +57,8 @@ struct Color_config {
     tuple<int,int,int> obstacle_highbound2;
 };
 
-#ifdef DEBUG_DRAWCURVE
 //-------------------DRAWING DUBINS CURVES-------------------
 cv::Mat dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255));
-#endif
 
 bool pointsEquals(Point pa, Point pb){
     return ((pa.x == pb.x)&&(pa.y == pb.y));
@@ -1118,7 +1117,7 @@ void drawDubinsArc(dubins::Arc& da) {
     cv::Point2f finishf = cv::Point2f(da.xf*debugImagesScale, da.yf*debugImagesScale);
 
     if (da.k == 0) {
-        cv::line(dcImg, cv::Point(startf.x,startf.y), cv::Point(finishf.x,finishf.y), cv::Scalar(255,200,0),2); // draw the line
+        cv::line(dcImg, cv::Point(startf.x,startf.y), cv::Point(finishf.x,finishf.y), cv::Scalar(255,200,0),1); // draw the line
     } else {
         float radius = abs(1 / da.k)*debugImagesScale; // radius is 1/k
         cv::Point2f centerf;
@@ -1145,13 +1144,13 @@ void drawDubinsArc(dubins::Arc& da) {
             for (unsigned int i = 0; 0.01 < ((dubins::mod2pi(thetastart + passo*i) - thetafinish)*(dubins::mod2pi(thetastart + passo*i) -thetafinish)); i++) {
                 cv::Point startSegment = cv::Point(cos(thetastart + passo*i  )*radius + centerf.x,+ sin(thetastart + passo*i  )*radius + centerf.y);
                 cv::Point finishSegment = cv::Point(cos(thetastart + passo*(i+1)  )*radius + centerf.x, sin(thetastart + passo*(i+1))*radius + centerf.y);
-                cv::line(dcImg, startSegment, finishSegment, cv::Scalar(255,200,0),2); // draw the line
+                cv::line(dcImg, startSegment, finishSegment, cv::Scalar(255,200,0),1); // draw the line
             }
         } else { // counter clockwise segment drawing
             for (unsigned int i = 0; 0.01 < ((dubins::mod2pi(thetastart - passo*i) - thetafinish)*(dubins::mod2pi(thetastart - passo*i) - thetafinish)); i++) {
                 cv::Point startSegment = cv::Point(cos(thetastart - passo*i  )*radius + centerf.x,+ sin(thetastart - passo*i  )*radius + centerf.y);
                 cv::Point finishSegment = cv::Point(cos(thetastart - passo*(i+1)  )*radius + centerf.x, sin(thetastart - passo*(i+1))*radius + centerf.y);
-                cv::line(dcImg, startSegment, finishSegment, cv::Scalar(255,200,0),2); // draw the line
+                cv::line(dcImg, startSegment, finishSegment, cv::Scalar(255,200,0),1); // draw the line
            }
         }
 
@@ -1600,36 +1599,72 @@ vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>&
     }
 }
 
-bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
-              const vector<pair<int,Polygon>>& victim_list, const Polygon& gate,
-              const float x, const float y, const float theta, Path& path,
-              const string& config_folder) {
-
-    #ifdef DEBUG_PLANPATH
-        printf("--------PLANNING WAS CALLED--------\n");
-        fflush(stdout);
-    #endif
-
-    double xf, yf, thf;                   // Endpoint
-    centerGate(gate,borders,xf,yf,thf);  // Endpoint computation
-    const double Kmax = 10.0;                   // Maximum curvature
-    const double path_res = 0.01;               // Path resolution (sampling)
-
+void drawDebugImage(const Polygon& borders, const vector<Polygon>& obstacle_list, const vector<pair<int,Polygon>>& victim_list){
     //
-    // Sort Victims by ID
+    //  Draw Curves to debug errors
     //
 
-    vector<pair<int,Polygon>> orderedVictimList = victim_list;
-    sort(orderedVictimList.begin(), orderedVictimList.end(), [](const pair<int,Polygon>& lhs, const pair<int,Polygon>& rhs) {
-      return lhs.first < rhs.first;
-    });
+    const bool VERBOSE_DEBUG_DRAWCURVE = false;
 
+    // draw borders
+    for (int i = 0; i < borders.size(); i++)
+        cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,0,0),3); // draw the line
+    
+    /*
+    // draw original path
+    for (int i = 0; i < vertices.size(); i++) {
+        cv::circle(dcImg, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(0,0,0),CV_FILLED);
+        if (VERBOSE_DEBUG_DRAWCURVE) cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
+        if (i > 0)
+            cv::line(dcImg, cv::Point(vertices[i-1].x*debugImagesScale, vertices[i-1].y*debugImagesScale),
+                     cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), cv::Scalar(255,0,0),2);
+    }
+    */
+    /*
+    //Draw Smothed path Dots and lines
+    for (int i = 0; i < short_path.size(); i++) {
+        cv::circle(dcImg, cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), 2, cv::Scalar(255,235,0),CV_FILLED);
+        if (VERBOSE_DEBUG_DRAWCURVE) cout << to_string(short_path[i].x) << "," << short_path[i].y << endl;
+        if (i > 0)
+            cv::line(dcImg, cv::Point(short_path[i-1].x*debugImagesScale, short_path[i-1].y*debugImagesScale),
+                     cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), cv::Scalar(255,235,0),2);
+    }
+    */
+    //Draw obstacles
+    for (const Polygon &pol : obstacle_list) {
+        for (int i=1; i<pol.size(); ++i) {
+            cv::line(dcImg, cv::Point(pol[i-1].x*debugImagesScale, pol[i-1].y*debugImagesScale),
+                     cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(0,0,255),2);
+        }
+        cv::line(dcImg, cv::Point(pol[0].x*debugImagesScale, pol[0].y*debugImagesScale),
+                     cv::Point(pol[pol.size()-1].x*debugImagesScale, pol[pol.size()-1].y*debugImagesScale), cv::Scalar(0,0,255),2);
+    }
+    //Draw victims
+    for (const pair<int, Polygon> victim : victim_list) {
+        const Polygon &pol = victim.second;
+        for (int i=1; i<pol.size(); ++i) {
+            cv::line(dcImg, cv::Point(pol[i-1].x*debugImagesScale, pol[i-1].y*debugImagesScale),
+                     cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(0,255,0),2);
+        }
+        cv::line(dcImg, cv::Point(pol[0].x*debugImagesScale, pol[0].y*debugImagesScale),
+                     cv::Point(pol[pol.size()-1].x*debugImagesScale, pol[pol.size()-1].y*debugImagesScale), cv::Scalar(0,255,0),2);
+
+        Point center = baricenter(pol);
+        cv::putText(dcImg, std::to_string(victim.first), cv::Point(center.x*debugImagesScale, center.y*debugImagesScale), cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,0), 2);
+    }
+}
+
+void collectVictimsPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
+              const vector<pair<int,Polygon>>& victim_list,
+              const float x, const float y, const float theta,
+              const string& config_folder, vector<Pose>& final_path_points,
+              double xf, double yf, double thf, double Kmax, const double path_res){
     //
     // Create a vector of crucial points (start, victims, end);
     //
     vector<Point> pathObjectives;
     pathObjectives.push_back(Point(x,y));              // push initial point
-    for(const pair<int,Polygon>& victim : orderedVictimList)
+    for(const pair<int,Polygon>& victim : victim_list)
         pathObjectives.push_back(baricenter(victim.second));  //push each victim center
     pathObjectives.push_back(Point(xf,yf));            // push final point
 
@@ -1674,58 +1709,6 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         cout << "------------------------------------------------------------" << endl;
     #endif
 
-#ifdef DEBUG_DRAWCURVE
-    //
-    //  Draw Curves to debug errors
-    //
-
-    const bool VERBOSE_DEBUG_DRAWCURVE = false;
-
-    // draw borders
-    for (int i = 0; i < borders.size(); i++)
-        cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,0,0),3); // draw the line
-    // draw original path
-    for (int i = 0; i < vertices.size(); i++) {
-        cv::circle(dcImg, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(0,0,0),CV_FILLED);
-        if (VERBOSE_DEBUG_DRAWCURVE) cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
-        if (i > 0)
-            cv::line(dcImg, cv::Point(vertices[i-1].x*debugImagesScale, vertices[i-1].y*debugImagesScale),
-                     cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), cv::Scalar(255,0,0),2);
-    }
-    /*
-    //Draw Smothed path Dots and lines
-    for (int i = 0; i < short_path.size(); i++) {
-        cv::circle(dcImg, cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), 2, cv::Scalar(255,235,0),CV_FILLED);
-        if (VERBOSE_DEBUG_DRAWCURVE) cout << to_string(short_path[i].x) << "," << short_path[i].y << endl;
-        if (i > 0)
-            cv::line(dcImg, cv::Point(short_path[i-1].x*debugImagesScale, short_path[i-1].y*debugImagesScale),
-                     cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), cv::Scalar(255,235,0),2);
-    }
-    */
-    //Draw obstacles
-    for (const Polygon &pol : obstacle_list) {
-        for (int i=1; i<pol.size(); ++i) {
-            cv::line(dcImg, cv::Point(pol[i-1].x*debugImagesScale, pol[i-1].y*debugImagesScale),
-                     cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(0,0,255),2);
-        }
-        cv::line(dcImg, cv::Point(pol[0].x*debugImagesScale, pol[0].y*debugImagesScale),
-                     cv::Point(pol[pol.size()-1].x*debugImagesScale, pol[pol.size()-1].y*debugImagesScale), cv::Scalar(0,0,255),2);
-    }
-    //Draw victims
-    for (const pair<int, Polygon> victim : orderedVictimList) {
-        const Polygon &pol = victim.second;
-        for (int i=1; i<pol.size(); ++i) {
-            cv::line(dcImg, cv::Point(pol[i-1].x*debugImagesScale, pol[i-1].y*debugImagesScale),
-                     cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(0,255,0),2);
-        }
-        cv::line(dcImg, cv::Point(pol[0].x*debugImagesScale, pol[0].y*debugImagesScale),
-                     cv::Point(pol[pol.size()-1].x*debugImagesScale, pol[pol.size()-1].y*debugImagesScale), cv::Scalar(0,255,0),2);
-
-        Point center = baricenter(pol);
-        cv::putText(dcImg, std::to_string(victim.first), cv::Point(center.x*debugImagesScale, center.y*debugImagesScale), cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,0), 2);
-    }
-#endif
-
     // Startpoint
     double x0 = short_path[0].x;
     double y0 = short_path[0].y;
@@ -1748,26 +1731,11 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     bool path_planned = multipointResult.first;
     vector<dubins::Curve> multipointPath = multipointResult.second;
 
-#ifdef DEBUG_DRAWCURVE
-
-    for (int i = 0; i < multipointPath.size(); i++)
-    {
-        drawDubinsArc(multipointPath[i].a1);
-        drawDubinsArc(multipointPath[i].a2);
-        drawDubinsArc(multipointPath[i].a3);
-    }
-
-    cv::flip(dcImg, dcImg, 0);
-    cv::imshow("Curves",dcImg); ///////////////////
-    cv::waitKey(0);
-
-#endif
-
     if (path_planned) {
-        #ifdef DEBUG_PLANPATH
-            cout << "> Planning Step 3: Multipoint dubins curve planned successfully" << endl;
-            cout << "------------------------------------------------------------" << endl;
-        #endif
+    #ifdef DEBUG_PLANPATH
+        cout << "> Planning Step 3: Multipoint dubins curve planned successfully" << endl;
+        cout << "------------------------------------------------------------" << endl;
+    #endif
     } else {
         #ifdef DEBUG_PLANPATH
             cout << "> Planning Step 3: Multipoint dubins curve planning" << endl;
@@ -1776,7 +1744,20 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         throw runtime_error("Could NOT plan path!");
     }
 
-    vector<Pose> points;
+    #ifdef DEBUG_DRAWCURVE
+
+        for (int i = 0; i < multipointPath.size(); i++)
+        {
+            drawDubinsArc(multipointPath[i].a1);
+            drawDubinsArc(multipointPath[i].a2);
+            drawDubinsArc(multipointPath[i].a3);
+        }
+
+        //cv::flip(dcImg, dcImg, 0);
+        cv::imshow("Curves",dcImg);
+        cv::waitKey(0);
+
+    #endif
 
     for (int i = 0; i < multipointPath.size(); i++) {
         // Sample the curve with resolution @path_res
@@ -1785,12 +1766,165 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         // Path conversion into compatible output representation
         for (dubins::Position p : res) {
             Pose pose(p.s,p.x,p.y,p.th,p.k);
-            points.push_back(pose);
+            final_path_points.push_back(pose);
         }
+    }
+}
+
+float getPathLength(const vector<Pose>& path){
+    float length = 0;
+
+    for (int i = 0; i < path.size()-1; i++)
+    {
+        const Pose pos1 = path[i];
+        const Pose pos2 = path[i+1];
+        length += sqrt(pow((pos1.x - pos2.x), 2) + pow((pos1.y - pos2.y), 2));
+    }
+    
+    return length;
+}
+
+/*  mission planning: find highest scoring path
+        - score depends on time and reward per victim
+        - generate graph of paths between vertices (start, end, victims)
+        - compute length of all paths
+        - choose algorihm to maximize score
+        - victim score --> time bonus so that score = travel time - bonus --> minimize time
+            
+    approach --> avoid computation of the whole graph, proceed step by step
+        step 1: compute score (time) with no victim rescued 
+        step 2: compute score of all paths with one victim
+                choose highest score
+        step 3: repeat for all next victims until all visited or end point reached
+    
+    - bonus = time discount per victim rescued
+*/
+bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
+              const vector<pair<int,Polygon>>& victim_list,
+              const float x, const float y, const float theta,
+              const string& config_folder, vector<Pose>& final_path_points,
+              double xf, double yf, double thf, double Kmax, const double path_res, float bonus){
+
+    float max_time = 1000.0f;
+    float best_partial_time;    // current best time score
+    float speed = 1.0f;     // TODO: insert correct robot speed
+
+    // no victim path
+    vector<Pose> initial_path_points;
+    vector<bool> collected;
+
+    for (int i = 0; i < victim_list.size(); i++)
+    {
+        collected.push_back(false);
+    }    
+
+    vector<pair<int,Polygon>> empty_victims_vector;
+
+    collectVictimsPath(borders, obstacle_list, empty_victims_vector, x, y, theta, config_folder, initial_path_points, xf, yf, thf, Kmax, path_res);
+
+    float length = getPathLength(initial_path_points);
+
+    best_partial_time = length / speed;
+
+    #ifdef DEBUG_SCORES
+        cout << "no victim, time-score: " << (length / speed) << endl;
+    #endif
+
+    vector<pair<int,Polygon>> victims_to_collect, temp_victim_list;
+    int victim_idx, bonus_multiplier = 1;
+
+    // repeat until no more victim is worth collecting or every victim is collected
+    do{
+        victim_idx = -1;
+        
+        for (int j = 0; j < victim_list.size(); j++)
+        {
+            if (!collected[j]){
+                vector<Pose> current_path_points;
+
+                temp_victim_list = victims_to_collect;
+                temp_victim_list.push_back(victim_list[j]);
+
+                collectVictimsPath(borders, obstacle_list, temp_victim_list, x, y, theta, config_folder, current_path_points, xf, yf, thf, Kmax, path_res);
+
+                length = getPathLength(current_path_points);
+                
+                #ifdef DEBUG_SCORES
+                    cout << "victim " << victim_list[j].first << ", time: " << (length / speed);
+                #endif
+
+                float current_partial_time = (length / speed) - (bonus * bonus_multiplier);
+                
+                #ifdef DEBUG_SCORES
+                    cout << ", time-score: " << current_partial_time << endl;
+                #endif
+
+                // update score and path
+                if (current_partial_time < best_partial_time){
+                    best_partial_time = current_partial_time;
+                    final_path_points = current_path_points;
+                    victim_idx = j;
+                }
+            }
+        }
+
+        if (victim_idx > -1){
+            victims_to_collect.push_back(victim_list[victim_idx]);
+            collected[victim_idx] = true;
+            bonus_multiplier++;
+            
+            #ifdef DEBUG_SCORES
+                cout << "will collect victim " << victim_list[victim_idx].first << endl;
+            #endif
+        }
+    } while(victim_idx > -1);
+}
+
+bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
+              const vector<pair<int,Polygon>>& victim_list, const Polygon& gate,
+              const float x, const float y, const float theta, Path& path,
+              const string& config_folder) {
+
+    #ifdef DEBUG_PLANPATH
+        printf("--------PLANNING WAS CALLED--------\n");
+        fflush(stdout);
+    #endif
+
+    double xf, yf, thf;                   // Endpoint
+    centerGate(gate,borders,xf,yf,thf);  // Endpoint computation
+    const double Kmax = 10.0;                   // Maximum curvature
+    const double path_res = 0.01;               // Path resolution (sampling)
+
+    int mission = 1;   // 0 = rescue all victims in order, 1 = maximize score
+    vector<Pose> final_path_points;
+
+    #ifdef DEBUG_DRAWCURVE
+        drawDebugImage(borders, obstacle_list, victim_list);
+    #endif
+
+    if (mission == 0){
+        //
+        // Sort Victims by ID
+        //
+
+        vector<pair<int,Polygon>> orderedVictimList = victim_list;
+        sort(orderedVictimList.begin(), orderedVictimList.end(), [](const pair<int,Polygon>& lhs, const pair<int,Polygon>& rhs) {
+        return lhs.first < rhs.first;
+        });
+
+        collectVictimsPath(borders, obstacle_list, orderedVictimList, x, y, theta, config_folder, final_path_points, xf, yf, thf, Kmax, path_res);
+    }
+    else if (mission == 1){
+        float bonus = 0.3f;
+        bestScorePath(borders, obstacle_list, victim_list, x, y, theta, config_folder, final_path_points, xf, yf, thf, Kmax, path_res, bonus);
+
+        #ifdef DEBUG_SCORES
+            cout << "Highest scoring path found\n";
+        #endif
     }
 
     //Set output
-    path.setPoints(points);
+    path.setPoints(final_path_points);
 
     return true;
   }
