@@ -12,6 +12,7 @@ include_directories(
  include
  ${OpenCV_INCLUDE_DIRS}
  ${project_interface_INCLUDE_DIRS}
+ src/clipper-lib-cpp/
 )
 
 ## CREATE EXECUTABLE LIBRARIES
@@ -26,6 +27,10 @@ add_library(dubins SHARED
 
 add_library(hsvpanel SHARED
   src/hsv_panel.cpp
+)
+
+add_library(clipperlib SHARED
+  src/clipper-lib-cpp/clipper.cpp
 )
 
 
@@ -45,6 +50,16 @@ target_link_libraries(student
 
 target_link_libraries(student
   hsvpanel
+)
+
+
+### DEMO for Clipper library
+
+add_executable(clipperdemo
+    src/clipper_console_demo.cpp
+)
+target_link_libraries(clipperdemo
+    clipperlib
 )
 
 
