@@ -62,10 +62,10 @@ namespace dubins{
     * @param[in] x0        x position value of the start of the maneuver
     * @param[in] y0        y position value of the start of the maneuver
     * @param[in] th0       orientation angle of the start of the maneuver
-    * @param[in] s1        length of the first arc                              // !TODO: Check if s are lengths or curvilinear abscissas
+    * @param[in] s1        length of the first arc
     * @param[in] s2        length of the second arc
     * @param[in] s3        length of the third arc
-    * @param[in] k0        curvature of the first arc                           // !TODO: Check why this starts from zero and the s from 1
+    * @param[in] k0        curvature of the first arc
     * @param[in] k1        curvature of the second arc
     * @param[in] k2        curvature of the third arc
     */

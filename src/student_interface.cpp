@@ -39,7 +39,7 @@
 using namespace std;
 
 // --------------------------------- CONSTANTS ---------------------------------
-enum class Mission { mission1, mission2};
+enum class Mission { mission1, mission2 };
 const Mission mission = Mission::mission1;   // 1 = rescue all victims in order, 2 = maximize score
 
 const string COLOR_CONFIG_FILE = "/color_parameters.config";
@@ -53,6 +53,10 @@ const float obstaclesInflationAmount = 0.001; // (Note: value in meters)
                                               // approximation errors in the
                                               // computation of // collisions
                                               // (in the RRT script)
+//Planning
+const double K_MAX = 10.0;                    // Maximum curvature
+const double PATH_RESOLUTION = 0.01;          // Path resolution (sampling)
+const float ROBOT_SPEED = 1.0f;               // TODO: insert correct robot ROBOT_SPEED
 
 namespace student {
 
@@ -875,7 +879,6 @@ void centerGate(const Polygon& gate, const Polygon& borders, double& x,
     theta = angle;
 }
 
-
 bool isArcColliding(dubins::Arc a, Point pA, Point pB) {
     cv::Point2f center;
     float radius = abs(1 / a.k);
@@ -1135,7 +1138,7 @@ void drawDubinsArc(dubins::Arc& da) {
 std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
                                                unsigned int startIdx, unsigned int arriveIdx,
                                                double startAngle, double arriveAngle,
-                                               double& returnedLength, const double Kmax,
+                                               double& returnedLength,
                                                const vector<Polygon>& obstacle_list) {
     /* ----------------------------- PARAMETERS ----------------------------- */
     const unsigned short NUM_ANGLES = 4;   // Number of angles to test for each free point
@@ -1165,7 +1168,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
         double x2 = path[arriveIdx].x;
         double y2 = path[arriveIdx].y;
         double theta2 = arriveAngle;
-        dubins::Curve curve = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
+        dubins::Curve curve = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, K_MAX, pidx);
         bool isColliding = isCurveColliding(curve, obstacle_list);
 
         returnedLength = isColliding ? std::numeric_limits<double>::max() : curve.L;
@@ -1202,7 +1205,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
             x2 = path[startIdx+1].x;
             y2 = path[startIdx+1].y;
             theta2 = alpha_middlepoint;
-            dubins::Curve curveA = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
+            dubins::Curve curveA = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, K_MAX, pidx);
             bool isAColliding = isCurveColliding(curveA, obstacle_list);
             // Compute the curve for segment B and check for collisions
             // B: starts from arriveIdx-1, angle: alpha_middlepoint | ends in arriveIdx, angle: arriveAngle
@@ -1213,7 +1216,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
             x2 = path[arriveIdx].x;
             y2 = path[arriveIdx].y;
             theta2 = arriveAngle;
-            dubins::Curve curveB = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
+            dubins::Curve curveB = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, K_MAX, pidx);
             bool isBColliding = isCurveColliding(curveB, obstacle_list);
 
             double lengthAB = curveA.L + curveB.L;
@@ -1275,7 +1278,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
             x2 = path[startIdx+1].x;
             y2 = path[startIdx+1].y;
             theta2 = alpha_first;
-            dubins::Curve curveA = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
+            dubins::Curve curveA = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, K_MAX, pidx);
             bool isAColliding = isCurveColliding(curveA, obstacle_list);
             // Compute the curve for segment B and check for collisions
             // B: starts from arriveIdx-1, angle: alpha_second | ends in arriveIdx, angle: arriveAngle
@@ -1286,7 +1289,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
             x2 = path[arriveIdx].x;
             y2 = path[arriveIdx].y;
             theta2 = arriveAngle;
-            dubins::Curve curveB = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, Kmax, pidx);
+            dubins::Curve curveB = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, K_MAX, pidx);
             bool isBColliding = isCurveColliding(curveB, obstacle_list);
 
             double recursivelyReturnedLength = -1;
@@ -1298,7 +1301,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
                 tuple = MDP(path, startIdx+1,arriveIdx-1,
                             alpha_first,alpha_second,
                             recursivelyReturnedLength,
-                            Kmax, obstacle_list);
+                            obstacle_list);
                 result = tuple.first;
                 recursiveReturnedPath = tuple.second;
             }
@@ -1597,11 +1600,12 @@ void drawDebugImage(const Polygon& borders, const vector<Polygon>& obstacle_list
     }
 }
 
-void collectVictimsPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
-              const vector<pair<int,Polygon>>& victim_list,
-              const float x, const float y, const float theta,
-              const string& config_folder, vector<Pose>& final_path_points,
-              double xf, double yf, double thf, double Kmax, const double path_res){
+vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
+                                 const vector<Polygon>& obstacle_list,
+                                 const vector<pair<int,Polygon>>& victim_list,
+                                 float x, float y, float theta,
+                                 float xf, float yf, float thf,
+                                 const string& config_folder){
     //
     // Create a vector of crucial points (start, victims, end);
     //
@@ -1658,11 +1662,6 @@ void collectVictimsPath(const Polygon& borders, const vector<Polygon>& obstacle_
         cv::waitKey(0);
     #endif
 
-    // Startpoint
-    double x0 = short_path[0].x;
-    double y0 = short_path[0].y;
-    double th0 = theta;
-
     // add borders for collision check
     vector<Polygon> boundaries = obstacle_list;
     boundaries.push_back(borders);
@@ -1674,8 +1673,8 @@ void collectVictimsPath(const Polygon& borders, const vector<Polygon>& obstacle_
     std::pair<bool,vector<dubins::Curve>> multipointResult;
     multipointResult = MDP(short_path,
                            0, short_path.size()-1,   // start and arrival indexes
-                           th0, thf,                 // start and arrive angles
-                           returnedLength, Kmax,
+                           theta, thf,                 // start and arrive angles
+                           returnedLength,
                            boundaries);
     bool path_planned = multipointResult.first;
     vector<dubins::Curve> multipointPath = multipointResult.second;
@@ -1708,36 +1707,13 @@ void collectVictimsPath(const Polygon& borders, const vector<Polygon>& obstacle_
 
     #endif
 
-    //
-    // Path discretization
-    //
-
-    double remainingDelta = 0.0;    // value used to carry the remaining "sampling step" between curves
-    double last_s = 0.0;            // value used to carry the last value of the curvilinear abscissa
-    for (int i = 0; i < multipointPath.size(); i++) {
-        // the last point of the curve is added only if it's the final curve of the path (otherwise it carries the remaining delta)
-        bool addLastPoint = i == (multipointPath.size()-1) ? true : false;
-        // the current curve is sampled with resolution path_res
-        vector<dubins::Position> res = multipointPath[i].discretizeCurve(path_res,remainingDelta,last_s,addLastPoint);
-
-        // Path conversion into compatible output representation
-        for (dubins::Position p : res) {
-            Pose pose(p.s,p.x,p.y,p.th,p.k);
-            final_path_points.push_back(pose);
-        }
-    }
+    return multipointPath;
 }
 
-float getPathLength(const vector<Pose>& path){
+float getPathLength(const vector<dubins::Curve>& multipointPath){
     float length = 0;
-
-    for (int i = 0; i < path.size()-1; i++)
-    {
-        const Pose pos1 = path[i];
-        const Pose pos2 = path[i+1];
-        length += sqrt(pow((pos1.x - pos2.x), 2) + pow((pos1.y - pos2.y), 2));
-    }
-
+    for (const dubins::Curve& curve : multipointPath)
+        length += curve.L;
     return length;
 }
 
@@ -1756,35 +1732,33 @@ float getPathLength(const vector<Pose>& path){
 
     - bonus = time discount per victim rescued
 */
-bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
-              const vector<pair<int,Polygon>>& victim_list,
-              const float x, const float y, const float theta,
-              const string& config_folder, vector<Pose>& final_path_points,
-              double xf, double yf, double thf, double Kmax, const double path_res, float bonus){
+vector<dubins::Curve> bestScorePath(const Polygon& borders,
+                                    const vector<Polygon>& obstacle_list,
+                                    const vector<pair<int,Polygon>>& victim_list,
+                                    float x, float y, float theta,
+                                    float xf, float yf, float thf, float bonus,
+                                    const string& config_folder){
 
+    vector<dubins::Curve> multipointPath;
     float max_time = 1000.0f;
     float best_partial_time;    // current best time score
-    float speed = 1.0f;     // TODO: insert correct robot speed
 
     // no victim path
-    vector<Pose> initial_path_points;
+    vector<dubins::Curve> initial_path;
     vector<bool> collected;
 
     for (int i = 0; i < victim_list.size(); i++)
-    {
         collected.push_back(false);
-    }
 
     vector<pair<int,Polygon>> empty_victims_vector;
 
-    collectVictimsPath(borders, obstacle_list, empty_victims_vector, x, y, theta, config_folder, initial_path_points, xf, yf, thf, Kmax, path_res);
+    initial_path = collectVictimsPath(borders, obstacle_list, empty_victims_vector, x, y, theta, xf, yf, thf, config_folder);
+    float length = getPathLength(initial_path);
 
-    float length = getPathLength(initial_path_points);
-
-    best_partial_time = length / speed;
+    best_partial_time = length / ROBOT_SPEED;
 
     #ifdef DEBUG_SCORES
-        cout << "no victim, time-score: " << (length / speed) << endl;
+        cout << "no victim, time-score: " << (length / ROBOT_SPEED) << endl;
     #endif
 
     vector<pair<int,Polygon>> victims_to_collect, temp_victim_list;
@@ -1797,20 +1771,21 @@ bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         for (int j = 0; j < victim_list.size(); j++)
         {
             if (!collected[j]){
-                vector<Pose> current_path_points;
+                vector<dubins::Curve> current_path;
 
                 temp_victim_list = victims_to_collect;
                 temp_victim_list.push_back(victim_list[j]);
 
-                collectVictimsPath(borders, obstacle_list, temp_victim_list, x, y, theta, config_folder, current_path_points, xf, yf, thf, Kmax, path_res);
+                //TODO: handle current_path_points
+                current_path = collectVictimsPath(borders, obstacle_list, temp_victim_list, x, y, theta, xf, yf, thf, config_folder);
 
-                length = getPathLength(current_path_points);
+                length = getPathLength(current_path);
 
                 #ifdef DEBUG_SCORES
-                    cout << "victim " << victim_list[j].first << ", time: " << (length / speed);
+                    cout << "victim " << victim_list[j].first << ", time: " << (length / ROBOT_SPEED);
                 #endif
 
-                float current_partial_time = (length / speed) - (bonus * bonus_multiplier);
+                float current_partial_time = (length / ROBOT_SPEED) - (bonus * bonus_multiplier);
 
                 #ifdef DEBUG_SCORES
                     cout << ", time-score: " << current_partial_time << endl;
@@ -1819,7 +1794,7 @@ bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
                 // update score and path
                 if (current_partial_time < best_partial_time){
                     best_partial_time = current_partial_time;
-                    final_path_points = current_path_points;
+                    multipointPath = current_path;
                     victim_idx = j;
                 }
             }
@@ -1835,6 +1810,7 @@ bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
             #endif
         }
     } while(victim_idx > -1);
+    return multipointPath;
 }
 
 bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
@@ -1849,15 +1825,12 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
     double xf, yf, thf;                   // Endpoint
     centerGate(gate,borders,xf,yf,thf);  // Endpoint computation
-    const double Kmax = 10.0;                   // Maximum curvature
-    const double path_res = 0.01;               // Path resolution (sampling)
-
-    vector<Pose> final_path_points;
 
     #ifdef DEBUG_DRAWCURVE
         drawDebugImage(borders, obstacle_list, victim_list);
     #endif
 
+    vector<dubins::Curve> multipointPath;
     if (mission == Mission::mission1){
 
         //
@@ -1871,20 +1844,37 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         //
         // Plan MISSION 1 path
         //
-        collectVictimsPath(borders, obstacle_list, orderedVictimList, x, y, theta, config_folder, final_path_points, xf, yf, thf, Kmax, path_res);
+        multipointPath = collectVictimsPath(borders, obstacle_list, orderedVictimList, x, y, theta, xf, yf, thf, config_folder);
     }
     else if (mission == Mission::mission2){
         float bonus = 0.3f;
-        bestScorePath(borders, obstacle_list, victim_list, x, y, theta, config_folder, final_path_points, xf, yf, thf, Kmax, path_res, bonus);
-
+        multipointPath = bestScorePath(borders, obstacle_list, victim_list, x, y, theta, xf, yf, thf, bonus, config_folder);
         #ifdef DEBUG_SCORES
             cout << "Highest scoring path found\n";
         #endif
     }
 
+    //
+    // Path discretization
+    //
+    vector<Pose> final_path_points;
+    double remainingDelta = 0.0;    // value used to carry the remaining "sampling step" between curves
+    double last_s = 0.0;            // value used to carry the last value of the curvilinear abscissa
+    for (int i = 0; i < multipointPath.size(); i++) {
+        // the last point of the curve is added only if it's the final curve of the path (otherwise it carries the remaining delta)
+        bool addLastPoint = i == (multipointPath.size()-1) ? true : false;
+        // the current curve is sampled with resolution PATH_RESOLUTION
+        vector<dubins::Position> res = multipointPath[i].discretizeCurve(PATH_RESOLUTION,remainingDelta,last_s,addLastPoint);
+
+        // Path conversion into compatible output representation
+        for (dubins::Position p : res) {
+            Pose pose(p.s,p.x,p.y,p.th,p.k);
+            final_path_points.push_back(pose);
+        }
+    }
+
     //Set output
     path.setPoints(final_path_points);
-
     return true;
   }
 }
