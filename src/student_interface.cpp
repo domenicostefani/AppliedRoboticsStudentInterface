@@ -626,13 +626,6 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
         cv::findContours(processROI, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
         minRect[i] = minAreaRect(cv::Mat(contours[0]));
 
-        // draw min rectangle       //TODO: keep or remove? decide
-        //cv::Point2f rect_points[4];
-        //minRect[i].points(rect_points);
-        //for (int k = 0; k < 4; ++k) {
-        //   line(processROI, rect_points[k], rect_points[(k+1)%4], cv::Scalar(255,0,255), 1, 8);
-        //}
-
         // rotate min rectangle to align with axes
         cv::Mat rotM = cv::getRotationMatrix2D(minRect[i].center, minRect[i].angle, 1.0);
         cv::warpAffine(processROI, processROI, rotM, processROI.size(), cv::INTER_CUBIC);
@@ -882,38 +875,6 @@ void centerGate(const Polygon& gate, const Polygon& borders, double& x,
     theta = angle;
 }
 
-// choose the curve with the arrival angle that minimizes the length    //TODO: check why this is not called by any function
-dubins::Curve findBestAngle(double& th0, double& thf, double& x0, double& y0,
-                            double& xf, double& yf, double& Kmax, int& pidx) {
-    #define DEBUG_FINDBESTANGLE
-#ifdef DEBUG_FINDBESTANGLE
-    static int fba_counter = 0;
-    fba_counter++;
-    cout << "findBestAngle() called #" << fba_counter << endl;
-#endif
-    vector<double> angles;
-    double best_length = 100000;
-    dubins::Curve best_curve = dubins::Curve(0,0,0,0,0,0,0,0,0);
-
-    // check start angle, end angle and angle in between (can be refined with more angles)
-    angles.push_back(th0);
-    angles.push_back(thf);
-    angles.push_back((th0 + thf)/2);
-
-    for (int i = 0; i < angles.size(); i++) {
-        #ifdef DEBUG_FINDBESTANGLE
-            cout << "dubins_shortest_path called from findBestAngle #" << fba_counter << endl;
-        #endif
-        dubins::Curve curve = dubins::dubins_shortest_path(x0, y0, th0, xf, yf, angles[i], Kmax, pidx);
-        if (curve.L < best_length) {
-            best_length = curve.L;
-            thf = angles[i];
-            best_curve = curve;
-        }
-    }
-
-    return best_curve;
-  }
 
 bool isArcColliding(dubins::Arc a, Point pA, Point pB) {
     cv::Point2f center;
@@ -1391,9 +1352,6 @@ bool isPathColliding(vector<Point> vertices, vector<Polygon> obstacle_list) {
 
 bool pathSmoothing(int start_index, int finish_index, vector<Point> vertices,
                    vector<Polygon> obstacle_list, vector<Point>& short_path) {
-
-    // TODO: recursion missing STOP condition, eg. start_index == finish_index then return false
-
     bool collision = false;
     double x0, y0, xf, yf;
 
@@ -1750,9 +1708,17 @@ void collectVictimsPath(const Polygon& borders, const vector<Polygon>& obstacle_
 
     #endif
 
+    //
+    // Path discretization
+    //
+
+    double remainingDelta = 0.0;    // value used to carry the remaining "sampling step" between curves
+    double last_s = 0.0;            // value used to carry the last value of the curvilinear abscissa
     for (int i = 0; i < multipointPath.size(); i++) {
-        // Sample the curve with resolution @path_res
-        vector<dubins::Position> res = multipointPath[i].discretizeSingleCurve(path_res);   //TODO: change to discretizeCurve() and manage carry values (remainders of the discretization used to have equal distance between points)
+        // the last point of the curve is added only if it's the final curve of the path (otherwise it carries the remaining delta)
+        bool addLastPoint = i == (multipointPath.size()-1) ? true : false;
+        // the current curve is sampled with resolution path_res
+        vector<dubins::Position> res = multipointPath[i].discretizeCurve(path_res,remainingDelta,last_s,addLastPoint);
 
         // Path conversion into compatible output representation
         for (dubins::Position p : res) {
