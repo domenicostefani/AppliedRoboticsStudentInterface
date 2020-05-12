@@ -32,15 +32,17 @@
 // #define DEBUG_PLANPATH            // generic info about the whole planner
 // #define DEBUG_RRT                 // inner planning algorithm
 // #define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
-// #define DEBUG_DRAWCURVE             // dubins path plotting
+ #define DEBUG_DRAWCURVE             // dubins path plotting
 #define DEBUG_SCORES              // track times and scores of victims to collect
 // #define DEBUG_COLLISION           // plot for collision detection
 
 using namespace std;
 
+using matrix = std::vector<std::vector<float>>;
+
 // --------------------------------- CONSTANTS ---------------------------------
 enum class Mission { mission1, mission2};
-const Mission mission = Mission::mission1;   // 1 = rescue all victims in order, 2 = maximize score
+const Mission mission = Mission::mission2;   // 1 = rescue all victims in order, 2 = maximize score
 
 const string COLOR_CONFIG_FILE = "/color_parameters.config";
 const int pythonUpscale = 1000; // scale factor used to convert parameters to a
@@ -1639,6 +1641,65 @@ void drawDebugImage(const Polygon& borders, const vector<Polygon>& obstacle_list
     }
 }
 
+void getFinalPathPoints(const vector<Point>& short_path, const Polygon& borders, const vector<Polygon>& obstacle_list,
+              const float theta, vector<Pose>& final_path_points,double thf, double Kmax, const double path_res){
+    // add borders for collision check
+    vector<Polygon> boundaries = obstacle_list;
+    boundaries.push_back(borders);
+
+    double returnedLength = 0;  // unused here, just for recursion
+    #ifdef DEBUG_PLANPATH
+        cout << "Computing Multi Point Dubins path..." << endl;
+    #endif
+    std::pair<bool,vector<dubins::Curve>> multipointResult;
+    multipointResult = MDP(short_path,
+                           0, short_path.size()-1,   // start and arrival indexes
+                           theta, thf,                 // start and arrive angles
+                           returnedLength, Kmax,
+                           boundaries);
+    bool path_planned = multipointResult.first;
+    vector<dubins::Curve> multipointPath = multipointResult.second;
+
+    if (path_planned) {
+    #ifdef DEBUG_PLANPATH
+        cout << "> Planning Step 3: Multipoint dubins curve planned successfully" << endl;
+        cout << "------------------------------------------------------------" << endl;
+    #endif
+    } else {
+        #ifdef DEBUG_PLANPATH
+            cout << "> Planning Step 3: Multipoint dubins curve planning" << endl;
+            cout << "------------------------------------------------------------" << endl;
+        #endif
+        throw runtime_error("Could NOT plan path!");
+    }
+
+    #ifdef DEBUG_DRAWCURVE
+
+        for (int i = 0; i < multipointPath.size(); i++)
+        {
+            drawDubinsArc(multipointPath[i].a1);
+            drawDubinsArc(multipointPath[i].a2);
+            drawDubinsArc(multipointPath[i].a3);
+        }
+
+        //cv::flip(dcImg, dcImg, 0);
+        cv::imshow("Curves",dcImg);
+        cv::waitKey(0);
+
+    #endif
+
+    for (int i = 0; i < multipointPath.size(); i++) {
+        // Sample the curve with resolution @path_res
+        vector<dubins::Position> res = multipointPath[i].discretizeSingleCurve(path_res);   //TODO: change to discretizeCurve() and manage carry values (remainders of the discretization used to have equal distance between points)
+
+        // Path conversion into compatible output representation
+        for (dubins::Position p : res) {
+            Pose pose(p.s,p.x,p.y,p.th,p.k);
+            final_path_points.push_back(pose);
+        }
+    }
+}
+
 void collectVictimsPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
               const vector<pair<int,Polygon>>& victim_list,
               const float x, const float y, const float theta,
@@ -1694,81 +1755,38 @@ void collectVictimsPath(const Polygon& borders, const vector<Polygon>& obstacle_
         cout << "------------------------------------------------------------" << endl;
     #endif
 
-    #ifdef DEBUG_PATH_SMOOTHING
+    #ifdef DEBUG_DRAWCURVE
         drawDebugPath(short_path);
         cv::imshow("Curves",dcImg);
         cv::waitKey(0);
     #endif
 
-    // Startpoint
-    double x0 = short_path[0].x;
-    double y0 = short_path[0].y;
-    double th0 = theta;
-
-    // add borders for collision check
-    vector<Polygon> boundaries = obstacle_list;
-    boundaries.push_back(borders);
-
-    double returnedLength = 0;  // unused here, just for recursion
-    #ifdef DEBUG_PLANPATH
-        cout << "Computing Multi Point Dubins path..." << endl;
-    #endif
-    std::pair<bool,vector<dubins::Curve>> multipointResult;
-    multipointResult = MDP(short_path,
-                           0, short_path.size()-1,   // start and arrival indexes
-                           th0, thf,                 // start and arrive angles
-                           returnedLength, Kmax,
-                           boundaries);
-    bool path_planned = multipointResult.first;
-    vector<dubins::Curve> multipointPath = multipointResult.second;
-
-    if (path_planned) {
-    #ifdef DEBUG_PLANPATH
-        cout << "> Planning Step 3: Multipoint dubins curve planned successfully" << endl;
-        cout << "------------------------------------------------------------" << endl;
-    #endif
-    } else {
-        #ifdef DEBUG_PLANPATH
-            cout << "> Planning Step 3: Multipoint dubins curve planning" << endl;
-            cout << "------------------------------------------------------------" << endl;
-        #endif
-        throw runtime_error("Could NOT plan path!");
-    }
-
-    #ifdef DEBUG_DRAWCURVE
-
-        for (int i = 0; i < multipointPath.size(); i++)
-        {
-            drawDubinsArc(multipointPath[i].a1);
-            drawDubinsArc(multipointPath[i].a2);
-            drawDubinsArc(multipointPath[i].a3);
-        }
-
-        //cv::flip(dcImg, dcImg, 0);
-        cv::imshow("Curves",dcImg);
-        cv::waitKey(0);
-
-    #endif
-
-    for (int i = 0; i < multipointPath.size(); i++) {
-        // Sample the curve with resolution @path_res
-        vector<dubins::Position> res = multipointPath[i].discretizeSingleCurve(path_res);   //TODO: change to discretizeCurve() and manage carry values (remainders of the discretization used to have equal distance between points)
-
-        // Path conversion into compatible output representation
-        for (dubins::Position p : res) {
-            Pose pose(p.s,p.x,p.y,p.th,p.k);
-            final_path_points.push_back(pose);
-        }
-    }
+    //
+    // PLANNING Step 3: Multi-point dubins curve to path points
+    //
+    getFinalPathPoints(short_path, borders, obstacle_list, theta, final_path_points, thf, Kmax, path_res);
 }
 
-float getPathLength(const vector<Pose>& path){
+float getPosePathLength(const vector<Pose>& path){
     float length = 0;
 
     for (int i = 0; i < path.size()-1; i++)
     {
         const Pose pos1 = path[i];
         const Pose pos2 = path[i+1];
+        length += sqrt(pow((pos1.x - pos2.x), 2) + pow((pos1.y - pos2.y), 2));
+    }
+
+    return length;
+}
+
+float getPointPathLength(const vector<Point>& path){
+    float length = 0;
+
+    for (int i = 0; i < path.size()-1; i++)
+    {
+        const Point pos1 = path[i];
+        const Point pos2 = path[i+1];
         length += sqrt(pow((pos1.x - pos2.x), 2) + pow((pos1.y - pos2.y), 2));
     }
 
@@ -1782,7 +1800,7 @@ float getPathLength(const vector<Pose>& path){
         - choose algorihm to maximize score
         - victim score --> time bonus so that score = travel time - bonus --> minimize time
 
-    approach --> avoid computation of the whole graph, proceed step by step
+    approach
         step 1: compute score (time) with no victim rescued
         step 2: compute score of all paths with one victim
                 choose highest score
@@ -1813,7 +1831,7 @@ bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
     collectVictimsPath(borders, obstacle_list, empty_victims_vector, x, y, theta, config_folder, initial_path_points, xf, yf, thf, Kmax, path_res);
 
-    float length = getPathLength(initial_path_points);
+    float length = getPosePathLength(initial_path_points);
 
     best_partial_time = length / speed;
 
@@ -1838,7 +1856,7 @@ bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
                 collectVictimsPath(borders, obstacle_list, temp_victim_list, x, y, theta, config_folder, current_path_points, xf, yf, thf, Kmax, path_res);
 
-                length = getPathLength(current_path_points);
+                length = getPosePathLength(current_path_points);
 
                 #ifdef DEBUG_SCORES
                     cout << "victim " << victim_list[j].first << ", time: " << (length / speed);
