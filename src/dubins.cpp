@@ -7,7 +7,7 @@
 #include <vector>
 #include <assert.h>
 
-#include <iostream> //TODO: remove
+#include <iostream>
 
 namespace dubins{
 
