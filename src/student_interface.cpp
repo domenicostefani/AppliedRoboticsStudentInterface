@@ -32,7 +32,7 @@
 // #define DEBUG_PLANPATH            // generic info about the whole planner
 // #define DEBUG_RRT                 // inner planning algorithm
 // #define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
- #define DEBUG_DRAWCURVE             // dubins path plotting
+// #define DEBUG_DRAWCURVE             // dubins path plotting
 #define DEBUG_SCORES              // track times and scores of victims to collect
 // #define DEBUG_COLLISION           // plot for collision detection
 
@@ -1793,6 +1793,10 @@ float getPointPathLength(const vector<Point>& path){
     return length;
 }
 
+bool sorByDistance(const pair<int,float>& p1, const pair<int,float>& p2){
+    return (p1.second < p2.second);
+}
+
 /*  mission planning: find highest scoring path
         - score depends on time and reward per victim
         - generate graph of paths between vertices (start, end, victims)
@@ -1808,16 +1812,30 @@ float getPointPathLength(const vector<Point>& path){
 
     - bonus = time discount per victim rescued
 */
-bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
+// TODO: handle case for no victim collected
+bool bestScoreGreedy(const Polygon& borders, const vector<Polygon>& obstacle_list,
               const vector<pair<int,Polygon>>& victim_list,
               const float x, const float y, const float theta,
               const string& config_folder, vector<Pose>& final_path_points,
               double xf, double yf, double thf, double Kmax, const double path_res, float bonus){
-
+                  
     float max_time = 1000.0f;
     float best_partial_time;    // current best time score
     float speed = 1.0f;     // TODO: insert correct robot speed
 
+    // compute victim distance from start
+    vector<float> distances;
+
+    for (int i = 0; i < victim_list.size(); i++)
+    {
+        vector<Point> path = RRTplanner(borders,obstacle_list,x,y,baricenter(victim_list[i].second).x,baricenter(victim_list[i].second).y,config_folder);
+        assert(!isPathColliding(path, obstacle_list));  // If the rrt path collides there is an error in the python script or conversion
+
+        float length = getPointPathLength(path);
+
+        distances.push_back(length);
+    }
+    
     // no victim path
     vector<Pose> initial_path_points;
     vector<bool> collected;
@@ -1839,21 +1857,31 @@ bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         cout << "no victim, time-score: " << (length / speed) << endl;
     #endif
 
-    vector<pair<int,Polygon>> victims_to_collect, temp_victim_list;
+    vector<pair<int,Polygon>> victims_to_collect;
+    vector<pair<int,float>> ordered_distances, temp_ordered_distances;
     int victim_idx, bonus_multiplier = 1;
 
     // repeat until no more victim is worth collecting or every victim is collected
     do{
         victim_idx = -1;
-
+    
         for (int j = 0; j < victim_list.size(); j++)
         {
             if (!collected[j]){
                 vector<Pose> current_path_points;
 
-                temp_victim_list = victims_to_collect;
-                temp_victim_list.push_back(victim_list[j]);
+                vector<pair<int,Polygon>> temp_victim_list;
+                temp_ordered_distances = ordered_distances;
 
+                temp_ordered_distances.push_back(make_pair(j,distances[j]));
+
+                sort(temp_ordered_distances.begin(), temp_ordered_distances.end(), sorByDistance);
+
+                for (int i = 0; i < temp_ordered_distances.size(); i++)
+                {
+                    temp_victim_list.push_back(victim_list[temp_ordered_distances[i].first]);
+                }
+                
                 collectVictimsPath(borders, obstacle_list, temp_victim_list, x, y, theta, config_folder, current_path_points, xf, yf, thf, Kmax, path_res);
 
                 length = getPosePathLength(current_path_points);
@@ -1879,6 +1907,7 @@ bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
 
         if (victim_idx > -1){
             victims_to_collect.push_back(victim_list[victim_idx]);
+            ordered_distances.push_back(make_pair(victim_idx, distances[victim_idx]));
             collected[victim_idx] = true;
             bonus_multiplier++;
 
@@ -1926,8 +1955,8 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         collectVictimsPath(borders, obstacle_list, orderedVictimList, x, y, theta, config_folder, final_path_points, xf, yf, thf, Kmax, path_res);
     }
     else if (mission == Mission::mission2){
-        float bonus = 0.3f;
-        bestScorePath(borders, obstacle_list, victim_list, x, y, theta, config_folder, final_path_points, xf, yf, thf, Kmax, path_res, bonus);
+        float bonus = 0.08f;
+        bestScoreGreedy(borders, obstacle_list, victim_list, x, y, theta, config_folder, final_path_points, xf, yf, thf, Kmax, path_res, bonus);
 
         #ifdef DEBUG_SCORES
             cout << "Highest scoring path found\n";
