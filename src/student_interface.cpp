@@ -39,6 +39,9 @@
 using namespace std;
 
 // --------------------------------- CONSTANTS ---------------------------------
+enum class Mission { mission1, mission2};
+const Mission mission = Mission::mission1;   // 1 = rescue all victims in order, 2 = maximize score
+
 const string COLOR_CONFIG_FILE = "/color_parameters.config";
 const int pythonUpscale = 1000; // scale factor used to convert parameters to a
                                 // int represetation for the planning library
@@ -1541,8 +1544,8 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     return vertices;
 }
 
-vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>& obstacle_list) { //TODO: change name
-    vector<Point> smoothedPath; //TODO: change name
+vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>& obstacle_list) {
+    vector<Point> smoothedPath;
     smoothedPath.push_back(path[0]);
     bool is_path_smoothed = pathSmoothing(0, path.size()-1, path, obstacle_list, smoothedPath);
 
@@ -1575,14 +1578,9 @@ vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>&
             bool reverse_smoothing = pathSmoothing(0, smoothedPath.size()-1, smoothedPath, obstacle_list, shorter_path);
             if (reverse_smoothing && (shorter_path.size() < smoothedPath.size())) {
                 #ifdef DEBUG_PATH_SMOOTHING
-                    cout << "Reverse smoothing SUCCESS" << endl;
                     cout << "\t>Path shortened AGAIN (size: " << smoothedPath.size() << "->" << shorter_path.size() << ")" << endl;
                 #endif
                 smoothedPath = shorter_path;
-            }else{
-                #ifdef DEBUG_PATH_SMOOTHING
-                    cout << "Reverse smoothing FAIL" << endl;
-                #endif
             }
             std::reverse(smoothedPath.begin(), smoothedPath.end());
         }
@@ -1596,19 +1594,15 @@ vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>&
             cout << "Path smoothing FAILED! Collision detected" << endl;
         #endif
         throw logic_error("ERROR: path cannot be shortened");
-        // TODO: Thie case might need to be handled in a better way:
-        // This occurs often if the scaling factor for the python script is too
-        // low. That causes approximation errors that result in RRT paths that
-        // do not collide according to the script, but collide accorting to the
-        // actual computations.
+    }
+}
 
-        // However, the scaling determines the granularity of the algorithm
-        // (high scaling, longer output path) which means that the script could
-        // hit its ITERATION LIMIT. This along with the fact that it's slower.
-        // Either we handle the iteration limit case by taking the partial path
-        // provided and launching other instances of the script to complete it
-        // OR we go for a good floating point RRT library (elegant and fast).
-        // (Maybe http://ompl.kavrakilab.org/planners.html)
+void drawDebugPath(std::vector<Point> path){
+    for (int i = 0; i < path.size(); i++) {
+        cv::circle(dcImg, cv::Point(path[i].x*debugImagesScale, path[i].y*debugImagesScale), 2, cv::Scalar(0,0,0),CV_FILLED);
+        if (i > 0)
+            cv::line(dcImg, cv::Point(path[i-1].x*debugImagesScale, path[i-1].y*debugImagesScale),
+                     cv::Point(path[i].x*debugImagesScale, path[i].y*debugImagesScale), cv::Scalar(255,0,0),2);
     }
 }
 
@@ -1617,32 +1611,10 @@ void drawDebugImage(const Polygon& borders, const vector<Polygon>& obstacle_list
     //  Draw Curves to debug errors
     //
 
-    const bool VERBOSE_DEBUG_DRAWCURVE = false;
-
     // draw borders
     for (int i = 0; i < borders.size(); i++)
         cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,0,0),3); // draw the line
-    
-    /*
-    // draw original path
-    for (int i = 0; i < vertices.size(); i++) {
-        cv::circle(dcImg, cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), 2, cv::Scalar(0,0,0),CV_FILLED);
-        if (VERBOSE_DEBUG_DRAWCURVE) cout << to_string(i) << ": " << to_string(vertices[i].x) << "," << vertices[i].y << endl;
-        if (i > 0)
-            cv::line(dcImg, cv::Point(vertices[i-1].x*debugImagesScale, vertices[i-1].y*debugImagesScale),
-                     cv::Point(vertices[i].x*debugImagesScale, vertices[i].y*debugImagesScale), cv::Scalar(255,0,0),2);
-    }
-    */
-    /*
-    //Draw Smothed path Dots and lines
-    for (int i = 0; i < short_path.size(); i++) {
-        cv::circle(dcImg, cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), 2, cv::Scalar(255,235,0),CV_FILLED);
-        if (VERBOSE_DEBUG_DRAWCURVE) cout << to_string(short_path[i].x) << "," << short_path[i].y << endl;
-        if (i > 0)
-            cv::line(dcImg, cv::Point(short_path[i-1].x*debugImagesScale, short_path[i-1].y*debugImagesScale),
-                     cv::Point(short_path[i].x*debugImagesScale, short_path[i].y*debugImagesScale), cv::Scalar(255,235,0),2);
-    }
-    */
+
     //Draw obstacles
     for (const Polygon &pol : obstacle_list) {
         for (int i=1; i<pol.size(); ++i) {
@@ -1685,8 +1657,8 @@ void collectVictimsPath(const Polygon& borders, const vector<Polygon>& obstacle_
     // Call a path planner for each segment to plan
     //
 
-    vector<Point> vertices;
-    vertices.push_back(Point(x,y));
+    vector<Point> full_path;
+    full_path.push_back(Point(x,y));
     vector<Point> short_path;
     short_path.push_back(Point(x,y));
     for(int i = 1; i < pathObjectives.size(); ++i) {
@@ -1701,8 +1673,8 @@ void collectVictimsPath(const Polygon& borders, const vector<Polygon>& obstacle_
         y1 = pathObjectives[i-1].y;
         x2 = pathObjectives[i].x;
         y2 = pathObjectives[i].y;
-        vector<Point> partialPath = RRTplanner(borders,obstacle_list,x1,y1,x2,y2,config_folder);    //TODO: change vertices name with something more appropriate?
-        vertices.insert(vertices.end(),partialPath.begin()+1,partialPath.end());    // begin()+1 not to repeat points
+        vector<Point> partialPath = RRTplanner(borders,obstacle_list,x1,y1,x2,y2,config_folder);
+        full_path.insert(full_path.end(),partialPath.begin()+1,partialPath.end());    // begin()+1 not to repeat points
         assert(!isPathColliding(partialPath, obstacle_list));  // If the rrt path collides there is an error in the python script or conversion
 
         //
@@ -1711,15 +1683,21 @@ void collectVictimsPath(const Polygon& borders, const vector<Polygon>& obstacle_
         vector<Point> partialShortPath = completeSmoothing(partialPath,obstacle_list);
         short_path.insert(short_path.end(), partialShortPath.begin()+1, partialShortPath.end());    // begin()+1 not to repeat points
     }
-    assert(pointsEquals(short_path.front(),vertices.front()));
-    assert(pointsEquals(short_path.back(),vertices.back()));
+    assert(pointsEquals(short_path.front(),full_path.front()));
+    assert(pointsEquals(short_path.back(),full_path.back()));
 
     #ifdef DEBUG_PLANPATH
         cout << "------------------------------------------------------------" << endl;
-        cout << "> Planning Step 1: planned RRT path ("<< vertices.size() <<" steps)" << endl;
+        cout << "> Planning Step 1: planned RRT path ("<< full_path.size() <<" steps)" << endl;
         cout << "------------------------------------------------------------" << endl;
         cout << "> Planning Step 2: smoothed path ("<< short_path.size() <<" steps)" << endl;
         cout << "------------------------------------------------------------" << endl;
+    #endif
+
+    #ifdef DEBUG_PATH_SMOOTHING
+        drawDebugPath(short_path);
+        cv::imshow("Curves",dcImg);
+        cv::waitKey(0);
     #endif
 
     // Startpoint
@@ -1793,7 +1771,7 @@ float getPathLength(const vector<Pose>& path){
         const Pose pos2 = path[i+1];
         length += sqrt(pow((pos1.x - pos2.x), 2) + pow((pos1.y - pos2.y), 2));
     }
-    
+
     return length;
 }
 
@@ -1803,13 +1781,13 @@ float getPathLength(const vector<Pose>& path){
         - compute length of all paths
         - choose algorihm to maximize score
         - victim score --> time bonus so that score = travel time - bonus --> minimize time
-            
+
     approach --> avoid computation of the whole graph, proceed step by step
-        step 1: compute score (time) with no victim rescued 
+        step 1: compute score (time) with no victim rescued
         step 2: compute score of all paths with one victim
                 choose highest score
         step 3: repeat for all next victims until all visited or end point reached
-    
+
     - bonus = time discount per victim rescued
 */
 bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
@@ -1829,7 +1807,7 @@ bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     for (int i = 0; i < victim_list.size(); i++)
     {
         collected.push_back(false);
-    }    
+    }
 
     vector<pair<int,Polygon>> empty_victims_vector;
 
@@ -1849,7 +1827,7 @@ bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     // repeat until no more victim is worth collecting or every victim is collected
     do{
         victim_idx = -1;
-        
+
         for (int j = 0; j < victim_list.size(); j++)
         {
             if (!collected[j]){
@@ -1861,13 +1839,13 @@ bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
                 collectVictimsPath(borders, obstacle_list, temp_victim_list, x, y, theta, config_folder, current_path_points, xf, yf, thf, Kmax, path_res);
 
                 length = getPathLength(current_path_points);
-                
+
                 #ifdef DEBUG_SCORES
                     cout << "victim " << victim_list[j].first << ", time: " << (length / speed);
                 #endif
 
                 float current_partial_time = (length / speed) - (bonus * bonus_multiplier);
-                
+
                 #ifdef DEBUG_SCORES
                     cout << ", time-score: " << current_partial_time << endl;
                 #endif
@@ -1885,7 +1863,7 @@ bool bestScorePath(const Polygon& borders, const vector<Polygon>& obstacle_list,
             victims_to_collect.push_back(victim_list[victim_idx]);
             collected[victim_idx] = true;
             bonus_multiplier++;
-            
+
             #ifdef DEBUG_SCORES
                 cout << "will collect victim " << victim_list[victim_idx].first << endl;
             #endif
@@ -1908,26 +1886,28 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     const double Kmax = 10.0;                   // Maximum curvature
     const double path_res = 0.01;               // Path resolution (sampling)
 
-    int mission = 1;   // 0 = rescue all victims in order, 1 = maximize score
     vector<Pose> final_path_points;
 
     #ifdef DEBUG_DRAWCURVE
         drawDebugImage(borders, obstacle_list, victim_list);
     #endif
 
-    if (mission == 0){
+    if (mission == Mission::mission1){
+
         //
         // Sort Victims by ID
         //
-
         vector<pair<int,Polygon>> orderedVictimList = victim_list;
         sort(orderedVictimList.begin(), orderedVictimList.end(), [](const pair<int,Polygon>& lhs, const pair<int,Polygon>& rhs) {
-        return lhs.first < rhs.first;
+            return lhs.first < rhs.first;
         });
 
+        //
+        // Plan MISSION 1 path
+        //
         collectVictimsPath(borders, obstacle_list, orderedVictimList, x, y, theta, config_folder, final_path_points, xf, yf, thf, Kmax, path_res);
     }
-    else if (mission == 1){
+    else if (mission == Mission::mission2){
         float bonus = 0.3f;
         bestScorePath(borders, obstacle_list, victim_list, x, y, theta, config_folder, final_path_points, xf, yf, thf, Kmax, path_res, bonus);
 
