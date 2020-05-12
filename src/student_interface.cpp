@@ -10,9 +10,11 @@
 #include <math.h>
 #include <limits>
 #include <algorithm>
-#include "clipper_helper.hpp"
 
-#define AUTO_CORNER_DETECTION false
+#include "clipper_helper.hpp"
+#include "corner_detection.hpp"
+
+#define AUTO_CORNER_DETECTION true
 
 // -------------------------------- DEBUG FLAGS --------------------------------
 // - Configuration Debug flags - //
@@ -20,7 +22,8 @@
 // #define DEBUG_COLOR_CONFIG
 
 // - Calibration Debug flags - //
-// #define DEBUG_ESTRINISIC_CALIB
+#define DEBUG_EXTRINSIC_CALIB
+// #define DEBUG_CORNER_AUTODETECT
 
 // - Image Analysis Debug flags - //
 // #define DEBUG_FINDOBSTACLES
@@ -144,83 +147,6 @@ void genericImageListener(const cv::Mat& img_in, string topic,
     }
 }
 
-bool autodetect_corners(const cv::Mat& img_in, vector<cv::Point2f>& corners) {
-    // convert to grayscale (you could load as grayscale instead)
-    // cv::Mat gray;
-    // cv::cvtColor(img_in,gray, CV_BGR2GRAY);
-    //
-    // // compute mask (you could use a simple threshold if the image is always as good as the one you provided)
-    // cv::Mat mask;
-    // cv::threshold(gray, mask, 10, 255, CV_THRESH_BINARY_INV | CV_THRESH_OTSU);
-    //
-    //
-    // // find contours (if always so easy to segment as your image, you could just add the black/rect pixels to a vector)
-    // vector<vector<cv::Point>> contours;
-    // vector<cv::Vec4i> hierarchy;
-    // cv::findContours(mask,contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
-    //
-    // /// Draw contours and find biggest contour (if there are other contours in the image, we assume the biggest one is the desired rect)
-    // // drawing here is only for demonstration!
-    // int biggestContourIdx = -1;
-    // float biggestContourArea = 0;
-    // // cv::Mat drawing = cv::Mat::zeros(mask.size(), CV_8UC3); REMOVE
-    //
-    // for (int i = 0; i< contours.size(); i++)
-    // {
-    //     // cv::Scalar color = cv::Scalar(0, 100, 0); REMOVE
-    //     //drawContours(drawing, contours, i, color, 1, 8, hierarchy, 0, cv::Point()); REMOVE
-    //
-    //     float ctArea= cv::contourArea(contours[i]);
-    //     if (ctArea > biggestContourArea)
-    //     {
-    //         biggestContourArea = ctArea;
-    //         biggestContourIdx = i;
-    //     }
-    // }
-    //
-    // // if no contour found
-    // if (biggestContourIdx < 0)
-    // {
-    //     cout << "no contour found" << endl;
-    //     return false;
-    // }
-    //
-    // // compute the rotated bounding rect of the biggest contour! (this is the part that does what you want/need)
-    // cv::RotatedRect boundingBox = cv::minAreaRect(contours[biggestContourIdx]);
-    // // one thing to remark: this will compute the OUTER boundary box, so maybe you have to erode/dilate if you want something between the ragged lines
-    //
-    // boundingBox.points(corners);
-    return true;
-}
-
-void onMouse(int evt, int x, int y, int flags, void* param) {
-    if (evt == CV_EVENT_LBUTTONDOWN) {
-        vector<cv::Point>* ptPtr = (vector<cv::Point>*)param;
-        ptPtr->push_back(cv::Point(x,y));
-    }
-}
-
-void manualselect_corners(const cv::Mat& img_in, vector<cv::Point2f>& corners) {
-    vector<cv::Point> points;
-    string windowname = "Select corners, counterclockwise, start from red";
-    cv::namedWindow(windowname);
-    cv::setMouseCallback(windowname, onMouse, (void*)&points);
-
-    while (points.size() < 4) {
-        cv::imshow(windowname, img_in);
-
-        for (int i=0; i < points.size(); i++) {
-            cv::circle(img_in, points[i], 20, cv::Scalar(240,0,0),CV_FILLED);
-        }
-        cv::waitKey(1);
-    }
-    cv::destroyWindow(windowname);
-
-    for (int i=0; i < 4; i++) {
-        corners.push_back(points[i]);
-    }
-}
-
 Color_config read_colors(const string& config_folder) {
     Color_config color_config;
 
@@ -294,54 +220,27 @@ bool extrinsicCalib(const cv::Mat& img_in, vector<cv::Point3f> object_points,
     vector<cv::Point2f> corners;
 
     if (AUTO_CORNER_DETECTION)
-        autodetect_corners(img_in,corners);
+        corners = CornerDetection::autodetect(img_in);
     else {
-        ///Try to read calibration file
-        string file_path = config_folder + "/extrinsicCalib.csv";
-
-        if (!experimental::filesystem::exists(file_path)) {
-            // File does not exist
-            manualselect_corners(img_in,corners);
-            // Save the file
-            experimental::filesystem::create_directories(config_folder);
-            ofstream output(file_path);
-            if (!output.is_open()) {
-                throw runtime_error("Cannot write file: " + file_path);
-            }
-            for (const auto pt: corners) {
-                output << pt.x << " " << pt.y << endl;
-            }
-            output.close();
-        } else {
-            // Load configuration from file
-            ifstream input(file_path);
-            if (!input.is_open()) {
-                throw runtime_error("Cannot read file: " + file_path);
-            }
-            while (!input.eof()) {
-                double x, y;
-                if (!(input >> x >> y)) {
-                    if (input.eof())
-                        break;
-                    else
-                      throw runtime_error("Malformed file: " + file_path);
-                }
-                corners.emplace_back(x, y);
-            }
-            input.close();
-        }
+        corners = CornerDetection::manualSelect(img_in,config_folder);
     }
 
-    #ifdef DEBUG_ESTRINISIC_CALIB
+    #ifdef DEBUG_EXTRINSIC_CALIB
         cv::line(img_in, corners[0], corners[1], cv::Scalar(0,0,255));
         cv::line(img_in, corners[1], corners[2], cv::Scalar(0,0,255));
         cv::line(img_in, corners[2], corners[3], cv::Scalar(0,0,255));
         cv::line(img_in, corners[3], corners[0], cv::Scalar(0,0,255));
 
-        cv::circle(img_in, corners[0], 20, cv::Scalar(50,50,50),4);
-        cv::circle(img_in, corners[1], 20, cv::Scalar(50,50,50),4);
-        cv::circle(img_in, corners[2], 20, cv::Scalar(50,50,50),4);
-        cv::circle(img_in, corners[3], 20, cv::Scalar(50,50,50),4);
+        cv::circle(img_in, corners[0], 20, cv::Scalar(0,0,255),4);
+        cv::circle(img_in, corners[1], 20, cv::Scalar(0,255,0),4);
+        cv::circle(img_in, corners[2], 20, cv::Scalar(255,0,0),4);
+        cv::circle(img_in, corners[3], 20, cv::Scalar(0,0,0),4);
+
+        cv::putText(img_in, "0", corners[0], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+        cv::putText(img_in, "1", corners[1], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+        cv::putText(img_in, "2", corners[2], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+        cv::putText(img_in, "3", corners[3], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+
         // display
         cv::imshow("Selected border points", img_in);
         cv::waitKey(0);
