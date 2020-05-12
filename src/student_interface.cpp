@@ -1573,18 +1573,18 @@ vector<Point> completeSmoothing(const vector<Point>& path,const vector<Polygon>&
             std::reverse(smoothedPath.begin(), smoothedPath.end());
             shorter_path.push_back(path[path.size()-1]);
             bool reverse_smoothing = pathSmoothing(0, smoothedPath.size()-1, smoothedPath, obstacle_list, shorter_path);
-            if (reverse_smoothing) {
+            if (reverse_smoothing && (shorter_path.size() < smoothedPath.size())) {
                 #ifdef DEBUG_PATH_SMOOTHING
                     cout << "Reverse smoothing SUCCESS" << endl;
                     cout << "\t>Path shortened AGAIN (size: " << smoothedPath.size() << "->" << shorter_path.size() << ")" << endl;
                 #endif
-                std::reverse(shorter_path.begin(), shorter_path.end());
                 smoothedPath = shorter_path;
             }else{
                 #ifdef DEBUG_PATH_SMOOTHING
                     cout << "Reverse smoothing FAIL" << endl;
                 #endif
             }
+            std::reverse(smoothedPath.begin(), smoothedPath.end());
         }
 
         assert(pointsEquals(smoothedPath.front(),path.front()));
