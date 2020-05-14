@@ -15,6 +15,7 @@
 #include "corner_detection.hpp"
 
 #define AUTO_CORNER_DETECTION true
+#define COLOR_TUNING_WIZARD false
 
 // -------------------------------- DEBUG FLAGS --------------------------------
 // - Configuration Debug flags - //
@@ -22,7 +23,7 @@
 // #define DEBUG_COLOR_CONFIG
 
 // - Calibration Debug flags - //
-#define DEBUG_EXTRINSIC_CALIB
+// #define DEBUG_EXTRINSIC_CALIB
 // #define DEBUG_CORNER_AUTODETECT
 
 // - Image Analysis Debug flags - //
@@ -174,7 +175,7 @@ Color_config read_colors(const string& config_folder) {
                     throw runtime_error("Malformed file: " + file_path);
             }
 
-            #ifdef DEBUG_COLOR_CONFIG 
+            #ifdef DEBUG_COLOR_CONFIG
                 printf("---> Reading %s : %d,%d,%d\n",name.c_str(),v1,v2,v3);
             #endif
 
@@ -448,6 +449,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
 
     vector<cv::Rect> boundRect(contours.size());
     vector<cv::RotatedRect> minRect(contours.size());
+    vector<Polygon> polgonsFound(contours.size());
 
     for (int i=0; i<contours.size(); ++i) {
         approxPolyDP(contours[i], approx_curve, 10, true);
@@ -458,7 +460,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
             for (const auto& pt: approx_curve) {
                 scaled_contour.emplace_back(pt.x/scale, pt.y/scale);
             }
-            victim_list.push_back({i+1, scaled_contour});
+            polgonsFound[i] = scaled_contour;
 
             contours_approx = {approx_curve};
             drawContours(contours_img, contours_approx, -1, cv::Scalar(0,170,220), 3, cv::LINE_AA);
@@ -503,8 +505,6 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
     cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size((2*2) + 1, (2*2)+1));
 
     contours.clear();
-
-    int curr_victim = 0;
 
     // For each green blob in the original image containing a digit
     for (int i=0; i < boundRect.size(); ++i) {
@@ -556,11 +556,15 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
             }
         }
 
-        victim_list[curr_victim].first = maxIdx;
-        curr_victim++;
+        if (maxIdx != -1) {
+            victim_list.push_back({maxIdx, polgonsFound[i]});
+        }
 
-        cout << "Best fitting template: " << maxIdx << endl;
-        cv::waitKey(0);
+        cout << "Best fitting template: " << ((maxIdx==-1) ? "None (rejected)" : to_string(maxIdx)) << endl;
+
+        #ifdef DEBUG_FINDVICTIMS
+            cv::waitKey(0);
+        #endif
     }
 
     return true;
@@ -1610,7 +1614,7 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
         cv::waitKey(0);
 
     #endif
-    
+
     return multipointPath;
 }
 
@@ -1673,7 +1677,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
                 float x, float y, float theta,
                 float xf, float yf, float thf, float bonus,
                 const string& config_folder){
-                  
+
     vector<dubins::Curve> multipointPath;
     float max_time = 1000.0f;
     float best_partial_time;    // current best time score
@@ -1690,7 +1694,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
 
         distances.push_back(length);
     }
-    
+
     // no victim path
     vector<dubins::Curve> initial_path;
     vector<bool> collected;
@@ -1699,9 +1703,9 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
         collected.push_back(false);
 
     vector<pair<int,Polygon>> empty_victims_vector;
-    
+
     initial_path = collectVictimsPath(borders, obstacle_list, empty_victims_vector, x, y, theta, xf, yf, thf, config_folder);
-    
+
     float length = getPathLength(initial_path);
 
     best_partial_time = length / ROBOT_SPEED;
@@ -1718,7 +1722,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
     // repeat until no more victim is worth collecting or every victim is collected
     do{
         victim_idx = -1;
-    
+
         for (int j = 0; j < victim_list.size(); j++)
         {
             if (!collected[j]){
@@ -1735,7 +1739,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
                 {
                     temp_victim_list.push_back(victim_list[temp_ordered_distances[i].first]);
                 }
-                
+
                 //TODO: handle current_path_points
                 current_path = collectVictimsPath(borders, obstacle_list, temp_victim_list, x, y, theta, xf, yf, thf, config_folder);
 
