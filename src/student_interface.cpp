@@ -33,11 +33,11 @@
 // #define DEBUG_FINDROBOT
 
 // - Planning Debug flags - //
-#define DEBUG_PLANPATH            // generic info about the whole planner
+// #define DEBUG_PLANPATH            // generic info about the whole planner
 // #define DEBUG_PLANPATH_SEGMENTS   // show images with the goals of every planned segment
 // #define DEBUG_RRT                 // inner planning algorithm
-#define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
-#define DEBUG_DRAWCURVE             // dubins path plotting
+// #define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
+// #define DEBUG_DRAWCURVE             // dubins path plotting
 #define DEBUG_SCORES              // track times and scores of victims to collect
 // #define DEBUG_COLLISION           // plot for collision detection
 
@@ -54,12 +54,16 @@ const int pythonUpscale = 1000; // scale factor used to convert parameters to a
                                 // int represetation for the planning library
 const double debugImagesScale = 512.82; // arbitrary scale factor used for
                                         // displaying debug images
-const float obstaclesInflationAmount = 0.01; // (Note: value in meters)
+const float obstaclesInflationAmount = 0.01;  // (Note: value in meters)
                                               // obstacles are slightly inflated
                                               // by this amount to account for
                                               // approximation errors in the
                                               // computation of // collisions
                                               // (in the RRT script)
+
+const unsigned short NUMBER_OF_MP_ANGLES = 4; // Number of possible angles used
+                                              // normally to plan the multipoint
+                                              // curve.
 //Planning
 const double K_MAX = 10.0;                    // Maximum curvature
 const double PATH_RESOLUTION = 0.01;          // Path resolution (sampling)
@@ -1045,9 +1049,9 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
                                                unsigned int startIdx, unsigned int arriveIdx,
                                                double startAngle, double arriveAngle,
                                                double& returnedLength,
-                                               const vector<Polygon>& obstacle_list) {
+                                               const vector<Polygon>& obstacle_list,
+                                               const unsigned short NUM_ANGLES) {
     /* ----------------------------- PARAMETERS ----------------------------- */
-    const unsigned short NUM_ANGLES = 4;   // Number of angles to test for each free point
     const bool MDP_VERBOSE = false;        // Setting this to true prints additional info for debug (Warning: it can get verbose)
     const bool USE_ANGLE_HEURISTIC = true; // Setting this to true tries to improve the way that free angles are chosen
 
@@ -1207,7 +1211,8 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
                 tuple = MDP(path, startIdx+1,arriveIdx-1,
                             alpha_first,alpha_second,
                             recursivelyReturnedLength,
-                            obstacle_list);
+                            obstacle_list,
+                            NUM_ANGLES);
                 result = tuple.first;
                 recursiveReturnedPath = tuple.second;
             }
@@ -1584,37 +1589,46 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
     #endif
 
     //
-    // PLANNING Step 3: Multi-point dubins curve to path points
+    // PLANNING Step 3: plan a Multi-point(or Multi-curve) Dubins path
     //
-    // add borders for collision check
-    vector<Polygon> boundaries = obstacle_list;
-    boundaries.push_back(borders);
 
-    double returnedLength = 0;  // unused here, just for recursion
+    vector<Polygon> boundaries = obstacle_list;
+    boundaries.push_back(borders); // add borders for collision check
+
     #ifdef DEBUG_PLANPATH
         cout << "Computing Multi Point Dubins path..." << endl;
     #endif
-    std::pair<bool,vector<dubins::Curve>> multipointResult;
-    multipointResult = MDP(short_path,
-                           0, short_path.size()-1,   // start and arrival indexes
-                           theta, thf,                 // start and arrive angles
-                           returnedLength,
-                           boundaries);
-    bool path_planned = multipointResult.first;
-    vector<dubins::Curve> multipointPath = multipointResult.second;
 
-    if (path_planned) {
-    #ifdef DEBUG_PLANPATH
-        cout << "> Planning Step 3: Multipoint dubins curve planned successfully" << endl;
-        cout << "------------------------------------------------------------" << endl;
-    #endif
-    } else {
+    unsigned short numberOfMpAngles = NUMBER_OF_MP_ANGLES;
+    bool path_planned = false;
+    vector<dubins::Curve> multipointPath;
+    do {
+        double returnedLength = 0;  // unused here, just for recursion
+        std::pair<bool,vector<dubins::Curve>> multipointResult;
+        multipointResult = MDP(short_path,
+                               0, short_path.size()-1,   // start and arrival indexes
+                               theta, thf,                 // start and arrive angles
+                               returnedLength,
+                               boundaries,
+                               numberOfMpAngles);
+        path_planned = multipointResult.first;
+        multipointPath = multipointResult.second;
+
+        if (path_planned) {
         #ifdef DEBUG_PLANPATH
-            cout << "> Planning Step 3: Multipoint dubins curve planning" << endl;
+            cout << "> Planning Step 3: Multipoint dubins curve planned successfully" << endl;
             cout << "------------------------------------------------------------" << endl;
         #endif
-        throw runtime_error("Could NOT plan path!");
-    }
+        } else {
+            unsigned short newAngles = numberOfMpAngles+1;
+
+            #ifdef DEBUG_PLANPATH
+                cout << "> Planning Step 3: Could not plan path, increase angles (" << numberOfMpAngles << " > " << newAngles << ") " << endl;
+            #endif
+            numberOfMpAngles = newAngles;
+        }
+
+    } while (!path_planned);
 
     #ifdef DEBUG_DRAWCURVE
 
