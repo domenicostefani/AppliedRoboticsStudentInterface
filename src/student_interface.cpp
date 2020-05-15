@@ -33,10 +33,11 @@
 // #define DEBUG_FINDROBOT
 
 // - Planning Debug flags - //
-// #define DEBUG_PLANPATH            // generic info about the whole planner
+#define DEBUG_PLANPATH            // generic info about the whole planner
+// #define DEBUG_PLANPATH_SEGMENTS   // show images with the goals of every planned segment
 // #define DEBUG_RRT                 // inner planning algorithm
-// #define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
-// #define DEBUG_DRAWCURVE             // dubins path plotting
+#define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
+#define DEBUG_DRAWCURVE             // dubins path plotting
 #define DEBUG_SCORES              // track times and scores of victims to collect
 // #define DEBUG_COLLISION           // plot for collision detection
 
@@ -46,14 +47,14 @@ using matrix = std::vector<std::vector<float>>;
 
 // --------------------------------- CONSTANTS ---------------------------------
 enum class Mission { mission1, mission2};
-const Mission mission = Mission::mission2;   // 1 = rescue all victims in order, 2 = maximize score
+const Mission mission = Mission::mission1;   // 1 = rescue all victims in order, 2 = maximize score
 
 const string COLOR_CONFIG_FILE = "/color_parameters.config";
 const int pythonUpscale = 1000; // scale factor used to convert parameters to a
                                 // int represetation for the planning library
 const double debugImagesScale = 512.82; // arbitrary scale factor used for
                                         // displaying debug images
-const float obstaclesInflationAmount = 0.001; // (Note: value in meters)
+const float obstaclesInflationAmount = 0.01; // (Note: value in meters)
                                               // obstacles are slightly inflated
                                               // by this amount to account for
                                               // approximation errors in the
@@ -1419,8 +1420,9 @@ vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>
         #ifdef DEBUG_PATH_SMOOTHING
             cout << "\t>Path shortened ONCE  (size: " << smoothedPath.size() << ")" << endl;
         #endif
-        bool additional_shortening;
-        do{
+        bool additional_shortening = true;
+
+        while (additional_shortening) {
             vector<Point> shorter_path;
             shorter_path.push_back(path[0]);
             bool success = pathSmoothing(0, smoothedPath.size()-1, smoothedPath, obstacle_list, shorter_path);
@@ -1431,7 +1433,7 @@ vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>
                 #endif
                 smoothedPath = shorter_path;
             }
-        }while(additional_shortening);
+        }
 
         assert(pointsEquals(smoothedPath.front(),path.front()));
         assert(pointsEquals(smoothedPath.back(),path.back()));
@@ -1540,6 +1542,20 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
         y1 = pathObjectives[i-1].y;
         x2 = pathObjectives[i].x;
         y2 = pathObjectives[i].y;
+
+        #ifdef DEBUG_PLANPATH_SEGMENTS
+            dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255));
+            drawDebugImage(borders, obstacle_list, victim_list);
+            cv::Point pointA(x1*debugImagesScale,y1*debugImagesScale);
+            cv::Point pointB(x2*debugImagesScale,y2*debugImagesScale);
+            cv::circle(dcImg, pointA, 20, cv::Scalar(0,255,0),4);
+            cv::putText(dcImg, "A", pointA, cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+            cv::circle(dcImg, pointB, 20, cv::Scalar(0,0,255),4);
+            cv::putText(dcImg, "B", pointB, cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+            cv::imshow("Current goal", dcImg);
+            cv::waitKey(0);
+        #endif
+
         vector<Point> partialPath = RRTplanner(borders,obstacle_list,x1,y1,x2,y2,config_folder);
         full_path.insert(full_path.end(),partialPath.begin()+1,partialPath.end());    // begin()+1 not to repeat points
         assert(!isPathColliding(partialPath, obstacle_list));  // If the rrt path collides there is an error in the python script or conversion

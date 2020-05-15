@@ -114,7 +114,7 @@ found = False;
 # Find the path and save in a graph
 while(found is False):
 
-	if( len(graph_vertices)>=1500 ):
+	if( len(graph_vertices)>=3000 ):
 		print "Iteration limit Reached";
 		break;
 	graph.append([]);

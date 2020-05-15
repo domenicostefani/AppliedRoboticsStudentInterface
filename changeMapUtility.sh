@@ -565,7 +565,7 @@ then
     echo "" >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://victim_3</uri>" >> $outputFile
-    echo "      <pose>0.6 0.2 0 0 0 0</pose>" >> $outputFile
+    echo "      <pose>0.5 0.2 0 0 0 0</pose>" >> $outputFile
     echo "      <name>victim3</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
