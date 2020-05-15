@@ -449,7 +449,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
 
     vector<cv::Rect> boundRect(contours.size());
     vector<cv::RotatedRect> minRect(contours.size());
-    vector<Polygon> polgonsFound(contours.size());
+    vector<Polygon> polygonsFound(contours.size());
 
     for (int i=0; i<contours.size(); ++i) {
         approxPolyDP(contours[i], approx_curve, 10, true);
@@ -460,7 +460,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
             for (const auto& pt: approx_curve) {
                 scaled_contour.emplace_back(pt.x/scale, pt.y/scale);
             }
-            polgonsFound[i] = scaled_contour;
+            polygonsFound[i] = scaled_contour;
 
             contours_approx = {approx_curve};
             drawContours(contours_img, contours_approx, -1, cv::Scalar(0,170,220), 3, cv::LINE_AA);
@@ -557,7 +557,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
         }
 
         if (maxIdx != -1) {
-            victim_list.push_back({maxIdx, polgonsFound[i]});
+            victim_list.push_back({maxIdx, polygonsFound[i]});
         }
 
         cout << "Best fitting template: " << ((maxIdx==-1) ? "None (rejected)" : to_string(maxIdx)) << endl;
@@ -1670,7 +1670,6 @@ bool sorByDistance(const pair<int,float>& p1, const pair<int,float>& p2){
 
     - bonus = time discount per victim rescued
 */
-// TODO: handle case for no victim collected
 vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
                 const vector<Polygon>& obstacle_list,
                 const vector<pair<int,Polygon>>& victim_list,
@@ -1696,7 +1695,6 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
     }
 
     // no victim path
-    vector<dubins::Curve> initial_path;
     vector<bool> collected;
 
     for (int i = 0; i < victim_list.size(); i++)
@@ -1704,9 +1702,9 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
 
     vector<pair<int,Polygon>> empty_victims_vector;
 
-    initial_path = collectVictimsPath(borders, obstacle_list, empty_victims_vector, x, y, theta, xf, yf, thf, config_folder);
+    multipointPath = collectVictimsPath(borders, obstacle_list, empty_victims_vector, x, y, theta, xf, yf, thf, config_folder);
 
-    float length = getPathLength(initial_path);
+    float length = getPathLength(multipointPath);
 
     best_partial_time = length / ROBOT_SPEED;
 
@@ -1812,7 +1810,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         multipointPath = collectVictimsPath(borders, obstacle_list, orderedVictimList, x, y, theta, xf, yf, thf, config_folder);
     }
     else if (mission == Mission::mission2){
-        float bonus = 0.08f;
+        float bonus = 0.00f;
         multipointPath = bestScoreGreedy(borders, obstacle_list, victim_list, x, y, theta, xf, yf, thf, bonus, config_folder);
         #ifdef DEBUG_SCORES
             cout << "Highest scoring path found\n";
