@@ -15,7 +15,7 @@
 #include "corner_detection.hpp"
 
 #define AUTO_CORNER_DETECTION true
-#define COLOR_TUNING_WIZARD true
+#define COLOR_TUNING_WIZARD false
 
 // -------------------------------- DEBUG FLAGS --------------------------------
 // - Configuration Debug flags - //
@@ -37,7 +37,7 @@
 // #define DEBUG_PLANPATH_SEGMENTS   // show images with the goals of every planned segment
 // #define DEBUG_RRT                 // inner planning algorithm
 // #define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
-// #define DEBUG_DRAWCURVE             // dubins path plotting
+#define DEBUG_DRAWCURVE             // dubins path plotting
 #define DEBUG_SCORES              // track times and scores of victims to collect
 // #define DEBUG_COLLISION           // plot for collision detection
 
@@ -256,9 +256,8 @@ bool extrinsicCalib(const cv::Mat& img_in, vector<cv::Point3f> object_points,
     cv::solvePnP(object_points,corners, camera_matrix, nullmat, rvec, tvec);
 
     // Call the routine with gui to tune the color values
-    #ifdef COLOR_TUNING_WIZARD
+    if(COLOR_TUNING_WIZARD)
         tune_color_parameters(img_in, config_folder);
-    #endif
 }
 
 void imageUndistort(const cv::Mat& img_in, cv::Mat& img_out,
@@ -1487,9 +1486,10 @@ void drawDebugImage(const Polygon& borders, const vector<Polygon>& obstacle_list
     //
 
     // draw borders
-    for (int i = 0; i < borders.size(); i++)
-        cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,0,0),3); // draw the line
-
+    for (int i = 0; i < borders.size(); i++) {
+        int next = (i+1)%borders.size();
+        cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[next].x*debugImagesScale,borders[next].y*debugImagesScale), cv::Scalar(0,0,0),3); // draw the line
+    }
     //Draw obstacles
     for (const Polygon &pol : obstacle_list) {
         for (int i=1; i<pol.size(); ++i) {
@@ -1810,6 +1810,51 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
     return multipointPath;
 }
 
+/*
+* Remove the area of the arena near the borders to account for robot size
+*/
+Polygon inflateBorders(const Polygon& borders) {
+
+    // compute robot dimension from barycenter for obstacle dilation
+    // distance between robot triangle front vertex and barycenter is triangle height/3*2
+    // from documentation, triangle height is 16 cm
+    #define ROBOT_INFLATE_AMOUNT 0.0533 //TODO: move and verify value
+                                        //Here I used half the value proposed as
+                                        //I think we should account only for
+                                        //half the robot size
+                                        //In case add 10% and correct also
+                                        //obstacle inflation
+
+    // deflate border polygon to account for robot size
+    Polygon correctedBorders = ClipperHelper::inflateWithClipper(borders,-1 * ROBOT_INFLATE_AMOUNT);
+    assert(borders.size() == correctedBorders.size());
+
+    // Reorder points
+    {
+        // Find first point
+        int closerToFirst = -1;
+        float minDistance = 1000.0f;
+        Polygon correctedBordersCopy = correctedBorders;
+        for (int i = 0; i < correctedBorders.size(); ++i) {
+            float distanceFromFirst = pow(borders[0].x - correctedBordersCopy[i].x,2) + pow(borders[0].y - correctedBordersCopy[i].y,2);
+            if (distanceFromFirst < minDistance) {
+                minDistance = distanceFromFirst;
+                closerToFirst = i;
+            }
+        }
+
+        assert(closerToFirst != -1);
+
+        // Actual reorder
+        for (int i = 0; i < correctedBorders.size(); ++i) {
+            int copyIndex = (i + closerToFirst)%correctedBorders.size();
+            correctedBorders[i] = correctedBordersCopy[copyIndex];
+        }
+    }
+
+    return correctedBorders;
+}
+
 bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
               const vector<pair<int,Polygon>>& victim_list, const Polygon& gate,
               const float x, const float y, const float theta, Path& path,
@@ -1823,9 +1868,13 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     double xf, yf, thf;                   // Endpoint
     centerGate(gate,borders,xf,yf,thf);  // Endpoint computation
 
+    // Correct borders to account for robot size
+    Polygon correctedBorders = inflateBorders(borders);
+
     #ifdef DEBUG_DRAWCURVE
-        drawDebugImage(borders, obstacle_list, victim_list);
+        drawDebugImage(correctedBorders, obstacle_list, victim_list);
     #endif
+
 
     vector<dubins::Curve> multipointPath;
     if (mission == Mission::mission1){
@@ -1841,11 +1890,11 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         //
         // Plan MISSION 1 path
         //
-        multipointPath = collectVictimsPath(borders, obstacle_list, orderedVictimList, x, y, theta, xf, yf, thf, config_folder);
+        multipointPath = collectVictimsPath(correctedBorders, obstacle_list, orderedVictimList, x, y, theta, xf, yf, thf, config_folder);
     }
     else if (mission == Mission::mission2){
         float bonus = 0.08f;
-        multipointPath = bestScoreGreedy(borders, obstacle_list, victim_list, x, y, theta, xf, yf, thf, bonus, config_folder);
+        multipointPath = bestScoreGreedy(correctedBorders, obstacle_list, victim_list, x, y, theta, xf, yf, thf, bonus, config_folder);
         #ifdef DEBUG_SCORES
             cout << "Highest scoring path found\n";
         #endif
