@@ -15,7 +15,7 @@
 #include "corner_detection.hpp"
 
 #define AUTO_CORNER_DETECTION true
-#define COLOR_TUNING_WIZARD false
+#define COLOR_TUNING_WIZARD true
 
 // -------------------------------- DEBUG FLAGS --------------------------------
 // - Configuration Debug flags - //
@@ -256,7 +256,9 @@ bool extrinsicCalib(const cv::Mat& img_in, vector<cv::Point3f> object_points,
     cv::solvePnP(object_points,corners, camera_matrix, nullmat, rvec, tvec);
 
     // Call the routine with gui to tune the color values
-    //tune_color_parameters(img_in, config_folder);
+    #ifdef COLOR_TUNING_WIZARD
+        tune_color_parameters(img_in, config_folder);
+    #endif
 }
 
 void imageUndistort(const cv::Mat& img_in, cv::Mat& img_out,

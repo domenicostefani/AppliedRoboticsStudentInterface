@@ -6,7 +6,7 @@
 
 namespace CornerDetection{
 
-cv::Point findLineCenter(cv::Mat img_in, std::vector<cv::Point> arena);
+cv::Point findLineCenter(const cv::Mat& img_in, const std::vector<cv::Point> &arena);
 void onMouse(int evt, int x, int y, int flags, void* param);
 void readSelection(const cv::Mat& img_in, std::vector<cv::Point2f>& corners);
 
@@ -76,8 +76,6 @@ std::vector<cv::Point2f> autodetect(const cv::Mat& img_in){
     }
     assert((nearestCorner >= 0)&&(nearestCorner <= 3));
 
-    cv::circle(img_in, approx_curve[nearestCorner], 30, cv::Scalar(0,255,0),6);
-
     //
     // Order Corners
     //
@@ -137,7 +135,7 @@ std::vector<cv::Point2f> manualSelect(const cv::Mat& img_in, std::string config_
 /**
  * Find the center of the redline in the arena
 */
-cv::Point findLineCenter(cv::Mat img_in, std::vector<cv::Point> arena) {
+cv::Point findLineCenter(const cv::Mat& img_in, const std::vector<cv::Point> &arena) {
     cv::Mat lower_red_hue_range; // the lower range for red hue
     cv::Mat upper_red_hue_range; // the higher range for red hue
     cv::Mat hsv_img;
