@@ -61,6 +61,12 @@ const float obstaclesInflationAmount = 0.01;  // (Note: value in meters)
                                               // computation of // collisions
                                               // (in the RRT script)
 
+const float ROBOT_RADIUS = 0.1051;             // Robot radius for obstacles and
+                                              // borders inflation.
+                                              // Computed as half the diagonal
+                                              // of the robot footprint
+                                              // (19cm x 9cm rectangle)
+
 const unsigned short NUMBER_OF_MP_ANGLES = 4; // Number of possible angles used
                                               // normally to plan the multipoint
                                               // curve.
@@ -329,7 +335,7 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     // compute robot dimension from barycenter for obstacle dilation
     // distance between robot triangle front vertex and barycenter is triangle height/3*2
     // from documentation, triangle height is 16 cm
-    float robot_dim = ceil(0.1117*scale);
+    float robot_dim = ceil(0.1117*scale);   //TODO: correct using ROBOT_RADIUS
 
     cout << "robot dim: " << robot_dim << endl;
 
@@ -1815,18 +1821,8 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
 */
 Polygon inflateBorders(const Polygon& borders) {
 
-    // compute robot dimension from barycenter for obstacle dilation
-    // distance between robot triangle front vertex and barycenter is triangle height/3*2
-    // from documentation, triangle height is 16 cm
-    #define ROBOT_INFLATE_AMOUNT 0.0533 //TODO: move and verify value
-                                        //Here I used half the value proposed as
-                                        //I think we should account only for
-                                        //half the robot size
-                                        //In case add 10% and correct also
-                                        //obstacle inflation
-
     // deflate border polygon to account for robot size
-    Polygon correctedBorders = ClipperHelper::inflateWithClipper(borders,-1 * ROBOT_INFLATE_AMOUNT);
+    Polygon correctedBorders = ClipperHelper::inflateWithClipper(borders,-1.0 * ROBOT_RADIUS);
     assert(borders.size() == correctedBorders.size());
 
     // Reorder points
