@@ -33,11 +33,12 @@
 // #define DEBUG_FINDROBOT
 
 // - Planning Debug flags - //
-// #define DEBUG_PLANPATH            // generic info about the whole planner
+#define DEBUG_PLANPATH            // generic info about the whole planner
+// #define DEBUG_FINDCENTERGATE
 // #define DEBUG_PLANPATH_SEGMENTS   // show images with the goals of every planned segment
 // #define DEBUG_RRT                 // inner planning algorithm
 // #define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
-#define DEBUG_DRAWCURVE             // dubins path plotting
+// #define DEBUG_DRAWCURVE             // dubins path plotting
 #define DEBUG_SCORES              // track times and scores of victims to collect
 // #define DEBUG_COLLISION           // plot for collision detection
 
@@ -54,7 +55,7 @@ const int pythonUpscale = 1000; // scale factor used to convert parameters to a
                                 // int represetation for the planning library
 const double debugImagesScale = 512.82; // arbitrary scale factor used for
                                         // displaying debug images
-const float obstaclesInflationAmount = 0.01;  // (Note: value in meters)
+const float SAFETY_INFLATE_AMOUNT = 0.01;  // (Note: value in meters)
                                               // obstacles are slightly inflated
                                               // by this amount to account for
                                               // approximation errors in the
@@ -733,16 +734,58 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
     return found;
 }
 
+/**
+ * Project point P to the line passing between A and B
+ * @param pA first point of the line
+ * @param pB second point of the line
+ * @param pP point to project
+ * @returns the orthogonal projection point
+*/
+Point projectPointToLine(Point pA, Point pB, Point pP) {
+
+    if (abs(pB.x - pA.x) < 0.001)   // Vertical line
+        return Point(pA.x, pP.y);
+    else if (abs(pB.y - pA.y) < 0.001) // Horizontal line
+        return Point(pP.x, pA.y);
+    else{ // general line
+        // Find line passing for A and B
+        float mAB = (pB.y - pA.y) / (pB.x - pA.x);
+        float cAB = pA.y - (mAB * pA.x);
+        // Find line perpendicular line to the one for A and B, passing for P
+        float mPR = -1.0 / mAB;
+        float cPR = pP.y - (mPR * pP.x);
+        // Find intersection
+        Point res;
+        res.x = (cAB - cPR) / (mPR - mAB);
+        res.y = res.x * mPR + cPR;
+
+        return res;
+    }
+}
+
+Point nearestPoint(Point pA, const vector<Point>& points) {
+    float smallestDistance = std::numeric_limits<float>::max(); //TODO: use limits
+    Point res;
+    for (Point pB : points) {
+        float dist = pow(pA.y - pB.y ,2) + pow(pA.x - pB.x,2);
+        if(dist < smallestDistance) {
+            smallestDistance = dist;
+            res = pB;
+        }
+    }
+    return res;
+}
+
 /*!
 * Find the arrival point
 * Returns the baricenter of the gate polygon with the correct arrival angle
 */
-void centerGate(const Polygon& gate, const Polygon& borders, double& x,
+void centerGate(const Polygon& gate, const Polygon& borders, const Polygon& cBorders, double& x,
                  double& y, double& theta) {
 
     assert(gate.size() == 4);
     assert(borders.size() == 4);
-    #ifdef DEBUG_GATE
+    #ifdef DEBUG_FINDCENTERGATE
         printf("---Center gate called---\n");
         printf("There are %zd points\n", gate.size());
     #endif
@@ -751,7 +794,7 @@ void centerGate(const Polygon& gate, const Polygon& borders, double& x,
     double gc_x=0, gc_y=0;
     baricenter(gate,gc_x,gc_y);
 
-    //Find shortest rectangle side between the first two
+    ////   Find shortest gate side (between the first two)
     Point shortest_p0;
     Point shortest_p1;
     double distance0 = pow((gate.at(0).x - gate.at(1).x), 2) +
@@ -769,30 +812,51 @@ void centerGate(const Polygon& gate, const Polygon& borders, double& x,
         shortest_p1.x = gate.at(2).x;
         shortest_p1.y = gate.at(2).y;
     }
-    ////   GATE ANGLE
+
+    ////   Find GATE ANGLE
     double angle;
     angle = atan2(shortest_p0.y-shortest_p1.y,shortest_p0.x-shortest_p1.x);
     if (angle < 0)
         angle += 2 * CV_PI;
-
-    // Decide if the angle is the found one or the opposite (+180°) based on
-    // the position of the gate
+    // Decide if the angle is the found one or the opposite (+180°) based on the position of the gate
     double ac_x = 0, ac_y = 0;
     baricenter(borders,ac_x,ac_y);
-
-    #ifdef DEBUG_GATE
-        printf("Gate baricenter %f,%f\n",gc_x,gc_y);
-        printf("Arena baricenter %f,%f\n",ac_x,ac_y);
-    #endif
-
     if (gc_y > ac_y) {
         angle -= CV_PI;
         if (angle < 0)
             angle += 2 * CV_PI;
     }
+
+    //
+    //   Project the solution into the corrected borders
+    //
+
+    // cBorders are the restricted borders that account for robot footprint when
+    // planning a line path and this projection places the arrival point inside
+    // this space
+
+    // Offset cBorders of a small safety amount to be sure that the arrival
+    // doesn't lie exactly on the border
+    Polygon safecBorders = ClipperHelper::offsetBorders(cBorders, -1.0 * SAFETY_INFLATE_AMOUNT);
+
+    vector<Point> projections;
+    for (int i=0; i < safecBorders.size(); ++i) {
+        Point pA = safecBorders[i],
+              pB = safecBorders[(i+1)%safecBorders.size()];
+        Point pP = projectPointToLine(pA,pB,Point(gc_x, gc_y));
+        projections.push_back(pP);
+    }
+
+    Point pointProjection = nearestPoint(Point(gc_x,gc_y),projections);
+
+    #ifdef DEBUG_FINDCENTERGATE
+        cv::circle(dcImg, cv::Point(gc_x * debugImagesScale, gc_y * debugImagesScale), 5, cv::Scalar(255,0,0), -1);
+        cv::circle(dcImg, cv::Point(pointProjection.x * debugImagesScale,pointProjection.y * debugImagesScale), 5, cv::Scalar(0,255,0), -1);
+    #endif
+
     ////   Assign Output
-    x = gc_x;
-    y = gc_y;
+    x = pointProjection.x;
+    y = pointProjection.y;
     theta = angle;
 }
 
@@ -1331,10 +1395,10 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     }
 
     #ifdef DEBUG_RRT
-        printf("To avoid approximation errors, obstacles are inflated by %f meters (%f cm)\n",obstaclesInflationAmount,obstaclesInflationAmount*100);
+        printf("To avoid approximation errors, obstacles are inflated by %f meters (%f cm)\n",SAFETY_INFLATE_AMOUNT,SAFETY_INFLATE_AMOUNT*100);
     #endif
 
-    vector<Polygon> inflated_obstacle_list = ClipperHelper::inflatePolygons(obstacle_list,obstaclesInflationAmount);
+    vector<Polygon> inflated_obstacle_list = ClipperHelper::inflatePolygons(obstacle_list,SAFETY_INFLATE_AMOUNT);
 
     #ifdef DEBUG_RRT
         printf("Writing problem parameters to file\n");
@@ -1717,7 +1781,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
                 const string& config_folder){
 
     vector<dubins::Curve> multipointPath;
-    float max_time = 1000.0f;
+    float max_time = 1000.0f;                   //TODO: unused, check
     float best_partial_time;    // current best time score
 
     // compute victim distance from start
@@ -1816,41 +1880,6 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
     return multipointPath;
 }
 
-/*
-* Remove the area of the arena near the borders to account for robot size
-*/
-Polygon inflateBorders(const Polygon& borders) {
-
-    // deflate border polygon to account for robot size
-    Polygon correctedBorders = ClipperHelper::inflateWithClipper(borders,-1.0 * ROBOT_RADIUS);
-    assert(borders.size() == correctedBorders.size());
-
-    // Reorder points
-    {
-        // Find first point
-        int closerToFirst = -1;
-        float minDistance = 1000.0f;
-        Polygon correctedBordersCopy = correctedBorders;
-        for (int i = 0; i < correctedBorders.size(); ++i) {
-            float distanceFromFirst = pow(borders[0].x - correctedBordersCopy[i].x,2) + pow(borders[0].y - correctedBordersCopy[i].y,2);
-            if (distanceFromFirst < minDistance) {
-                minDistance = distanceFromFirst;
-                closerToFirst = i;
-            }
-        }
-
-        assert(closerToFirst != -1);
-
-        // Actual reorder
-        for (int i = 0; i < correctedBorders.size(); ++i) {
-            int copyIndex = (i + closerToFirst)%correctedBorders.size();
-            correctedBorders[i] = correctedBordersCopy[copyIndex];
-        }
-    }
-
-    return correctedBorders;
-}
-
 bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
               const vector<pair<int,Polygon>>& victim_list, const Polygon& gate,
               const float x, const float y, const float theta, Path& path,
@@ -1861,16 +1890,15 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         fflush(stdout);
     #endif
 
-    double xf, yf, thf;                   // Endpoint
-    centerGate(gate,borders,xf,yf,thf);  // Endpoint computation
-
     // Correct borders to account for robot size
-    Polygon correctedBorders = inflateBorders(borders);
+    Polygon correctedBorders = ClipperHelper::offsetBorders(borders,-1.0 * ROBOT_RADIUS);
 
     #ifdef DEBUG_DRAWCURVE
         drawDebugImage(correctedBorders, obstacle_list, victim_list);
     #endif
 
+    double xf, yf, thf;                   // Endpoint
+    centerGate(gate,borders,correctedBorders,xf,yf,thf);  // Endpoint computation
 
     vector<dubins::Curve> multipointPath;
     if (mission == Mission::mission1){
