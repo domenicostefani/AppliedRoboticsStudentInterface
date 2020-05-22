@@ -62,11 +62,12 @@ const float SAFETY_INFLATE_AMOUNT = 0.01;  // (Note: value in meters)
                                               // computation of // collisions
                                               // (in the RRT script)
 
-const float ROBOT_RADIUS = 0.1051;             // Robot radius for obstacles and
+const float ROBOT_RADIUS = 0.1491;             // Robot radius for obstacles and
                                               // borders inflation.
-                                              // Computed as half the diagonal
-                                              // of the robot footprint
-                                              // (19cm x 9cm rectangle)
+                                              // Computed as the maximum
+                                              // distance between the wheels
+                                              // center and the robot footprint
+                                              // borders
 
 const unsigned short NUMBER_OF_MP_ANGLES = 4; // Number of possible angles used
                                               // normally to plan the multipoint
@@ -336,7 +337,7 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     // compute robot dimension from barycenter for obstacle dilation
     // distance between robot triangle front vertex and barycenter is triangle height/3*2
     // from documentation, triangle height is 16 cm
-    float robot_dim = ceil(0.1117*scale);   //TODO: correct using ROBOT_RADIUS
+    float robot_dim = ceil(ROBOT_RADIUS*scale);   //TODO: correct using ROBOT_RADIUS
 
     cout << "robot dim: " << robot_dim << endl;
 
