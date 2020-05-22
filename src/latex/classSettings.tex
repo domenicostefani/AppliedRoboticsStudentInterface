@@ -1,0 +1,363 @@
+\hypertarget{classSettings}{}\doxysection{Settings Class Reference}
+\label{classSettings}\index{Settings@{Settings}}
+\doxysubsection*{Public Types}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8}{Pattern}} \{ \mbox{\hyperlink{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8ad2f421ce100bd7e0302b17bda1a74eb9}{N\+O\+T\+\_\+\+E\+X\+I\+S\+T\+I\+NG}}, 
+\mbox{\hyperlink{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8ae96aa2d60b4a554a215524a05b32908e}{C\+H\+E\+S\+S\+B\+O\+A\+RD}}, 
+\mbox{\hyperlink{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8a79472d1c69f8ed7aa1b55f908b136f68}{C\+I\+R\+C\+L\+E\+S\+\_\+\+G\+R\+ID}}, 
+\mbox{\hyperlink{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8a2cea29ee5896f2cb4cc64df25fd2375b}{A\+S\+Y\+M\+M\+E\+T\+R\+I\+C\+\_\+\+C\+I\+R\+C\+L\+E\+S\+\_\+\+G\+R\+ID}}
+ \}
+\item 
+enum \mbox{\hyperlink{classSettings_a5afe85d24b071973a7f248c05386f7f4}{Input\+Type}} \{ \mbox{\hyperlink{classSettings_a5afe85d24b071973a7f248c05386f7f4adb44130895aedc32a119565eb6d61bed}{I\+N\+V\+A\+L\+ID}}, 
+\mbox{\hyperlink{classSettings_a5afe85d24b071973a7f248c05386f7f4aba4cc7726878c8913831f0ea6360fa05}{C\+A\+M\+E\+RA}}, 
+\mbox{\hyperlink{classSettings_a5afe85d24b071973a7f248c05386f7f4ac9fd97535bc651249f9eed1fddf2d36b}{V\+I\+D\+E\+O\+\_\+\+F\+I\+LE}}, 
+\mbox{\hyperlink{classSettings_a5afe85d24b071973a7f248c05386f7f4a292bd2e5ba912a92ace1606e366edc4d}{I\+M\+A\+G\+E\+\_\+\+L\+I\+ST}}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classSettings_ab7169a6eefce79566dd07db3b1e5e967}{Settings}} ()
+\item 
+void \mbox{\hyperlink{classSettings_a0785cc2055091b2a857b1dcefe291acc}{write}} (File\+Storage \&fs) const
+\item 
+void \mbox{\hyperlink{classSettings_a2d7841f8441095032e0f3b7d20adfd3f}{read}} (const File\+Node \&node)
+\item 
+void \mbox{\hyperlink{classSettings_a29016205c90b95d6247df18365a70dd0}{validate}} ()
+\item 
+Mat \mbox{\hyperlink{classSettings_a7701462e928f2425b342440fba9973e5}{next\+Image}} ()
+\end{DoxyCompactItemize}
+\doxysubsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static bool \mbox{\hyperlink{classSettings_ae57696cead99c4f0c528e33793866457}{read\+String\+List}} (const string \&filename, vector$<$ string $>$ \&l)
+\item 
+static bool \mbox{\hyperlink{classSettings_ae7696860215ac20c48a5e7121c5dd32e}{is\+List\+Of\+Images}} (const string \&filename)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+Size \mbox{\hyperlink{classSettings_a5030a7164df923bb3b86dd7a0fc9af30}{board\+Size}}
+\item 
+\mbox{\hyperlink{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8}{Pattern}} \mbox{\hyperlink{classSettings_a94551b7ffe8ac60311b035b2905e9498}{calibration\+Pattern}}
+\item 
+float \mbox{\hyperlink{classSettings_a6c94708776ad1ce258fc44f2101f5941}{square\+Size}}
+\item 
+int \mbox{\hyperlink{classSettings_a7e6654cd0e51791ed687eaa85f8fc143}{nr\+Frames}}
+\item 
+float \mbox{\hyperlink{classSettings_af55c910308a0d773055d0b19261bb3b8}{aspect\+Ratio}}
+\item 
+int \mbox{\hyperlink{classSettings_a5fe947366441009187d633f9e4663256}{delay}}
+\item 
+bool \mbox{\hyperlink{classSettings_a53ac449815682c6bfae7e50944ba0565}{write\+Points}}
+\item 
+bool \mbox{\hyperlink{classSettings_a1cee56847e08f49c90d2f7e2b0511197}{write\+Extrinsics}}
+\item 
+bool \mbox{\hyperlink{classSettings_a4bc7ff147d74721a3587ce6fcb64ef32}{calib\+Zero\+Tangent\+Dist}}
+\item 
+bool \mbox{\hyperlink{classSettings_a44397eea3f08a0c78808c38bdd716594}{calib\+Fix\+Principal\+Point}}
+\item 
+bool \mbox{\hyperlink{classSettings_ab6304f260b315d2820f755e1c3a052b5}{flip\+Vertical}}
+\item 
+string \mbox{\hyperlink{classSettings_a9468f1ad53e982f9541d76c8d3228900}{output\+File\+Name}}
+\item 
+bool \mbox{\hyperlink{classSettings_a935d6f27ee454e9fee63f8b662f48a06}{show\+Undistorsed}}
+\item 
+string \mbox{\hyperlink{classSettings_a9970d51ab47b6560ab11b267637b6219}{input}}
+\item 
+bool \mbox{\hyperlink{classSettings_ac8f271630d54f9d0c718ea0130972d44}{use\+Fisheye}}
+\item 
+bool \mbox{\hyperlink{classSettings_a25242813ee2c5e111ce48fe1f7f85e7b}{fix\+K1}}
+\item 
+bool \mbox{\hyperlink{classSettings_abad0b643dc5a39d493a6343d38f41578}{fix\+K2}}
+\item 
+bool \mbox{\hyperlink{classSettings_a433fca3c377d42f1c7d43e35a286913f}{fix\+K3}}
+\item 
+bool \mbox{\hyperlink{classSettings_ac993998a56cebe0593cb74fe39858d31}{fix\+K4}}
+\item 
+bool \mbox{\hyperlink{classSettings_a4d0d37eef5f3033a8aabc3f09ee29a03}{fix\+K5}}
+\item 
+int \mbox{\hyperlink{classSettings_af32a5ff06192bde106c934e0361bcd7e}{camera\+ID}}
+\item 
+vector$<$ string $>$ \mbox{\hyperlink{classSettings_ae261128a69d1d3d2b0f5315aff8066c8}{image\+List}}
+\item 
+size\+\_\+t \mbox{\hyperlink{classSettings_a1b89e85a2638e19f2d53269245d19b66}{at\+Image\+List}}
+\item 
+Video\+Capture \mbox{\hyperlink{classSettings_abd5706146b34d3c32aef4025dcd2ec1b}{input\+Capture}}
+\item 
+\mbox{\hyperlink{classSettings_a5afe85d24b071973a7f248c05386f7f4}{Input\+Type}} \mbox{\hyperlink{classSettings_a89fb14ce9856fb642f18bb0f7c5b8868}{input\+Type}}
+\item 
+bool \mbox{\hyperlink{classSettings_a3b9fc27b555f982bd5b9ea5198e1f7e3}{good\+Input}}
+\item 
+int \mbox{\hyperlink{classSettings_aba5691e3e76525f93ea254e654ec3717}{flag}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Member Enumeration Documentation}
+\mbox{\Hypertarget{classSettings_a5afe85d24b071973a7f248c05386f7f4}\label{classSettings_a5afe85d24b071973a7f248c05386f7f4}} 
+\index{Settings@{Settings}!InputType@{InputType}}
+\index{InputType@{InputType}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{InputType}{InputType}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{classSettings_a5afe85d24b071973a7f248c05386f7f4}{Settings\+::\+Input\+Type}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{INVALID@{INVALID}!Settings@{Settings}}\index{Settings@{Settings}!INVALID@{INVALID}}}\mbox{\Hypertarget{classSettings_a5afe85d24b071973a7f248c05386f7f4adb44130895aedc32a119565eb6d61bed}\label{classSettings_a5afe85d24b071973a7f248c05386f7f4adb44130895aedc32a119565eb6d61bed}} 
+I\+N\+V\+A\+L\+ID&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CAMERA@{CAMERA}!Settings@{Settings}}\index{Settings@{Settings}!CAMERA@{CAMERA}}}\mbox{\Hypertarget{classSettings_a5afe85d24b071973a7f248c05386f7f4aba4cc7726878c8913831f0ea6360fa05}\label{classSettings_a5afe85d24b071973a7f248c05386f7f4aba4cc7726878c8913831f0ea6360fa05}} 
+C\+A\+M\+E\+RA&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{VIDEO\_FILE@{VIDEO\_FILE}!Settings@{Settings}}\index{Settings@{Settings}!VIDEO\_FILE@{VIDEO\_FILE}}}\mbox{\Hypertarget{classSettings_a5afe85d24b071973a7f248c05386f7f4ac9fd97535bc651249f9eed1fddf2d36b}\label{classSettings_a5afe85d24b071973a7f248c05386f7f4ac9fd97535bc651249f9eed1fddf2d36b}} 
+V\+I\+D\+E\+O\+\_\+\+F\+I\+LE&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{IMAGE\_LIST@{IMAGE\_LIST}!Settings@{Settings}}\index{Settings@{Settings}!IMAGE\_LIST@{IMAGE\_LIST}}}\mbox{\Hypertarget{classSettings_a5afe85d24b071973a7f248c05386f7f4a292bd2e5ba912a92ace1606e366edc4d}\label{classSettings_a5afe85d24b071973a7f248c05386f7f4a292bd2e5ba912a92ace1606e366edc4d}} 
+I\+M\+A\+G\+E\+\_\+\+L\+I\+ST&\\
+\hline
+
+\end{DoxyEnumFields}
+\mbox{\Hypertarget{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8}\label{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8}} 
+\index{Settings@{Settings}!Pattern@{Pattern}}
+\index{Pattern@{Pattern}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{Pattern}{Pattern}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8}{Settings\+::\+Pattern}}}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{NOT\_EXISTING@{NOT\_EXISTING}!Settings@{Settings}}\index{Settings@{Settings}!NOT\_EXISTING@{NOT\_EXISTING}}}\mbox{\Hypertarget{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8ad2f421ce100bd7e0302b17bda1a74eb9}\label{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8ad2f421ce100bd7e0302b17bda1a74eb9}} 
+N\+O\+T\+\_\+\+E\+X\+I\+S\+T\+I\+NG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CHESSBOARD@{CHESSBOARD}!Settings@{Settings}}\index{Settings@{Settings}!CHESSBOARD@{CHESSBOARD}}}\mbox{\Hypertarget{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8ae96aa2d60b4a554a215524a05b32908e}\label{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8ae96aa2d60b4a554a215524a05b32908e}} 
+C\+H\+E\+S\+S\+B\+O\+A\+RD&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CIRCLES\_GRID@{CIRCLES\_GRID}!Settings@{Settings}}\index{Settings@{Settings}!CIRCLES\_GRID@{CIRCLES\_GRID}}}\mbox{\Hypertarget{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8a79472d1c69f8ed7aa1b55f908b136f68}\label{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8a79472d1c69f8ed7aa1b55f908b136f68}} 
+C\+I\+R\+C\+L\+E\+S\+\_\+\+G\+R\+ID&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{ASYMMETRIC\_CIRCLES\_GRID@{ASYMMETRIC\_CIRCLES\_GRID}!Settings@{Settings}}\index{Settings@{Settings}!ASYMMETRIC\_CIRCLES\_GRID@{ASYMMETRIC\_CIRCLES\_GRID}}}\mbox{\Hypertarget{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8a2cea29ee5896f2cb4cc64df25fd2375b}\label{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8a2cea29ee5896f2cb4cc64df25fd2375b}} 
+A\+S\+Y\+M\+M\+E\+T\+R\+I\+C\+\_\+\+C\+I\+R\+C\+L\+E\+S\+\_\+\+G\+R\+ID&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classSettings_ab7169a6eefce79566dd07db3b1e5e967}\label{classSettings_ab7169a6eefce79566dd07db3b1e5e967}} 
+\index{Settings@{Settings}!Settings@{Settings}}
+\index{Settings@{Settings}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{Settings()}{Settings()}}
+{\footnotesize\ttfamily Settings\+::\+Settings (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{classSettings_ae7696860215ac20c48a5e7121c5dd32e}\label{classSettings_ae7696860215ac20c48a5e7121c5dd32e}} 
+\index{Settings@{Settings}!isListOfImages@{isListOfImages}}
+\index{isListOfImages@{isListOfImages}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{isListOfImages()}{isListOfImages()}}
+{\footnotesize\ttfamily static bool Settings\+::is\+List\+Of\+Images (\begin{DoxyParamCaption}\item[{const string \&}]{filename }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\mbox{\Hypertarget{classSettings_a7701462e928f2425b342440fba9973e5}\label{classSettings_a7701462e928f2425b342440fba9973e5}} 
+\index{Settings@{Settings}!nextImage@{nextImage}}
+\index{nextImage@{nextImage}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{nextImage()}{nextImage()}}
+{\footnotesize\ttfamily Mat Settings\+::next\+Image (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classSettings_a2d7841f8441095032e0f3b7d20adfd3f}\label{classSettings_a2d7841f8441095032e0f3b7d20adfd3f}} 
+\index{Settings@{Settings}!read@{read}}
+\index{read@{read}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{read()}{read()}}
+{\footnotesize\ttfamily void Settings\+::read (\begin{DoxyParamCaption}\item[{const File\+Node \&}]{node }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classSettings_ae57696cead99c4f0c528e33793866457}\label{classSettings_ae57696cead99c4f0c528e33793866457}} 
+\index{Settings@{Settings}!readStringList@{readStringList}}
+\index{readStringList@{readStringList}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{readStringList()}{readStringList()}}
+{\footnotesize\ttfamily static bool Settings\+::read\+String\+List (\begin{DoxyParamCaption}\item[{const string \&}]{filename,  }\item[{vector$<$ string $>$ \&}]{l }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+\mbox{\Hypertarget{classSettings_a29016205c90b95d6247df18365a70dd0}\label{classSettings_a29016205c90b95d6247df18365a70dd0}} 
+\index{Settings@{Settings}!validate@{validate}}
+\index{validate@{validate}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{validate()}{validate()}}
+{\footnotesize\ttfamily void Settings\+::validate (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\mbox{\Hypertarget{classSettings_a0785cc2055091b2a857b1dcefe291acc}\label{classSettings_a0785cc2055091b2a857b1dcefe291acc}} 
+\index{Settings@{Settings}!write@{write}}
+\index{write@{write}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{write()}{write()}}
+{\footnotesize\ttfamily void Settings\+::write (\begin{DoxyParamCaption}\item[{File\+Storage \&}]{fs }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+\doxysubsection{Member Data Documentation}
+\mbox{\Hypertarget{classSettings_af55c910308a0d773055d0b19261bb3b8}\label{classSettings_af55c910308a0d773055d0b19261bb3b8}} 
+\index{Settings@{Settings}!aspectRatio@{aspectRatio}}
+\index{aspectRatio@{aspectRatio}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{aspectRatio}{aspectRatio}}
+{\footnotesize\ttfamily float Settings\+::aspect\+Ratio}
+
+\mbox{\Hypertarget{classSettings_a1b89e85a2638e19f2d53269245d19b66}\label{classSettings_a1b89e85a2638e19f2d53269245d19b66}} 
+\index{Settings@{Settings}!atImageList@{atImageList}}
+\index{atImageList@{atImageList}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{atImageList}{atImageList}}
+{\footnotesize\ttfamily size\+\_\+t Settings\+::at\+Image\+List}
+
+\mbox{\Hypertarget{classSettings_a5030a7164df923bb3b86dd7a0fc9af30}\label{classSettings_a5030a7164df923bb3b86dd7a0fc9af30}} 
+\index{Settings@{Settings}!boardSize@{boardSize}}
+\index{boardSize@{boardSize}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{boardSize}{boardSize}}
+{\footnotesize\ttfamily Size Settings\+::board\+Size}
+
+\mbox{\Hypertarget{classSettings_a44397eea3f08a0c78808c38bdd716594}\label{classSettings_a44397eea3f08a0c78808c38bdd716594}} 
+\index{Settings@{Settings}!calibFixPrincipalPoint@{calibFixPrincipalPoint}}
+\index{calibFixPrincipalPoint@{calibFixPrincipalPoint}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{calibFixPrincipalPoint}{calibFixPrincipalPoint}}
+{\footnotesize\ttfamily bool Settings\+::calib\+Fix\+Principal\+Point}
+
+\mbox{\Hypertarget{classSettings_a94551b7ffe8ac60311b035b2905e9498}\label{classSettings_a94551b7ffe8ac60311b035b2905e9498}} 
+\index{Settings@{Settings}!calibrationPattern@{calibrationPattern}}
+\index{calibrationPattern@{calibrationPattern}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{calibrationPattern}{calibrationPattern}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classSettings_a0e7117abd9427a6f8bc1d1d8d456b5c8}{Pattern}} Settings\+::calibration\+Pattern}
+
+\mbox{\Hypertarget{classSettings_a4bc7ff147d74721a3587ce6fcb64ef32}\label{classSettings_a4bc7ff147d74721a3587ce6fcb64ef32}} 
+\index{Settings@{Settings}!calibZeroTangentDist@{calibZeroTangentDist}}
+\index{calibZeroTangentDist@{calibZeroTangentDist}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{calibZeroTangentDist}{calibZeroTangentDist}}
+{\footnotesize\ttfamily bool Settings\+::calib\+Zero\+Tangent\+Dist}
+
+\mbox{\Hypertarget{classSettings_af32a5ff06192bde106c934e0361bcd7e}\label{classSettings_af32a5ff06192bde106c934e0361bcd7e}} 
+\index{Settings@{Settings}!cameraID@{cameraID}}
+\index{cameraID@{cameraID}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{cameraID}{cameraID}}
+{\footnotesize\ttfamily int Settings\+::camera\+ID}
+
+\mbox{\Hypertarget{classSettings_a5fe947366441009187d633f9e4663256}\label{classSettings_a5fe947366441009187d633f9e4663256}} 
+\index{Settings@{Settings}!delay@{delay}}
+\index{delay@{delay}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{delay}{delay}}
+{\footnotesize\ttfamily int Settings\+::delay}
+
+\mbox{\Hypertarget{classSettings_a25242813ee2c5e111ce48fe1f7f85e7b}\label{classSettings_a25242813ee2c5e111ce48fe1f7f85e7b}} 
+\index{Settings@{Settings}!fixK1@{fixK1}}
+\index{fixK1@{fixK1}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{fixK1}{fixK1}}
+{\footnotesize\ttfamily bool Settings\+::fix\+K1}
+
+\mbox{\Hypertarget{classSettings_abad0b643dc5a39d493a6343d38f41578}\label{classSettings_abad0b643dc5a39d493a6343d38f41578}} 
+\index{Settings@{Settings}!fixK2@{fixK2}}
+\index{fixK2@{fixK2}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{fixK2}{fixK2}}
+{\footnotesize\ttfamily bool Settings\+::fix\+K2}
+
+\mbox{\Hypertarget{classSettings_a433fca3c377d42f1c7d43e35a286913f}\label{classSettings_a433fca3c377d42f1c7d43e35a286913f}} 
+\index{Settings@{Settings}!fixK3@{fixK3}}
+\index{fixK3@{fixK3}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{fixK3}{fixK3}}
+{\footnotesize\ttfamily bool Settings\+::fix\+K3}
+
+\mbox{\Hypertarget{classSettings_ac993998a56cebe0593cb74fe39858d31}\label{classSettings_ac993998a56cebe0593cb74fe39858d31}} 
+\index{Settings@{Settings}!fixK4@{fixK4}}
+\index{fixK4@{fixK4}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{fixK4}{fixK4}}
+{\footnotesize\ttfamily bool Settings\+::fix\+K4}
+
+\mbox{\Hypertarget{classSettings_a4d0d37eef5f3033a8aabc3f09ee29a03}\label{classSettings_a4d0d37eef5f3033a8aabc3f09ee29a03}} 
+\index{Settings@{Settings}!fixK5@{fixK5}}
+\index{fixK5@{fixK5}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{fixK5}{fixK5}}
+{\footnotesize\ttfamily bool Settings\+::fix\+K5}
+
+\mbox{\Hypertarget{classSettings_aba5691e3e76525f93ea254e654ec3717}\label{classSettings_aba5691e3e76525f93ea254e654ec3717}} 
+\index{Settings@{Settings}!flag@{flag}}
+\index{flag@{flag}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{flag}{flag}}
+{\footnotesize\ttfamily int Settings\+::flag}
+
+\mbox{\Hypertarget{classSettings_ab6304f260b315d2820f755e1c3a052b5}\label{classSettings_ab6304f260b315d2820f755e1c3a052b5}} 
+\index{Settings@{Settings}!flipVertical@{flipVertical}}
+\index{flipVertical@{flipVertical}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{flipVertical}{flipVertical}}
+{\footnotesize\ttfamily bool Settings\+::flip\+Vertical}
+
+\mbox{\Hypertarget{classSettings_a3b9fc27b555f982bd5b9ea5198e1f7e3}\label{classSettings_a3b9fc27b555f982bd5b9ea5198e1f7e3}} 
+\index{Settings@{Settings}!goodInput@{goodInput}}
+\index{goodInput@{goodInput}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{goodInput}{goodInput}}
+{\footnotesize\ttfamily bool Settings\+::good\+Input}
+
+\mbox{\Hypertarget{classSettings_ae261128a69d1d3d2b0f5315aff8066c8}\label{classSettings_ae261128a69d1d3d2b0f5315aff8066c8}} 
+\index{Settings@{Settings}!imageList@{imageList}}
+\index{imageList@{imageList}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{imageList}{imageList}}
+{\footnotesize\ttfamily vector$<$string$>$ Settings\+::image\+List}
+
+\mbox{\Hypertarget{classSettings_a9970d51ab47b6560ab11b267637b6219}\label{classSettings_a9970d51ab47b6560ab11b267637b6219}} 
+\index{Settings@{Settings}!input@{input}}
+\index{input@{input}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{input}{input}}
+{\footnotesize\ttfamily string Settings\+::input}
+
+\mbox{\Hypertarget{classSettings_abd5706146b34d3c32aef4025dcd2ec1b}\label{classSettings_abd5706146b34d3c32aef4025dcd2ec1b}} 
+\index{Settings@{Settings}!inputCapture@{inputCapture}}
+\index{inputCapture@{inputCapture}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{inputCapture}{inputCapture}}
+{\footnotesize\ttfamily Video\+Capture Settings\+::input\+Capture}
+
+\mbox{\Hypertarget{classSettings_a89fb14ce9856fb642f18bb0f7c5b8868}\label{classSettings_a89fb14ce9856fb642f18bb0f7c5b8868}} 
+\index{Settings@{Settings}!inputType@{inputType}}
+\index{inputType@{inputType}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{inputType}{inputType}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classSettings_a5afe85d24b071973a7f248c05386f7f4}{Input\+Type}} Settings\+::input\+Type}
+
+\mbox{\Hypertarget{classSettings_a7e6654cd0e51791ed687eaa85f8fc143}\label{classSettings_a7e6654cd0e51791ed687eaa85f8fc143}} 
+\index{Settings@{Settings}!nrFrames@{nrFrames}}
+\index{nrFrames@{nrFrames}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{nrFrames}{nrFrames}}
+{\footnotesize\ttfamily int Settings\+::nr\+Frames}
+
+\mbox{\Hypertarget{classSettings_a9468f1ad53e982f9541d76c8d3228900}\label{classSettings_a9468f1ad53e982f9541d76c8d3228900}} 
+\index{Settings@{Settings}!outputFileName@{outputFileName}}
+\index{outputFileName@{outputFileName}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{outputFileName}{outputFileName}}
+{\footnotesize\ttfamily string Settings\+::output\+File\+Name}
+
+\mbox{\Hypertarget{classSettings_a935d6f27ee454e9fee63f8b662f48a06}\label{classSettings_a935d6f27ee454e9fee63f8b662f48a06}} 
+\index{Settings@{Settings}!showUndistorsed@{showUndistorsed}}
+\index{showUndistorsed@{showUndistorsed}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{showUndistorsed}{showUndistorsed}}
+{\footnotesize\ttfamily bool Settings\+::show\+Undistorsed}
+
+\mbox{\Hypertarget{classSettings_a6c94708776ad1ce258fc44f2101f5941}\label{classSettings_a6c94708776ad1ce258fc44f2101f5941}} 
+\index{Settings@{Settings}!squareSize@{squareSize}}
+\index{squareSize@{squareSize}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{squareSize}{squareSize}}
+{\footnotesize\ttfamily float Settings\+::square\+Size}
+
+\mbox{\Hypertarget{classSettings_ac8f271630d54f9d0c718ea0130972d44}\label{classSettings_ac8f271630d54f9d0c718ea0130972d44}} 
+\index{Settings@{Settings}!useFisheye@{useFisheye}}
+\index{useFisheye@{useFisheye}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{useFisheye}{useFisheye}}
+{\footnotesize\ttfamily bool Settings\+::use\+Fisheye}
+
+\mbox{\Hypertarget{classSettings_a1cee56847e08f49c90d2f7e2b0511197}\label{classSettings_a1cee56847e08f49c90d2f7e2b0511197}} 
+\index{Settings@{Settings}!writeExtrinsics@{writeExtrinsics}}
+\index{writeExtrinsics@{writeExtrinsics}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{writeExtrinsics}{writeExtrinsics}}
+{\footnotesize\ttfamily bool Settings\+::write\+Extrinsics}
+
+\mbox{\Hypertarget{classSettings_a53ac449815682c6bfae7e50944ba0565}\label{classSettings_a53ac449815682c6bfae7e50944ba0565}} 
+\index{Settings@{Settings}!writePoints@{writePoints}}
+\index{writePoints@{writePoints}!Settings@{Settings}}
+\doxysubsubsection{\texorpdfstring{writePoints}{writePoints}}
+{\footnotesize\ttfamily bool Settings\+::write\+Points}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{camera__calibration_8cpp}{camera\+\_\+calibration.\+cpp}}\end{DoxyCompactItemize}

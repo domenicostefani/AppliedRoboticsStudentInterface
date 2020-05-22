@@ -1,0 +1,81 @@
+\hypertarget{hsv__panel_8cpp}{}\doxysection{hsv\+\_\+panel.\+cpp File Reference}
+\label{hsv__panel_8cpp}\index{hsv\_panel.cpp@{hsv\_panel.cpp}}
+{\ttfamily \#include \char`\"{}hsv\+\_\+panel.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}opencv2/imgproc.\+hpp\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}opencv2/highgui.\+hpp\char`\"{}}\newline
+{\ttfamily \#include $<$string$>$}\newline
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classWindowData}{Window\+Data}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{hsv__panel_8cpp_a26b3c759964337eb5a7f43e576dc9ec4}{on\+\_\+low\+\_\+h\+\_\+thresh\+\_\+change}} (int, void $\ast$userdata)
+\item 
+void \mbox{\hyperlink{hsv__panel_8cpp_a170e8413b6faad92182b5d6bbe8f8ce5}{on\+\_\+high\+\_\+h\+\_\+thresh\+\_\+change}} (int, void $\ast$userdata)
+\item 
+void \mbox{\hyperlink{hsv__panel_8cpp_ad6161d8a6e2fa32238e12263b42e14a8}{on\+\_\+low\+\_\+s\+\_\+thresh\+\_\+change}} (int, void $\ast$userdata)
+\item 
+void \mbox{\hyperlink{hsv__panel_8cpp_a04f23a85e552ad29843ff0425c16375a}{on\+\_\+high\+\_\+s\+\_\+thresh\+\_\+change}} (int, void $\ast$userdata)
+\item 
+void \mbox{\hyperlink{hsv__panel_8cpp_af79666f0c5974ae4700bb1cced6a110f}{on\+\_\+low\+\_\+v\+\_\+thresh\+\_\+change}} (int, void $\ast$userdata)
+\item 
+void \mbox{\hyperlink{hsv__panel_8cpp_a0cb3710106a16c17493adb2360dde918}{on\+\_\+high\+\_\+v\+\_\+thresh\+\_\+change}} (int, void $\ast$userdata)
+\item 
+void \mbox{\hyperlink{hsv__panel_8cpp_a80dbcbaf8d30fb7929bcefa9c85c5097}{on\+\_\+ok\+\_\+button\+\_\+pressed}} (int, void $\ast$userdata)
+\item 
+\mbox{\hyperlink{classWindowData}{Window\+Data}} \mbox{\hyperlink{hsv__panel_8cpp_aec18e1ff7014272284cf5c640c81cb97}{display\+Control}} (const cv\+::\+Mat \&frame, string window\+Name, int low\+\_\+h, int low\+\_\+s, int low\+\_\+v, int high\+\_\+h, int high\+\_\+s, int high\+\_\+v)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{hsv__panel_8cpp_aec18e1ff7014272284cf5c640c81cb97}\label{hsv__panel_8cpp_aec18e1ff7014272284cf5c640c81cb97}} 
+\index{hsv\_panel.cpp@{hsv\_panel.cpp}!displayControl@{displayControl}}
+\index{displayControl@{displayControl}!hsv\_panel.cpp@{hsv\_panel.cpp}}
+\doxysubsubsection{\texorpdfstring{displayControl()}{displayControl()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classWindowData}{Window\+Data}} display\+Control (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{frame,  }\item[{string}]{window\+Name,  }\item[{int}]{low\+\_\+h,  }\item[{int}]{low\+\_\+s,  }\item[{int}]{low\+\_\+v,  }\item[{int}]{high\+\_\+h,  }\item[{int}]{high\+\_\+s,  }\item[{int}]{high\+\_\+v }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hsv__panel_8cpp_a170e8413b6faad92182b5d6bbe8f8ce5}\label{hsv__panel_8cpp_a170e8413b6faad92182b5d6bbe8f8ce5}} 
+\index{hsv\_panel.cpp@{hsv\_panel.cpp}!on\_high\_h\_thresh\_change@{on\_high\_h\_thresh\_change}}
+\index{on\_high\_h\_thresh\_change@{on\_high\_h\_thresh\_change}!hsv\_panel.cpp@{hsv\_panel.cpp}}
+\doxysubsubsection{\texorpdfstring{on\_high\_h\_thresh\_change()}{on\_high\_h\_thresh\_change()}}
+{\footnotesize\ttfamily void on\+\_\+high\+\_\+h\+\_\+thresh\+\_\+change (\begin{DoxyParamCaption}\item[{int}]{,  }\item[{void $\ast$}]{userdata }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hsv__panel_8cpp_a04f23a85e552ad29843ff0425c16375a}\label{hsv__panel_8cpp_a04f23a85e552ad29843ff0425c16375a}} 
+\index{hsv\_panel.cpp@{hsv\_panel.cpp}!on\_high\_s\_thresh\_change@{on\_high\_s\_thresh\_change}}
+\index{on\_high\_s\_thresh\_change@{on\_high\_s\_thresh\_change}!hsv\_panel.cpp@{hsv\_panel.cpp}}
+\doxysubsubsection{\texorpdfstring{on\_high\_s\_thresh\_change()}{on\_high\_s\_thresh\_change()}}
+{\footnotesize\ttfamily void on\+\_\+high\+\_\+s\+\_\+thresh\+\_\+change (\begin{DoxyParamCaption}\item[{int}]{,  }\item[{void $\ast$}]{userdata }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hsv__panel_8cpp_a0cb3710106a16c17493adb2360dde918}\label{hsv__panel_8cpp_a0cb3710106a16c17493adb2360dde918}} 
+\index{hsv\_panel.cpp@{hsv\_panel.cpp}!on\_high\_v\_thresh\_change@{on\_high\_v\_thresh\_change}}
+\index{on\_high\_v\_thresh\_change@{on\_high\_v\_thresh\_change}!hsv\_panel.cpp@{hsv\_panel.cpp}}
+\doxysubsubsection{\texorpdfstring{on\_high\_v\_thresh\_change()}{on\_high\_v\_thresh\_change()}}
+{\footnotesize\ttfamily void on\+\_\+high\+\_\+v\+\_\+thresh\+\_\+change (\begin{DoxyParamCaption}\item[{int}]{,  }\item[{void $\ast$}]{userdata }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hsv__panel_8cpp_a26b3c759964337eb5a7f43e576dc9ec4}\label{hsv__panel_8cpp_a26b3c759964337eb5a7f43e576dc9ec4}} 
+\index{hsv\_panel.cpp@{hsv\_panel.cpp}!on\_low\_h\_thresh\_change@{on\_low\_h\_thresh\_change}}
+\index{on\_low\_h\_thresh\_change@{on\_low\_h\_thresh\_change}!hsv\_panel.cpp@{hsv\_panel.cpp}}
+\doxysubsubsection{\texorpdfstring{on\_low\_h\_thresh\_change()}{on\_low\_h\_thresh\_change()}}
+{\footnotesize\ttfamily void on\+\_\+low\+\_\+h\+\_\+thresh\+\_\+change (\begin{DoxyParamCaption}\item[{int}]{,  }\item[{void $\ast$}]{userdata }\end{DoxyParamCaption})}
+
+Function Headers \mbox{\Hypertarget{hsv__panel_8cpp_ad6161d8a6e2fa32238e12263b42e14a8}\label{hsv__panel_8cpp_ad6161d8a6e2fa32238e12263b42e14a8}} 
+\index{hsv\_panel.cpp@{hsv\_panel.cpp}!on\_low\_s\_thresh\_change@{on\_low\_s\_thresh\_change}}
+\index{on\_low\_s\_thresh\_change@{on\_low\_s\_thresh\_change}!hsv\_panel.cpp@{hsv\_panel.cpp}}
+\doxysubsubsection{\texorpdfstring{on\_low\_s\_thresh\_change()}{on\_low\_s\_thresh\_change()}}
+{\footnotesize\ttfamily void on\+\_\+low\+\_\+s\+\_\+thresh\+\_\+change (\begin{DoxyParamCaption}\item[{int}]{,  }\item[{void $\ast$}]{userdata }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hsv__panel_8cpp_af79666f0c5974ae4700bb1cced6a110f}\label{hsv__panel_8cpp_af79666f0c5974ae4700bb1cced6a110f}} 
+\index{hsv\_panel.cpp@{hsv\_panel.cpp}!on\_low\_v\_thresh\_change@{on\_low\_v\_thresh\_change}}
+\index{on\_low\_v\_thresh\_change@{on\_low\_v\_thresh\_change}!hsv\_panel.cpp@{hsv\_panel.cpp}}
+\doxysubsubsection{\texorpdfstring{on\_low\_v\_thresh\_change()}{on\_low\_v\_thresh\_change()}}
+{\footnotesize\ttfamily void on\+\_\+low\+\_\+v\+\_\+thresh\+\_\+change (\begin{DoxyParamCaption}\item[{int}]{,  }\item[{void $\ast$}]{userdata }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{hsv__panel_8cpp_a80dbcbaf8d30fb7929bcefa9c85c5097}\label{hsv__panel_8cpp_a80dbcbaf8d30fb7929bcefa9c85c5097}} 
+\index{hsv\_panel.cpp@{hsv\_panel.cpp}!on\_ok\_button\_pressed@{on\_ok\_button\_pressed}}
+\index{on\_ok\_button\_pressed@{on\_ok\_button\_pressed}!hsv\_panel.cpp@{hsv\_panel.cpp}}
+\doxysubsubsection{\texorpdfstring{on\_ok\_button\_pressed()}{on\_ok\_button\_pressed()}}
+{\footnotesize\ttfamily void on\+\_\+ok\+\_\+button\+\_\+pressed (\begin{DoxyParamCaption}\item[{int}]{,  }\item[{void $\ast$}]{userdata }\end{DoxyParamCaption})}
+

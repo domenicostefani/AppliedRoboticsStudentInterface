@@ -1,0 +1,102 @@
+\hypertarget{camera__calibration_8cpp}{}\doxysection{camera\+\_\+calibration.\+cpp File Reference}
+\label{camera__calibration_8cpp}\index{camera\_calibration.cpp@{camera\_calibration.cpp}}
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$sstream$>$}\newline
+{\ttfamily \#include $<$string$>$}\newline
+{\ttfamily \#include $<$ctime$>$}\newline
+{\ttfamily \#include $<$cstdio$>$}\newline
+{\ttfamily \#include $<$opencv2/core.\+hpp$>$}\newline
+{\ttfamily \#include $<$opencv2/core/utility.\+hpp$>$}\newline
+{\ttfamily \#include $<$opencv2/imgproc.\+hpp$>$}\newline
+{\ttfamily \#include $<$opencv2/calib3d.\+hpp$>$}\newline
+{\ttfamily \#include $<$opencv2/imgcodecs.\+hpp$>$}\newline
+{\ttfamily \#include $<$opencv2/videoio.\+hpp$>$}\newline
+{\ttfamily \#include $<$opencv2/highgui.\+hpp$>$}\newline
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{classSettings}{Settings}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \{ \mbox{\hyperlink{camera__calibration_8cpp_a06fc87d81c62e9abb8790b6e5713c55ba167a7ee1aabe9f27e010fff93c0ba971}{D\+E\+T\+E\+C\+T\+I\+ON}} = 0, 
+\mbox{\hyperlink{camera__calibration_8cpp_a06fc87d81c62e9abb8790b6e5713c55ba53f5d985011ab26db21516188f46a94f}{C\+A\+P\+T\+U\+R\+I\+NG}} = 1, 
+\mbox{\hyperlink{camera__calibration_8cpp_a06fc87d81c62e9abb8790b6e5713c55baf7834eaf5a327e180e039aa05dd3ebd1}{C\+A\+L\+I\+B\+R\+A\+T\+ED}} = 2
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{camera__calibration_8cpp_ac7558c8da6af683fc1c86c2ede7bb31c}{run\+Calibration\+And\+Save}} (\mbox{\hyperlink{classSettings}{Settings}} \&s, Size image\+Size, Mat \&camera\+Matrix, Mat \&dist\+Coeffs, vector$<$ vector$<$ Point2f $>$ $>$ image\+Points)
+\begin{DoxyCompactList}\small\item\em \mbox{[}run\+\_\+and\+\_\+save\mbox{]} \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{camera__calibration_8cpp_a0ddf1224851353fc92bfbff6f499fa97}{main}} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{camera__calibration_8cpp_a06fc87d81c62e9abb8790b6e5713c55b}\label{camera__calibration_8cpp_a06fc87d81c62e9abb8790b6e5713c55b}} 
+\doxysubsubsection{\texorpdfstring{anonymous enum}{anonymous enum}}
+{\footnotesize\ttfamily anonymous enum}
+
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DETECTION@{DETECTION}!camera\_calibration.cpp@{camera\_calibration.cpp}}\index{camera\_calibration.cpp@{camera\_calibration.cpp}!DETECTION@{DETECTION}}}\mbox{\Hypertarget{camera__calibration_8cpp_a06fc87d81c62e9abb8790b6e5713c55ba167a7ee1aabe9f27e010fff93c0ba971}\label{camera__calibration_8cpp_a06fc87d81c62e9abb8790b6e5713c55ba167a7ee1aabe9f27e010fff93c0ba971}} 
+D\+E\+T\+E\+C\+T\+I\+ON&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CAPTURING@{CAPTURING}!camera\_calibration.cpp@{camera\_calibration.cpp}}\index{camera\_calibration.cpp@{camera\_calibration.cpp}!CAPTURING@{CAPTURING}}}\mbox{\Hypertarget{camera__calibration_8cpp_a06fc87d81c62e9abb8790b6e5713c55ba53f5d985011ab26db21516188f46a94f}\label{camera__calibration_8cpp_a06fc87d81c62e9abb8790b6e5713c55ba53f5d985011ab26db21516188f46a94f}} 
+C\+A\+P\+T\+U\+R\+I\+NG&\\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{CALIBRATED@{CALIBRATED}!camera\_calibration.cpp@{camera\_calibration.cpp}}\index{camera\_calibration.cpp@{camera\_calibration.cpp}!CALIBRATED@{CALIBRATED}}}\mbox{\Hypertarget{camera__calibration_8cpp_a06fc87d81c62e9abb8790b6e5713c55baf7834eaf5a327e180e039aa05dd3ebd1}\label{camera__calibration_8cpp_a06fc87d81c62e9abb8790b6e5713c55baf7834eaf5a327e180e039aa05dd3ebd1}} 
+C\+A\+L\+I\+B\+R\+A\+T\+ED&\\
+\hline
+
+\end{DoxyEnumFields}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{camera__calibration_8cpp_a0ddf1224851353fc92bfbff6f499fa97}\label{camera__calibration_8cpp_a0ddf1224851353fc92bfbff6f499fa97}} 
+\index{camera\_calibration.cpp@{camera\_calibration.cpp}!main@{main}}
+\index{main@{main}!camera\_calibration.cpp@{camera\_calibration.cpp}}
+\doxysubsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}\item[{int}]{argc,  }\item[{char $\ast$}]{argv\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+\mbox{[}file\+\_\+read\mbox{]}
+
+\mbox{[}file\+\_\+read\mbox{]}
+
+\mbox{[}get\+\_\+input\mbox{]}
+
+\mbox{[}get\+\_\+input\mbox{]}
+
+\mbox{[}find\+\_\+pattern\mbox{]}
+
+\mbox{[}find\+\_\+pattern\mbox{]} \mbox{[}pattern\+\_\+found\mbox{]}
+
+\mbox{[}pattern\+\_\+found\mbox{]}
+
+\mbox{[}output\+\_\+text\mbox{]}
+
+\mbox{[}output\+\_\+text\mbox{]}
+
+\mbox{[}output\+\_\+undistorted\mbox{]}
+
+\mbox{[}output\+\_\+undistorted\mbox{]}
+
+\mbox{[}await\+\_\+input\mbox{]}
+
+\mbox{[}await\+\_\+input\mbox{]}
+
+\mbox{[}show\+\_\+results\mbox{]}
+
+\mbox{[}show\+\_\+results\mbox{]}\mbox{\Hypertarget{camera__calibration_8cpp_ac7558c8da6af683fc1c86c2ede7bb31c}\label{camera__calibration_8cpp_ac7558c8da6af683fc1c86c2ede7bb31c}} 
+\index{camera\_calibration.cpp@{camera\_calibration.cpp}!runCalibrationAndSave@{runCalibrationAndSave}}
+\index{runCalibrationAndSave@{runCalibrationAndSave}!camera\_calibration.cpp@{camera\_calibration.cpp}}
+\doxysubsubsection{\texorpdfstring{runCalibrationAndSave()}{runCalibrationAndSave()}}
+{\footnotesize\ttfamily bool run\+Calibration\+And\+Save (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classSettings}{Settings}} \&}]{s,  }\item[{Size}]{image\+Size,  }\item[{Mat \&}]{camera\+Matrix,  }\item[{Mat \&}]{dist\+Coeffs,  }\item[{vector$<$ vector$<$ Point2f $>$ $>$}]{image\+Points }\end{DoxyParamCaption})}
+
+
+
+\mbox{[}run\+\_\+and\+\_\+save\mbox{]} 
+
