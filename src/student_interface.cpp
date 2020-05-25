@@ -13,6 +13,7 @@
 
 #include "clipper_helper.hpp"
 #include "corner_detection.hpp"
+#include "polygon_utils.hpp"
 
 #define AUTO_CORNER_DETECTION true
 #define COLOR_TUNING_WIZARD false
@@ -75,7 +76,7 @@ const unsigned short NUMBER_OF_MP_ANGLES = 4; // Number of possible angles used
 //Planning
 const double K_MAX = 10.0;                    // Maximum curvature
 const double PATH_RESOLUTION = 0.01;          // Path resolution (sampling)
-const float ROBOT_SPEED = 1.0f;               // TODO: insert correct robot ROBOT_SPEED
+const float ROBOT_SPEED = 0.1f;               // Robot speed: 0.1 m/s
 
 namespace student {
 
@@ -92,10 +93,6 @@ struct Color_config {
 
 //-------------------DRAWING DUBINS CURVES-------------------
 cv::Mat dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255));
-
-bool pointsEquals(Point pa, Point pb){
-    return ((pa.x == pb.x)&&(pa.y == pb.y));
-}
 
 void loadImage(cv::Mat& img_out, const string& config_folder) {
     static bool initialized = false;
@@ -148,7 +145,7 @@ void genericImageListener(const cv::Mat& img_in, string topic,
         string foldername = config_folder;
         foldername += "/image";      //This is the folder used in the topic string
         string command = "mkdir -p " + foldername;  //-p creates only if non exists
-        system(command.c_str());  //use bash command
+        int state = system(command.c_str());  //use bash command
 
         /* Save current image */
         string filename = config_folder;
@@ -463,7 +460,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
 
     vector<cv::Rect> boundRect(contours.size());
     vector<cv::RotatedRect> minRect(contours.size());
-    vector<Polygon> polgonsFound(contours.size());
+    vector<Polygon> polygonsFound(contours.size());
 
     for (int i=0; i<contours.size(); ++i) {
         approxPolyDP(contours[i], approx_curve, 10, true);
@@ -474,7 +471,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
             for (const auto& pt: approx_curve) {
                 scaled_contour.emplace_back(pt.x/scale, pt.y/scale);
             }
-            polgonsFound[i] = scaled_contour;
+            polygonsFound[i] = scaled_contour;
 
             contours_approx = {approx_curve};
             drawContours(contours_img, contours_approx, -1, cv::Scalar(0,170,220), 3, cv::LINE_AA);
@@ -571,10 +568,10 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
         }
 
         if (maxIdx != -1) {
-            victim_list.push_back({maxIdx, polgonsFound[i]});
+            victim_list.push_back({maxIdx, polygonsFound[i]});
         }
 
-        cout << "Best fitting template: " << ((maxIdx==-1) ? "None (rejected)" : to_string(maxIdx)) << endl;
+        cout << "Best fitting template: " << ((maxIdx==-1) ? "None (rejected)" : to_string(maxIdx)) << " coordinates: (" << PUtils::baricenter(polygonsFound[i]).x << "," << PUtils::baricenter(polygonsFound[i]).y << ")" << endl;
 
         #ifdef DEBUG_FINDVICTIMS
             cv::waitKey(0);
@@ -600,24 +597,6 @@ bool processMap(const cv::Mat& img_in, const double scale,
     findVictims(img_hsv, scale, victim_list, color_config, config_folder);
 
     return true;
-}
-
-/*!
-* Finds the baricenter of a utils::Polygon
-*/
-void baricenter(const Polygon& polygon, double& cx, double& cy) {
-    for (auto vertex: polygon) {
-        cx += vertex.x;
-        cy += vertex.y;
-    }
-    cx /= static_cast<double>(polygon.size());
-    cy /=  static_cast<double>(polygon.size());
-}
-
-Point baricenter(const Polygon& polygon) {
-    double cx,cy;
-    baricenter(polygon,cx,cy);
-    return Point(cx,cy);
 }
 
 bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
@@ -692,7 +671,7 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
         double cx = 0, cy = 0;
 
         // Compute the triangle baricenter
-        baricenter(triangle,cx,cy);
+        PUtils::baricenter(triangle,cx,cy);
 
         // Find the robot orientation (i.e the angle of height relative to the base with the x axis)
         double dst = 0;
@@ -716,12 +695,12 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
         const double dy = cy - top_vertex.y;
         theta = atan2(dy, dx);
 
-        cv::Point cv_baricenter(x*scale, y*scale); // convert back m to px
+        cv::Point cv_center(x*scale, y*scale); // convert back m to px
         cv::Point cv_vertex(top_vertex.x*scale, top_vertex.y*scale); // convert back m to px
         #ifdef DEBUG_FINDROBOT
             // Draw over the image
-            cv::line(contours_img, cv_baricenter, cv_vertex, cv::Scalar(0,255,0), 3);
-            cv::circle(contours_img, cv_baricenter, 5, cv::Scalar(0,0,255), -1);
+            cv::line(contours_img, cv_center, cv_vertex, cv::Scalar(0,255,0), 3);
+            cv::circle(contours_img, cv_center, 5, cv::Scalar(0,0,255), -1);
             cv::circle(contours_img, cv_vertex, 5, cv::Scalar(0,255,0), -1);
             cout << "(x, y, theta) = " << x << ", " << y << ", " << theta*180/M_PI << endl;
         #endif
@@ -735,54 +714,12 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
     return found;
 }
 
-/**
- * Project point P to the line passing between A and B
- * @param pA first point of the line
- * @param pB second point of the line
- * @param pP point to project
- * @returns the orthogonal projection point
-*/
-Point projectPointToLine(Point pA, Point pB, Point pP) {
-
-    if (abs(pB.x - pA.x) < 0.001)   // Vertical line
-        return Point(pA.x, pP.y);
-    else if (abs(pB.y - pA.y) < 0.001) // Horizontal line
-        return Point(pP.x, pA.y);
-    else{ // general line
-        // Find line passing for A and B
-        float mAB = (pB.y - pA.y) / (pB.x - pA.x);
-        float cAB = pA.y - (mAB * pA.x);
-        // Find line perpendicular line to the one for A and B, passing for P
-        float mPR = -1.0 / mAB;
-        float cPR = pP.y - (mPR * pP.x);
-        // Find intersection
-        Point res;
-        res.x = (cAB - cPR) / (mPR - mAB);
-        res.y = res.x * mPR + cPR;
-
-        return res;
-    }
-}
-
-Point nearestPoint(Point pA, const vector<Point>& points) {
-    float smallestDistance = std::numeric_limits<float>::max(); //TODO: use limits
-    Point res;
-    for (Point pB : points) {
-        float dist = pow(pA.y - pB.y ,2) + pow(pA.x - pB.x,2);
-        if(dist < smallestDistance) {
-            smallestDistance = dist;
-            res = pB;
-        }
-    }
-    return res;
-}
-
 /*!
 * Find the arrival point
 * Returns the baricenter of the gate polygon with the correct arrival angle
 */
 void centerGate(const Polygon& gate, const Polygon& borders, const Polygon& cBorders, double& x,
-                 double& y, double& theta) {
+                 double& y, double& theta, double& xProj, double& yProj) {
 
     assert(gate.size() == 4);
     assert(borders.size() == 4);
@@ -793,7 +730,7 @@ void centerGate(const Polygon& gate, const Polygon& borders, const Polygon& cBor
 
     ////   GATE BARICENTER
     double gc_x=0, gc_y=0;
-    baricenter(gate,gc_x,gc_y);
+    PUtils::baricenter(gate,gc_x,gc_y);
 
     ////   Find shortest gate side (between the first two)
     Point shortest_p0;
@@ -821,7 +758,7 @@ void centerGate(const Polygon& gate, const Polygon& borders, const Polygon& cBor
         angle += 2 * CV_PI;
     // Decide if the angle is the found one or the opposite (+180°) based on the position of the gate
     double ac_x = 0, ac_y = 0;
-    baricenter(borders,ac_x,ac_y);
+    PUtils::baricenter(borders,ac_x,ac_y);
     if (gc_y > ac_y) {
         angle -= CV_PI;
         if (angle < 0)
@@ -844,11 +781,11 @@ void centerGate(const Polygon& gate, const Polygon& borders, const Polygon& cBor
     for (int i=0; i < safecBorders.size(); ++i) {
         Point pA = safecBorders[i],
               pB = safecBorders[(i+1)%safecBorders.size()];
-        Point pP = projectPointToLine(pA,pB,Point(gc_x, gc_y));
+        Point pP = PUtils::projectPointToLine(pA,pB,Point(gc_x, gc_y));
         projections.push_back(pP);
     }
 
-    Point pointProjection = nearestPoint(Point(gc_x,gc_y),projections);
+    Point pointProjection = PUtils::nearestPoint(Point(gc_x,gc_y),projections);
 
     #ifdef DEBUG_FINDCENTERGATE
         cv::circle(dcImg, cv::Point(gc_x * debugImagesScale, gc_y * debugImagesScale), 5, cv::Scalar(255,0,0), -1);
@@ -856,9 +793,84 @@ void centerGate(const Polygon& gate, const Polygon& borders, const Polygon& cBor
     #endif
 
     ////   Assign Output
-    x = pointProjection.x;
-    y = pointProjection.y;
+    x = gc_x;
+    y = gc_y;
+    xProj = pointProjection.x;
+    yProj = pointProjection.y;
     theta = angle;
+}
+
+/**
+ * Cut a slot in the safeBorders polygon for the gate
+ *
+ * @param gate gate polygon
+ * @param cBorders safe Corrected Borders polygon
+ * @param xf xcoord of the projection of the gate center on the safe Borders
+ * @param yf ycoord of the projection of the gate center on the safe Borders
+*/
+Polygon cutGateSlot(const Polygon& gate, const Polygon& cBorders, double xf,
+                    double yf) {
+    Polygon slottedBorders = cBorders;
+    // Find the two corners of the side of the gate
+    int aIdx = -1,bIdx = -1;
+    for (int i = 0; i < cBorders.size(); ++i) {
+        if ((abs(cBorders[i].x - xf) < (SAFETY_INFLATE_AMOUNT*1.1)) || \
+            (abs(cBorders[i].y - yf) < (SAFETY_INFLATE_AMOUNT*1.1))) {
+            if(aIdx == -1) {
+                aIdx = i;
+            } else if(bIdx == -1) {
+                bIdx = i;
+            }
+        }
+    }
+    assert((aIdx != -1) && (bIdx != -1));
+
+    //find the outer points of the gate, to project into the borders
+    int gAidx = -1, gBidx = -1;
+    float maxDistance = std::numeric_limits<float>::min();
+    for (int i = 0; i < gate.size(); ++i) {
+        float distance = pow(gate[i].x - xf,2) + pow(gate[i].y - yf,2);
+        if (distance > maxDistance) {
+            maxDistance = distance;
+            gAidx = i;
+        }
+    }
+    maxDistance = std::numeric_limits<float>::min();
+    for (int i = 0; i < gate.size(); ++i) {
+        if(i != gAidx) {
+            float distance = pow(gate[i].x - xf,2) + pow(gate[i].y - yf,2);
+            if (distance > maxDistance) {
+                maxDistance = distance;
+                gBidx = i;
+            }
+        }
+    }
+
+    assert((gAidx != -1) && (gBidx != -1));
+
+    //Project points into the cBorders
+    Point gAproj = PUtils::projectPointToLine(cBorders[aIdx],cBorders[bIdx],gate[gAidx]);
+    Point gBproj = PUtils::projectPointToLine(cBorders[aIdx],cBorders[bIdx],gate[gBidx]);
+
+    // Create the polygon to add to the arena safe borders
+    Polygon gatePoly = {gAproj, gBproj, gate[gAidx], gate[gBidx]};
+    PUtils::sortPolygonPoints(gatePoly);
+
+    // Merge gate and borders polygon
+    slottedBorders = ClipperHelper::mergePolygons(cBorders,gatePoly);
+
+    #ifdef DEBUG_CUTSLOT
+        int counter = 0;
+        for (Point bp : slottedBorders) {
+            counter++;
+            cv::circle(dcImg, cv::Point(bp.x * debugImagesScale, bp.y * debugImagesScale), 5, cv::Scalar(0,0,255), -1);
+            cv::putText(dcImg, std::to_string(counter), cv::Point(bp.x*debugImagesScale, bp.y*debugImagesScale), cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,0), 2);
+        }
+        cv::imshow("CutSlot", dcImg);
+        cv::waitKey(0);
+    #endif
+
+    return slottedBorders;
 }
 
 bool isArcColliding(dubins::Arc a, Point pA, Point pB) {
@@ -1444,7 +1456,7 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     char str[cmd.size()+1];
     strcpy(str, cmd.c_str());
     // call library script
-    system(str);
+    int state = system(str);
 
     //
     // Read the resulting path
@@ -1512,8 +1524,8 @@ vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>
             }
         }
 
-        assert(pointsEquals(smoothedPath.front(),path.front()));
-        assert(pointsEquals(smoothedPath.back(),path.back()));
+        assert(PUtils::pointsEquals(smoothedPath.front(),path.front()));
+        assert(PUtils::pointsEquals(smoothedPath.back(),path.back()));
 
         {
             // additional iteration on reversed path
@@ -1530,8 +1542,8 @@ vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>
             std::reverse(smoothedPath.begin(), smoothedPath.end());
         }
 
-        assert(pointsEquals(smoothedPath.front(),path.front()));
-        assert(pointsEquals(smoothedPath.back(),path.back()));
+        assert(PUtils::pointsEquals(smoothedPath.front(),path.front()));
+        assert(PUtils::pointsEquals(smoothedPath.back(),path.back()));
         return smoothedPath;
 
     }else{
@@ -1580,7 +1592,7 @@ void drawDebugImage(const Polygon& borders, const vector<Polygon>& obstacle_list
         cv::line(dcImg, cv::Point(pol[0].x*debugImagesScale, pol[0].y*debugImagesScale),
                      cv::Point(pol[pol.size()-1].x*debugImagesScale, pol[pol.size()-1].y*debugImagesScale), cv::Scalar(0,255,0),2);
 
-        Point center = baricenter(pol);
+        Point center = PUtils::baricenter(pol);
         cv::putText(dcImg, std::to_string(victim.first), cv::Point(center.x*debugImagesScale, center.y*debugImagesScale), cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,0), 2);
     }
 }
@@ -1597,7 +1609,7 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
     vector<Point> pathObjectives;
     pathObjectives.push_back(Point(x,y));              // push initial point
     for(const pair<int,Polygon>& victim : victim_list)
-        pathObjectives.push_back(baricenter(victim.second));  //push each victim center
+        pathObjectives.push_back(PUtils::baricenter(victim.second));  //push each victim center
     pathObjectives.push_back(Point(xf,yf));            // push final point
 
     //
@@ -1622,6 +1634,7 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
         y2 = pathObjectives[i].y;
 
         #ifdef DEBUG_PLANPATH_SEGMENTS
+            cout << "Segment (" << x1 << "," << y1 << ")->(" << x2 << "," << y2 << ")" << endl;
             dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255));
             drawDebugImage(borders, obstacle_list, victim_list);
             cv::Point pointA(x1*debugImagesScale,y1*debugImagesScale);
@@ -1644,8 +1657,8 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
         vector<Point> partialShortPath = completeSmoothing(partialPath,obstacle_list);
         short_path.insert(short_path.end(), partialShortPath.begin()+1, partialShortPath.end());    // begin()+1 not to repeat points
     }
-    assert(pointsEquals(short_path.front(),full_path.front()));
-    assert(pointsEquals(short_path.back(),full_path.back()));
+    assert(PUtils::pointsEquals(short_path.front(),full_path.front()));
+    assert(PUtils::pointsEquals(short_path.back(),full_path.back()));
 
     #ifdef DEBUG_PLANPATH
         cout << "------------------------------------------------------------" << endl;
@@ -1790,7 +1803,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
 
     for (int i = 0; i < victim_list.size(); i++)
     {
-        vector<Point> path = RRTplanner(borders,obstacle_list,x,y,baricenter(victim_list[i].second).x,baricenter(victim_list[i].second).y,config_folder);
+        vector<Point> path = RRTplanner(borders,obstacle_list,x,y,PUtils::baricenter(victim_list[i].second).x,PUtils::baricenter(victim_list[i].second).y,config_folder);
         assert(!isPathColliding(path, obstacle_list));  // If the rrt path collides there is an error in the python script or conversion
 
         float length = getPointPathLength(path);
@@ -1898,8 +1911,10 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         drawDebugImage(correctedBorders, obstacle_list, victim_list);
     #endif
 
-    double xf, yf, thf;                   // Endpoint
-    centerGate(gate,borders,correctedBorders,xf,yf,thf);  // Endpoint computation
+    double xf, yf, thf;    // Endpoint
+    double xProj, yProj;   // Projection
+    centerGate(gate,borders,correctedBorders,xf,yf,thf,xProj, yProj);  // Endpoint computation
+    correctedBorders = cutGateSlot(gate,correctedBorders,xProj, yProj);
 
     vector<dubins::Curve> multipointPath;
     if (mission == Mission::mission1){
