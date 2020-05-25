@@ -172,4 +172,26 @@ Polygon offsetBorders(const Polygon& borders, float amount) {
     return correctedBorders;
 }
 
+/**
+ * Perform polygon union
+ * Use the clupper union to merge polygon A and B
+ *
+ * @param A first polygon
+ * @param B second polygon
+ * @returns polygon union
+*/
+Polygon mergePolygons(const Polygon& A, const Polygon& B) {
+    ClipperLib::Paths polyPathA = { Polygon2CPath(A) };
+    ClipperLib::Paths polyPathB = { Polygon2CPath(B) };
+    ClipperLib::Paths resultPath;
+    ClipperLib::Clipper mClipper;
+
+    mClipper.AddPaths( polyPathA , ClipperLib::ptSubject, true );
+    mClipper.AddPaths( polyPathB , ClipperLib::ptClip, true );
+    mClipper.Execute( ClipperLib::ctUnion , resultPath , ClipperLib::pftPositive, ClipperLib::pftPositive);
+
+    assert(resultPath.size() == 1);
+    return CPath2Polygon(resultPath[0]);
+}
+
 } //namespace ClipperHelper
