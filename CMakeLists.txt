@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 2.8.3)
 project(student_project)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++11
+                    -O3)
 
 find_package(OpenCV REQUIRED )
 find_package(project_interface REQUIRED )
