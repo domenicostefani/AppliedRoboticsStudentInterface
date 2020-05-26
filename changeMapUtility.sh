@@ -146,7 +146,7 @@ then
     echo "" >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://victim_5</uri>" >> $outputFile
-    echo "      <pose>1.3 0.75 0 0 0 0</pose>" >> $outputFile
+    echo "      <pose>1.27 0.75 0 0 0 0</pose>" >> $outputFile
     echo "      <name>victim5</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
@@ -275,7 +275,7 @@ then
     echo "" >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://victim_5</uri>" >> $outputFile
-    echo "      <pose>1.3 0.75 0 0 0 0</pose>" >> $outputFile
+    echo "      <pose>1.3 0.80 0 0 0 0</pose>" >> $outputFile
     echo "      <name>victim5</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
@@ -381,7 +381,7 @@ then
     echo "    <!-- Victim section -->" >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://victim_1</uri>" >> $outputFile
-    echo "      <pose>0.2 0.2 0 0 0 1.5</pose>" >> $outputFile
+    echo "      <pose>0.25 0.25 0 0 0 1.5</pose>" >> $outputFile
     echo "      <name>victim1</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
@@ -393,13 +393,13 @@ then
     echo "" >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://victim_3</uri>" >> $outputFile
-    echo "      <pose>1.0 0.6 0 0 0 0</pose>" >> $outputFile
+    echo "      <pose>0.75 0.83 0 0 0 0</pose>" >> $outputFile
     echo "      <name>victim3</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://victim_4</uri>" >> $outputFile
-    echo "      <pose>1.3 0.6 0 0 0 0</pose>" >> $outputFile
+    echo "      <pose>1.22 0.6 0 0 0 0</pose>" >> $outputFile
     echo "      <name>victim4</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
@@ -467,7 +467,7 @@ then
     echo "    <!-- Victim section -->" >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://victim_1</uri>" >> $outputFile
-    echo "      <pose>0.2 0.2 0 0 0 1.5</pose>" >> $outputFile
+    echo "      <pose>0.24 0.26 0 0 0 1.5</pose>" >> $outputFile
     echo "      <name>victim1</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
@@ -479,13 +479,13 @@ then
     echo "" >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://victim_3</uri>" >> $outputFile
-    echo "      <pose>1.0 0.6 0 0 0 0</pose>" >> $outputFile
+    echo "      <pose>0.75 0.83 0 0 0 0</pose>" >> $outputFile
     echo "      <name>victim3</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://victim_4</uri>" >> $outputFile
-    echo "      <pose>1.3 0.6 0 0 0 0</pose>" >> $outputFile
+    echo "      <pose>1.22 0.6 0 0 0 0</pose>" >> $outputFile
     echo "      <name>victim4</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
