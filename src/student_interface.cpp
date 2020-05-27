@@ -524,7 +524,7 @@ bool findGate(const cv::Mat& hsv_img, const double scale, Polygon& gate,
  * @param scale Scaling factor.
  * @param victim_list List of output victim polygons.
  * @param color_config Color bounds configuration.
- * @param config_folder Configuration folder path. 
+ * @param config_folder Configuration folder path.
  * @return True if victims were found.
 */
 bool findVictims(const cv::Mat& hsv_img, const double scale,
@@ -680,7 +680,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
 }
 
 /** Initiates the map processing starting from an image of the arena.
- * Converts the input image in HSV space for better color detection and 
+ * Converts the input image in HSV space for better color detection and
  * calls the functions that detect gate, obstacles and victims.
  * @param img_in Input image.
  * @param scale Scaling factor.
@@ -999,7 +999,7 @@ Polygon cutGateSlot(const Polygon& gate, const Polygon& cBorders, double xf,
 
     return slottedBorders;
 }
-  
+
 /** Checks if a dubins::Arc is colliding with a segment.
  * @param a Arc to check.
  * @param pA First point of the segment.
@@ -1287,7 +1287,7 @@ void drawDubinsArc(dubins::Arc& da) {
 
 /** Finds the shortest multi-point dubins curve for the given path.
  * The recursive function has two base cases: two-points dubins::Curve and three-points dubins::Curve.
- * The recursion step is called on N-points dubins::Curve. Free angles are chosen among a number of 
+ * The recursion step is called on N-points dubins::Curve. Free angles are chosen among a number of
  * test angles. The choice is optimized by adding the average between the fixed angles.
  * @param path List of points in the path.
  * @param startIdx Recursion start index.
@@ -1685,8 +1685,8 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
 }
 
 /** Tries to reduce the number of points in a path by combinaning different techniques.
- * The function performs recursive smoothing iteratively until 
- * no change is observed. An additional step is performed on the points of the path 
+ * The function performs recursive smoothing iteratively until
+ * no change is observed. An additional step is performed on the points of the path
  * in reversed order to achieve further smoothing.
  * @param path Input path to smooth.
  * @param obstacle_list List of obstacle polygons.
@@ -1745,7 +1745,7 @@ vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>
         throw logic_error("ERROR: path cannot be shortened");
     }
 }
-  
+
 /** Draws the path on a debug image.
  * @param path The path to draw.
 */
@@ -1800,8 +1800,8 @@ void drawDebugImage(const Polygon& borders, const vector<Polygon>& obstacle_list
 }
 
 /** Plans a path in which every victim is collected in the correct order.
- * Calls the planning steps for each sub-path in the following order: RRT planner, path smoothing, multi-point 
- * dubins curve problem. 
+ * Calls the planning steps for each sub-path in the following order: RRT planner, path smoothing, multi-point
+ * dubins curve problem.
  * @param safeBorders safe borders without gate slot (used to prevent RRT bug)
  * @param slotBorders borders with gate slot (used for collision detection)
  * @param obstacle_list List of obstacle polygons.
@@ -2008,8 +2008,8 @@ bool sorByDistance(const pair<int,float>& p1, const pair<int,float>& p2){
 }
 
 /** Plans a path that maximizes the time-score of the mission.
- * For each victim collected a time-bonus is granted. At each step, the greedy function picks the victim  
- * that better improves the final score. To avoid loops and improve the search, the victims to test are ordered by 
+ * For each victim collected a time-bonus is granted. At each step, the greedy function picks the victim
+ * that better improves the final score. To avoid loops and improve the search, the victims to test are ordered by
  * distance from the starting point.
  * @param safeBorders safe borders without gate slot (used to prevent RRT bug)
  * @param slotBorders borders with gate slot (used for collision detection)
@@ -2056,8 +2056,8 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
 
     vector<pair<int,Polygon>> empty_victims_vector;
 
-    initial_path = collectVictimsPath(safeBorders, slotBorders, obstacle_list, empty_victims_vector, x, y, theta, xf, yf, thf, config_folder);
-  
+    multipointPath = collectVictimsPath(safeBorders, slotBorders, obstacle_list, empty_victims_vector, x, y, theta, xf, yf, thf, config_folder);
+
     float length = getPathLength(multipointPath);
 
     best_partial_time = length / ROBOT_SPEED;
@@ -2131,7 +2131,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
 
 Path savedPath;
 
-/** Plans a path according to the mission selected. 
+/** Plans a path according to the mission selected.
  * @param borders Borders of the arena
  * @param obstacle_list List of obstacle polygons.
  * @param victim_list List of victim polygons.
