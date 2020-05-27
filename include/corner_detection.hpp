@@ -6,14 +6,14 @@
 
 namespace CornerDetection{
 
-cv::Point findLineCenter(cv::Mat img_in, std::vector<cv::Point> arena);
+cv::Point findLineCenter(const cv::Mat& img_in, const std::vector<cv::Point> &arena);
 void onMouse(int evt, int x, int y, int flags, void* param);
 void readSelection(const cv::Mat& img_in, std::vector<cv::Point2f>& corners);
 
 /**
  * Detect automatically the arena corners
 */
-std::vector<cv::Point2f> autodetect(const cv::Mat& img_in){
+std::vector<cv::Point2f> autodetect(const cv::Mat& img_in) {
     std::vector<cv::Point2f> corners;
 
     // convert to grayscale
@@ -36,7 +36,7 @@ std::vector<cv::Point2f> autodetect(const cv::Mat& img_in){
         cv::Mat drawing = cv::Mat::zeros( mask.size(), CV_8UC3 ); //Todo: REMOVE
     #endif
 
-    for( int i = 0; i< contours.size(); i++ ){
+    for (size_t i = 0; i < contours.size(); i++) {
         float ctArea= cv::contourArea(contours[i]);
         if(ctArea > biggestContourArea)
         {
@@ -85,8 +85,6 @@ std::vector<cv::Point2f> autodetect(const cv::Mat& img_in){
     }
     assert((nearestCorner >= 0)&&(nearestCorner <= 3));
 
-    cv::circle(img_in, approx_curve[nearestCorner], 30, cv::Scalar(0,255,0),6);
-
     //
     // Order Corners
     //
@@ -101,7 +99,7 @@ std::vector<cv::Point2f> autodetect(const cv::Mat& img_in){
 /**
  * Read the configuration, if not existent ask the user to select points
 */
-std::vector<cv::Point2f> manualSelect(const cv::Mat& img_in, std::string config_folder){
+std::vector<cv::Point2f> manualSelect(const cv::Mat& img_in, std::string config_folder) {
     //
     //  Read configuration file or ask for manual selection
     //
@@ -146,7 +144,7 @@ std::vector<cv::Point2f> manualSelect(const cv::Mat& img_in, std::string config_
 /**
  * Find the center of the redline in the arena
 */
-cv::Point findLineCenter(cv::Mat img_in, std::vector<cv::Point> arena) {
+cv::Point findLineCenter(const cv::Mat& img_in, const std::vector<cv::Point> &arena) {
     cv::Mat lower_red_hue_range; // the lower range for red hue
     cv::Mat upper_red_hue_range; // the higher range for red hue
     cv::Mat hsv_img;
@@ -160,11 +158,11 @@ cv::Point findLineCenter(cv::Mat img_in, std::vector<cv::Point> arena) {
     cv::Mat maskRect(size, CV_8U, cv::Scalar(0.0));
 
     std::vector<cv::Point2f> tempcorners;
-    for(int i = 0; i < 4; ++i)
+    for (int i = 0; i < 4; ++i)
         tempcorners.emplace_back(arena[i].x, arena[i].y);
     cv::Scalar white = cv::Scalar(255.0); // white
     cv::Point vertices[4];
-    for(int i = 0; i < 4; ++i){
+    for (int i = 0; i < 4; ++i) {
         vertices[i] = tempcorners[i];
     }
     cv::fillConvexPoly(maskRect, vertices, 4, white);
@@ -181,7 +179,7 @@ cv::Point findLineCenter(cv::Mat img_in, std::vector<cv::Point> arena) {
     int biggestContourIdxForLine = -1;
     float biggestContourAreaForLine = 0;
 
-    for( int i = 0; i< contoursForLine.size(); i++ ){
+    for (size_t i = 0; i< contoursForLine.size(); i++) {
         float ctArea= cv::contourArea(contoursForLine[i]);
         if(ctArea > biggestContourAreaForLine)
         {
@@ -194,7 +192,7 @@ cv::Point findLineCenter(cv::Mat img_in, std::vector<cv::Point> arena) {
 
     int xsum = 0;
     int ysum = 0;
-    for(int i = 0; i < 4; i++){
+    for (int i = 0; i < 4; i++) {
         xsum += approx_curve_forLine[i].x;
         ysum += approx_curve_forLine[i].y;
     }
@@ -225,7 +223,7 @@ void readSelection(const cv::Mat& img_in, std::vector<cv::Point2f>& corners) {
     while (points.size() < 4) {
         cv::imshow(windowname, img_in);
 
-        for (int i=0; i < points.size(); i++) {
+        for (size_t i=0; i < points.size(); i++) {
             cv::circle(img_in, points[i], 20, cv::Scalar(240,0,0),CV_FILLED);
         }
         cv::waitKey(1);

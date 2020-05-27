@@ -131,4 +131,67 @@ std::vector<Polygon> inflatePolygons(const std::vector<Polygon>& polygons, float
     return res;
 }
 
+/**
+ * Specific border inflation method
+ * This inflates/deflates border polygon objects (***) and ensures that the
+ * points returned are ordered
+ *
+ * (***) struct from https://github.com/ValerioMa/AppliedRoboticsEnvironment/blob/master/src/9_project_interface/include/utils.hpp
+ *
+ * @param borders poligon describing borders
+ * @param amount inflation amount (deflation if negative)
+ * @returns offset border polygon
+*/
+Polygon offsetBorders(const Polygon& borders, float amount) {
+    Polygon correctedBorders = ClipperHelper::inflateWithClipper(borders, amount);
+    assert(borders.size() == correctedBorders.size());
+
+    // Reorder points
+    {
+        // Find first point
+        int closerToFirst = -1;
+        float minDistance = std::numeric_limits<float>::max();
+        Polygon correctedBordersCopy = correctedBorders;
+        for (size_t i = 0; i < correctedBorders.size(); ++i) {
+            float distanceFromFirst = pow(borders[0].x - correctedBordersCopy[i].x,2) + pow(borders[0].y - correctedBordersCopy[i].y,2);
+            if (distanceFromFirst < minDistance) {
+                minDistance = distanceFromFirst;
+                closerToFirst = i;
+            }
+        }
+
+        assert(closerToFirst != -1);
+
+        // Actual reorder
+        for (size_t i = 0; i < correctedBorders.size(); ++i) {
+            int copyIndex = (i + closerToFirst)%correctedBorders.size();
+            correctedBorders[i] = correctedBordersCopy[copyIndex];
+        }
+    }
+
+    return correctedBorders;
+}
+
+/**
+ * Perform polygon union
+ * Use the clupper union to merge polygon A and B
+ *
+ * @param A first polygon
+ * @param B second polygon
+ * @returns polygon union
+*/
+Polygon mergePolygons(const Polygon& A, const Polygon& B) {
+    ClipperLib::Paths polyPathA = { Polygon2CPath(A) };
+    ClipperLib::Paths polyPathB = { Polygon2CPath(B) };
+    ClipperLib::Paths resultPath;
+    ClipperLib::Clipper mClipper;
+
+    mClipper.AddPaths( polyPathA , ClipperLib::ptSubject, true );
+    mClipper.AddPaths( polyPathB , ClipperLib::ptClip, true );
+    mClipper.Execute( ClipperLib::ctUnion , resultPath , ClipperLib::pftPositive, ClipperLib::pftPositive);
+
+    assert(resultPath.size() == 1);
+    return CPath2Polygon(resultPath[0]);
+}
+
 } //namespace ClipperHelper
