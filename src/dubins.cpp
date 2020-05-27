@@ -1,3 +1,6 @@
+/** \file dubins.cpp
+ * @brief Dubins Path Computation library.
+*/
 #include "dubins.hpp"
 
 #include <stdlib.h>
@@ -12,7 +15,7 @@
 namespace dubins{
 
 /**
- * Pointer to maneuver funciton
+ * Pointer to maneuver function.
 */
 typedef bool(*maneuver)(double, double, double, double&, double&, double&);
 
@@ -54,11 +57,7 @@ Curve::Curve(double x0, double y0, double th0, double s1, double s2,
     L = a1.L + a2.L + a3.L;
 }
 
-///
-/// Auxiliary functions
-///
-
-/**
+/** sinc(t) mathematical function.
 * Implementation of function sinc(t), returning 1 for t==0, and sin(t)/t
 * otherwise
 * @param t input value
@@ -74,7 +73,7 @@ double sinc(double t) {
     return s;
 }
 
-/**
+/** Angle normalization.
 * Normalize an angle (in range [0,2*pi))
 * @param ang input angle
 * @return normalized angle
@@ -88,7 +87,7 @@ double mod2pi(double ang) {
     return out;
 }
 
-/**
+/** Angular difference normalization.
 * Normalize an angular difference (range (-pi, pi])
 * @param ang input angle
 * @return normalized angular difference
@@ -102,11 +101,7 @@ double rangeSymm(double ang) {
     return out;
 }
 
-///
-/// Validity check functions
-///
-
-/** Check solution validity
+/** Check solution validity.
 * Check validity of a solution by evaluating explicitly the 3 equations
 * defining a Dubins problem (in standard form)
 * @param s1 first curvilinear abscissa
@@ -150,11 +145,7 @@ bool check(double s1, double k0, double s2, double k1, double s3, double k2,
     return (sqrt(eq1 * eq1 + eq2 * eq2 + eq3 * eq3) < thres) && Lpos;
 }
 
-///
-/// Transform functions
-///
-
-/**
+/** Problem variables scaling.
 * Scale the input problem to standard form (x0: -1, y0: 0, xf: 1, yf: 0)
 */
 void
@@ -173,7 +164,7 @@ scaleToStandard(double x0, double y0, double th0, double xf, double yf,
     sc_Kmax = Kmax * lambda;
 }
 
-/**
+/** Problem variables back scaling.
 * Scale the solution to the standard problem back to the original problem
 */
 void
@@ -183,10 +174,6 @@ scaleFromStandard(double lambda, double sc_s1, double sc_s2, double sc_s3,
     s2 = sc_s2 * lambda;
     s3 = sc_s3 * lambda;
 }
-
-///
-/// Manouver computation methods  (One for each possible solution)
-///
 
 /**
 * LSL  (Left-Straight-Left soluton)
@@ -461,13 +448,6 @@ Position::Position(double s, double x, double y, double th, double k) {
     this->k  = k;
 }
 
-/**
-* Returns a discrete point vector, sampling at every delta interval
-* @param[in]  arc             arc object to discretize
-* @param[in]  delta           interval at which to sample points
-* @param[i/o] remainingDelta  carry
-* @return                     std::vector of points along the arc
-*/
 std::vector<Position>
 Arc::discretizeArc(double delta, double& remainingDelta, double& last_s,
                    bool add_endpoint) {

@@ -1,15 +1,16 @@
-/**
- * Arena Corner Detection utilities
+/** \file corner_detection.hpp
+ * @brief Arena Corner Detection utilities
 */
 #pragma once
 
+//! Arena corner detection methods
 namespace CornerDetection{
 
 cv::Point findLineCenter(const cv::Mat& img_in, const std::vector<cv::Point> &arena);
 void onMouse(int evt, int x, int y, int flags, void* param);
 void readSelection(const cv::Mat& img_in, std::vector<cv::Point2f>& corners);
 
-/** Detect automatically the arena corners
+/** Detect automatically the arena corners.
  * @param img_in input image
  * @return ordered corners vector
 */
@@ -96,7 +97,7 @@ std::vector<cv::Point2f> autodetect(const cv::Mat& img_in) {
     return corners;
 }
 
-/** Read the configuration, if not existent ask the user to select points
+/** Read the configuration, if not existent ask the user to select points.
  * @param img_in input image
  * @param config_folder configuration folder path
  * @return ordered corners vector
@@ -143,7 +144,7 @@ std::vector<cv::Point2f> manualSelect(const cv::Mat& img_in, std::string config_
     return corners;
 }
 
-/** Find the center of the redline in the arena
+/** Find the center of the redline in the arena.
  * @param img_in input image
  * @param arena arena cornrs vector
  * @return the baricenter of the red line
@@ -205,7 +206,7 @@ cv::Point findLineCenter(const cv::Mat& img_in, const std::vector<cv::Point> &ar
     return lineCenter;
 }
 
-/** Event handler for mouse event
+/** Event handler for mouse event.
  * @param evt event type
  * @param x coordinate of mouse event
  * @param y coordinate of mouse event
@@ -219,7 +220,7 @@ void onMouse(int evt, int x, int y, int flags, void* param) {
     }
 }
 
-/** Ask the user to manually select the corners in order
+/** Ask the user to manually select the corners in order.
  * @param img_in input image
  * @param corners output corners vector
 */

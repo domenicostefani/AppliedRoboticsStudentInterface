@@ -1,5 +1,5 @@
-/*
- * Utilities for polygon manipulation
+/** \file polygon_utils.hpp
+ * @brief Utilities for polygon manipulation.
  *
  * polygon refers to the Polygon objects from the AppliedRoboticsEnvironment(*).
 
@@ -9,6 +9,7 @@
 */
 #pragma once
 
+//! Polygon utilities
 namespace PUtils {
     /** Finds the baricenter coordinates of a utils::Polygon.
      * @param polygon Input polygon.
@@ -40,7 +41,7 @@ namespace PUtils {
     //  Polygon points reordering
     //
 
-    /** Point comparison operator
+    /** Point comparison operator.
      * It's used to establish a less-than relationship that allows to order
      * points of a polygon in either clockwise or counter-clockwise.
      *
@@ -75,7 +76,7 @@ namespace PUtils {
         return d1 > d2;
     }
 
-    /** Sort points of a polygon in clockwise order
+    /** Sort points of a polygon in clockwise order.
      *
      * @param polygon the polygon which points have to be sorter
     */
@@ -97,7 +98,7 @@ namespace PUtils {
         }
     }
 
-    /** Project point P to the line passing between A and B
+    /** Project point P to the line passing between A and B.
      * @param pA first point of the line
      * @param pB second point of the line
      * @param pP point to project
@@ -125,7 +126,7 @@ namespace PUtils {
         }
     }
 
-    /** Find the point in the vector that is nearest to A
+    /** Find the point in the vector that is nearest to A.
      *
      * @param pa point A
      * @param points vector of points
@@ -144,7 +145,7 @@ namespace PUtils {
         return res;
     }
 
-    /** return true if two poins have the same coordinates
+    /** return true if two poins have the same coordinates.
      *
      * @param pa first point
      * @param pa second point

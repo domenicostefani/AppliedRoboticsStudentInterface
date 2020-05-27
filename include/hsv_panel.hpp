@@ -1,5 +1,6 @@
-/**
- * HSV Panel library
+/** \file hsv_panel.hpp
+ * @brief HSV Panel library.
+ *
  * This library allow to show a configuration panel for the Hue-Saturation-Value
  * ranges for different colors of differen elements.
  * Configurations are saved on a text file that can later be read.
@@ -10,8 +11,9 @@
 #include "opencv2/highgui.hpp"
 #include <string>
 
+//! Color configuration panel utilities
 namespace hsvpanel{
-    /** show the hsv tuning panel
+    /** show the hsv tuning panel.
      * This shows a panel to tune the different Hue-Saturation-value ranges for
      * image elaboration and element detection.
      *

@@ -1,3 +1,7 @@
+/** \file student_interface.cpp
+ * @brief Main project library
+ * Library containing main functions for the functiong of the robot
+*/
 #include "student_image_elab_interface.hpp"
 #include "student_planning_interface.hpp"
 #include "dubins.hpp"
@@ -15,8 +19,8 @@
 #include "corner_detection.hpp"
 #include "polygon_utils.hpp"
 
-#define AUTO_CORNER_DETECTION true
-#define COLOR_TUNING_WIZARD true
+#define AUTO_CORNER_DETECTION true  ///< Use Automatic corner detection
+#define COLOR_TUNING_WIZARD true    ///< Use color tuning panel
 
 // -------------------------------- DEBUG FLAGS --------------------------------
 // - Configuration Debug flags - //
@@ -35,76 +39,86 @@
 // #define DEBUG_FINDROBOT
 
 // - Planning Debug flags - //
-#define DEBUG_PLANPATH            // generic info about the whole planner
+#define DEBUG_PLANPATH            ///< generic info about the whole planner
 // #define DEBUG_COMPUTEARRIVAL
-// #define DEBUG_PLANPATH_SEGMENTS   // show images with the goals of every planned segment
-// #define DEBUG_RRT                 // inner planning algorithm
-// #define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
-// #define DEBUG_DRAWCURVE             // dubins path plotting
-#define DEBUG_SCORES              // track times and scores of victims to collect
-// #define DEBUG_COLLISION           // plot for collision detection
+// #define DEBUG_PLANPATH_SEGMENTS   ///< show images with the goals of every planned segment
+// #define DEBUG_RRT                 ///< inner planning algorithm
+// #define DEBUG_PATH_SMOOTHING      ///< path smoothing pipeline
+// #define DEBUG_DRAWCURVE             ///< dubins path plotting
+#define DEBUG_SCORES              ///< track times and scores of victims to collect
+// #define DEBUG_COLLISION           ///< plot for collision detection
 
 using namespace std;
 
 using matrix = std::vector<std::vector<float>>;
 
 // --------------------------------- CONSTANTS ---------------------------------
-enum class Mission { mission1, mission2};
-const Mission mission = Mission::mission1;   // 1 = rescue all victims in order, 2 = maximize score
+enum class Mission { mission1, mission2}; ///< Planning tasks available.
+
+const Mission mission = Mission::mission1;   ///< Planning task chosen.
 
 const string COLOR_CONFIG_FILE = "/color_parameters.config";
-const int pythonUpscale = 1000; // scale factor used to convert parameters to a
-                                // int represetation for the planning library
-const double debugImagesScale = 512.82; // arbitrary scale factor used for
-                                        // displaying debug images
-const float SAFETY_INFLATE_AMOUNT = 0.04;  // (Note: value in meters)
-                                              // obstacles are slightly inflated
-                                              // by this amount to account for
-                                              // approximation errors in the
-                                              // computation of // collisions
-                                              // (in the RRT script)
-const bool DO_CUT_GATE_SLOT = true;   // Cut a slot for the gate in the
-                                      // safe arena border polygon.
-                                      // if False, the robot only
-                                      // arrives near the gate (not
-                                      // inside) to avoid the possible
-                                      // virtual collision with the arena
-                                      // border behind the gate
-const float SAFETY_GATE_INFLATE_AMOUNT = 0.01;
 
-const float ROBOT_RADIUS = 0.1491;  // Robot radius for obstacles and
-                                    // borders inflation.
-                                    // Computed as the maximum
-                                    // distance between the wheels
-                                    // center and the robot footprint
-                                    // borders
+const int pythonUpscale = 1000; ///< Scale factor for planner script.
+                                ///< Scale factor used to convert parameters to
+                                ///< an int represetation for the planning
+                                ///> library
+const double debugImagesScale = 512.82; ///< Arbitrary scale factor used for
+                                        ///< displaying debug images
+const float SAFETY_INFLATE_AMOUNT = 0.04;    ///< Obstacles inflation amount.
+                                             ///< obstacles are slightly inflated
+                                             ///< by this amount to account for
+                                             ///< approximation errors in the
+                                             ///< computation of collisions
+                                             ///< (in the RRT script)
+                                             ///< (Note: value in meters)
+const bool DO_CUT_GATE_SLOT = true;   ///< Cut a slot for the gate in the
+                                      ///< safe arena border polygon.
+                                      ///< if False, the robot only
+                                      ///< arrives near the gate (not
+                                      ///< inside) to avoid the possible
+                                      ///< virtual collision with the arena
+                                      ///< border behind the gate
+const float SAFETY_GATE_INFLATE_AMOUNT = 0.01; ///<< Gate polygon inflate amount
 
-const unsigned short NUMBER_OF_MP_ANGLES = 10;  // Number of possible angles
-                                                // used normally to plan the
-                                                // multipoint curve.
+const float ROBOT_RADIUS = 0.1491;  ///< Robot radius for obstacles and
+                                    ///< borders inflation.
+                                    ///< Computed as the maximum
+                                    ///< distance between the wheels
+                                    ///< center and the robot footprint
+                                    ///< borders.
 
-constexpr bool USE_ANGLE_HEURISTIC = false;  // Setting this to true improves the
-                                         // way that free angles are chosen when
-                                         // planning
+const unsigned short NUMBER_OF_MP_ANGLES = 10;  ///< Number of possible planning
+                                                ///< angles.
+                                                ///< Number of angles used
+                                                ///> normally to plan the
+                                                ///< multipoint curve.
+
+constexpr bool USE_ANGLE_HEURISTIC = false;///< Enable heuristic on angle
+                                           ///< computation.
+                                           ///< Setting this to true improves the
+                                           ///< way that free angles are chosen
+                                           ///< when planning
 //Planning
-const double K_MAX = 10.0;                    // Maximum curvature
-const double PATH_RESOLUTION = 0.01;          // Path resolution (sampling)
+const double K_MAX = 10.0;            ///< Maximum robot curvature.
+const double PATH_RESOLUTION = 0.01;  ///< Path resolution (sampling).
 
-const float ROBOT_SPEED = 0.1f;               // Robot speed: 0.1 m/s
-const float BONUS = 0.08f;                      // time bonus for each victim collected
+const float ROBOT_SPEED = 0.1f;       ///< Robot speed: 0.1 m/s.
+const float BONUS = 0.08f;            ///< Time bonus for each victim collected.
 
+//! Main namespace containing student interface methods
 namespace student {
 
 /** Color bounds configuration for victims, robot and obstacles. */
 struct Color_config {
-    tuple<int,int,int> victims_lowbound; /**< Color lower-bound for victims. */
-    tuple<int,int,int> victims_highbound; /**< Color higher-bound for victims. */
-    tuple<int,int,int> robot_lowbound; /**< Color lower-bound for robot. */
-    tuple<int,int,int> robot_highbound; /**< Color higher-bound for robot. */
-    tuple<int,int,int> obstacle_lowbound1; /**< Color first lower-bound for obstacles. */
-    tuple<int,int,int> obstacle_highbound1; /**< Color first higher-bound for obstacles. */
-    tuple<int,int,int> obstacle_lowbound2; /**< Color second lower-bound for obstacles. */
-    tuple<int,int,int> obstacle_highbound2; /**< Color second higher-bound for obstacles. */
+    tuple<int,int,int> victims_lowbound; ///< Color lower-bound for victims.
+    tuple<int,int,int> victims_highbound; ///< Color higher-bound for victims.
+    tuple<int,int,int> robot_lowbound; ///< Color lower-bound for robot.
+    tuple<int,int,int> robot_highbound; ///< Color higher-bound for robot.
+    tuple<int,int,int> obstacle_lowbound1; ///< Color first lower-bound for obstacles.
+    tuple<int,int,int> obstacle_highbound1; ///< Color first higher-bound for obstacles.
+    tuple<int,int,int> obstacle_lowbound2; ///< Color second lower-bound for obstacles.
+    tuple<int,int,int> obstacle_highbound2; ///< Color second higher-bound for obstacles.
 };
 
 //-------------------DRAWING DUBINS CURVES-------------------
@@ -249,7 +263,7 @@ Color_config read_colors(const string& config_folder) {
     return color_config;
 }
 
-/**
+/** Open color tuning panel.
  * Open a series of panels to tune the color threshold for better detection
  * @param image Reference image for color tuning.
  * @param config_folder Configuration folder path.
@@ -327,7 +341,8 @@ void imageUndistort(const cv::Mat& img_in, cv::Mat& img_out,
     cv::undistort(img_in,img_out,cam_matrix,dist_coeffs);
 }
 
-/** Calculates a perspetive transform from four pairs of the corresponding points.
+/** Calculates a perspetive transform.
+ * Calculates a perspetive transform from four pairs of the corresponding points.
  * @param cam_matrix Input camera matrix.
  * @param rvec Output rotation vector.
  * @param tvec Output translation vector.
@@ -363,7 +378,9 @@ void unwarp(const cv::Mat& img_in, cv::Mat& img_out, const cv::Mat& transf,
     cv::warpPerspective(img_in, img_out, transf, img_in.size());
 }
 
-/** Finds the obstacles in the arena given the arena image and dilate to account for robot dimensions.
+/** Find arena obstacles.
+ * Finds the obstacles in the arena given the arena image and dilate to account
+ * for robot dimensions.
  * Obstacle color is red.
  * @param hsv_img HSV input image.
  * @param scale Scaling factor.
@@ -451,7 +468,7 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     #endif
 }
 
-/** Finds the gate in the arena given the arena image.
+/** Finds the gate in the arena.
  * Gate color is green.
  * @param hsv_img HSV input image.
  * @param scale Scaling factor.
@@ -832,7 +849,7 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
     return found;
 }
 
-/** Find the arrival point
+/** Find the arrival point.
  * Returns the baricenter of the gate polygon with the correct arrival angle,
  * along with the projection of the gate center into the neares arena border line
  *
@@ -927,7 +944,7 @@ void computeArrival(const Polygon& gate, const Polygon& borders, const Polygon& 
     theta = angle;
 }
 
-/** Cut a slot in the safeBorders polygon for the gate
+/** Cut a slot in the safeBorders polygon for the gate.
  *
  * @param gate gate polygon
  * @param cBorders safe Corrected Borders polygon
@@ -1131,7 +1148,8 @@ bool isSegmentColliding(Point a1, Point a2, Point p1, Point p2) {
     return isSegColliding;
 }
 
-/** Approximate approach to check for collisions between dubins::Arc and segment using arc discretization.
+/** Approximate collision checker.
+ * Approximate approach to check for collisions between dubins::Arc and segment using arc discretization.
  * @param a Arc to check.
  * @param pA First point of the segment.
  * @param pB Second point of the segment.
@@ -1757,7 +1775,7 @@ void drawDebugPath(std::vector<Point> path) {
     }
 }
 
-/** Draws borders, obstacles and victims on a debug image
+/** Draws borders, obstacles and victims on a debug image.
  * @param borders Borders of the arena
  * @param obstacle_list List of obstacle polygons.
  * @param victim_list List of victim polygons.

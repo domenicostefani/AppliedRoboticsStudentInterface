@@ -73,229 +73,229 @@ $(function() {
 <a href="corner__detection_8hpp.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160; </div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
-<div class="line"><a name="l00006"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html">    6</a></span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceCornerDetection.html">CornerDetection</a>{</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;cv::Point <a class="code" href="namespaceCornerDetection.html#ae8222411481626340743d5593ae01bdb">findLineCenter</a>(<span class="keyword">const</span> cv::Mat&amp; img_in, <span class="keyword">const</span> std::vector&lt;cv::Point&gt; &amp;arena);</div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespaceCornerDetection.html#ae1a921123f31fd4e0fa2ff7f56b3cb32">onMouse</a>(<span class="keywordtype">int</span> evt, <span class="keywordtype">int</span> x, <span class="keywordtype">int</span> y, <span class="keywordtype">int</span> flags, <span class="keywordtype">void</span>* param);</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespaceCornerDetection.html#a9ec312e6d732d8014903cfe70d2838ae">readSelection</a>(<span class="keyword">const</span> cv::Mat&amp; img_in, std::vector&lt;cv::Point2f&gt;&amp; corners);</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
-<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html#a3a66a2c9e2bf8319cff1627a7d8d707f">   16</a></span>&#160;std::vector&lt;cv::Point2f&gt; <a class="code" href="namespaceCornerDetection.html#a3a66a2c9e2bf8319cff1627a7d8d707f">autodetect</a>(<span class="keyword">const</span> cv::Mat&amp; img_in) {</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    std::vector&lt;cv::Point2f&gt; corners;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="comment">// convert to grayscale</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    cv::Mat gray;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    cv::cvtColor(img_in,gray, CV_BGR2GRAY);</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="comment">// compute mask</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    cv::Mat mask;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    cv::threshold(gray, mask, 120, 255, CV_THRESH_BINARY_INV | CV_THRESH_OTSU);</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="comment">// find contours (if always so easy to segment as your image, you could just add the black/rect pixels to a std::vector)</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    std::vector&lt;std::vector&lt;cv::Point&gt;&gt; contours;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    std::vector&lt;cv::Vec4i&gt; hierarchy;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    cv::findContours(mask,contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="comment">// Find biggest contour (if there are other contours in the image, we assume</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="comment">// the biggest one is the desired rect)</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <span class="keywordtype">int</span> biggestContourIdx = -1;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keywordtype">float</span> biggestContourArea = 0;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">    #ifdef DEBUG_CORNER_AUTODETECT</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;        cv::Mat drawing = cv::Mat::zeros( mask.size(), CV_8UC3 ); <span class="comment">//Todo: REMOVE</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">    #endif</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; contours.size(); i++) {</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;        <span class="keywordtype">float</span> ctArea= cv::contourArea(contours[i]);</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        <span class="keywordflow">if</span>(ctArea &gt; biggestContourArea)</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        {</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;            biggestContourArea = ctArea;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;            biggestContourIdx = i;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        }</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    }</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="preprocessor">    #ifdef DEBUG_CORNER_AUTODETECT</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        cv::Mat display = img_in.clone();</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        cv::Scalar color = cv::Scalar(0, 0, 255); <span class="comment">// Todo: REMOVE</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        cv::drawContours( display, contours,biggestContourIdx , color, 1, 8, hierarchy, 0, cv::Point() );</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        cv::imshow(<span class="stringliteral">&quot;C3&quot;</span>,display);</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        cv::waitKey(0);</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="preprocessor">    #endif</span></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    std::vector&lt;cv::Point&gt; approx_curve;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="comment">// repeat until there are only 4 corners</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 3; i &lt; 10; i++)</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    {</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        approxPolyDP(contours[biggestContourIdx], approx_curve, i, <span class="keyword">true</span>);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        <span class="keywordflow">if</span> (approx_curve.size() == 4) <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    }</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="comment">// Now that the four corners are found they have to be ordered</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="comment">// The first is the one closer to the red line</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="comment">// Then counterclockwise order</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="comment">//</span></div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="comment">// Find Red line</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="comment">//                /* Red color requires 2 ranges*/</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    cv::Point redLine = <a class="code" href="namespaceCornerDetection.html#ae8222411481626340743d5593ae01bdb">findLineCenter</a>(img_in,approx_curve);</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="comment">//</span></div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="comment">// Find nearestCorner</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="comment">//</span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordtype">float</span> lowestDistance = 1000000;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keywordtype">int</span> nearestCorner = -1;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 4; i++) {</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        <span class="keywordtype">float</span> distance = pow((approx_curve[i].x-redLine.x),2) + pow((approx_curve[i].y-redLine.y),2);</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        <span class="keywordflow">if</span> (distance &lt; lowestDistance) {</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;            lowestDistance = distance;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;            nearestCorner = i;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        }</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    }</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    assert((nearestCorner &gt;= 0)&amp;&amp;(nearestCorner &lt;= 3));</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="comment">//</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="comment">// Order Corners</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="comment">//</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 4; ++i) {</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        <span class="keywordtype">int</span> index = (nearestCorner + i) % 4;</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        corners.emplace_back(approx_curve[index].x,approx_curve[index].y);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    }</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keywordflow">return</span> corners;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;}</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160; </div>
-<div class="line"><a name="l00104"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html#a4f3662cd921a975da8069a9e01dbc7d5">  104</a></span>&#160;std::vector&lt;cv::Point2f&gt; <a class="code" href="namespaceCornerDetection.html#a4f3662cd921a975da8069a9e01dbc7d5">manualSelect</a>(<span class="keyword">const</span> cv::Mat&amp; img_in, std::string config_folder) {</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="comment">//</span></div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    <span class="comment">//  Read configuration file or ask for manual selection</span></div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="comment">//</span></div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    std::vector&lt;cv::Point2f&gt; corners;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    std::string file_path = config_folder + <span class="stringliteral">&quot;/extrinsicCalib.csv&quot;</span>;</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160; </div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <span class="keywordflow">if</span> (!std::experimental::filesystem::exists(file_path)) {</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;        <span class="comment">// File does not exist</span></div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        <a class="code" href="namespaceCornerDetection.html#a9ec312e6d732d8014903cfe70d2838ae">CornerDetection::readSelection</a>(img_in,corners);</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        <span class="comment">// Save the file</span></div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        std::experimental::filesystem::create_directories(config_folder);</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;        std::ofstream output(file_path);</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;        <span class="keywordflow">if</span> (!output.is_open()) {</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Cannot write file: &quot;</span> + file_path);</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        }</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> pt: corners) {</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;            output &lt;&lt; pt.x &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; pt.y &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;        }</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        output.close();</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;        <span class="comment">// Load configuration from file</span></div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;        std::ifstream input(file_path);</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;        <span class="keywordflow">if</span> (!input.is_open()) {</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Cannot read file: &quot;</span> + file_path);</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;        }</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;        <span class="keywordflow">while</span> (!input.eof()) {</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;            <span class="keywordtype">double</span> x, y;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;            <span class="keywordflow">if</span> (!(input &gt;&gt; x &gt;&gt; y)) {</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;                <span class="keywordflow">if</span> (input.eof())</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;                    <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;                <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;                  <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Malformed file: &quot;</span> + file_path);</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;            }</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;            corners.emplace_back(x, y);</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;        }</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;        input.close();</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    }</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;    <span class="keywordflow">return</span> corners;</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;}</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160; </div>
-<div class="line"><a name="l00151"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html#ae8222411481626340743d5593ae01bdb">  151</a></span>&#160;cv::Point <a class="code" href="namespaceCornerDetection.html#ae8222411481626340743d5593ae01bdb">findLineCenter</a>(<span class="keyword">const</span> cv::Mat&amp; img_in, <span class="keyword">const</span> std::vector&lt;cv::Point&gt; &amp;arena) {</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    cv::Mat lower_red_hue_range; <span class="comment">// the lower range for red hue</span></div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    cv::Mat upper_red_hue_range; <span class="comment">// the higher range for red hue</span></div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    cv::Mat hsv_img;</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    cv::cvtColor(img_in, hsv_img, cv::COLOR_BGR2HSV);</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;    cv::inRange(hsv_img, cv::Scalar(0, 100, 100), cv::Scalar(10, 255, 255), lower_red_hue_range);</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    cv::inRange(hsv_img, cv::Scalar(160, 100, 100), cv::Scalar(180, 255, 255), upper_red_hue_range);</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    cv::Mat red_hue_image;</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    cv::addWeighted(lower_red_hue_range, 1.0, upper_red_hue_range, 1.0, 0.0, red_hue_image);</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160; </div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    cv::Size size(red_hue_image.cols, red_hue_image.rows);</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    cv::Mat maskRect(size, CV_8U, cv::Scalar(0.0));</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160; </div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;    std::vector&lt;cv::Point2f&gt; tempcorners;</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 4; ++i)</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;        tempcorners.emplace_back(arena[i].x, arena[i].y);</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    cv::Scalar white = cv::Scalar(255.0); <span class="comment">// white</span></div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    cv::Point vertices[4];</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 4; ++i) {</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;        vertices[i] = tempcorners[i];</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    }</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;    cv::fillConvexPoly(maskRect, vertices, 4, white);</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160; </div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;    <span class="comment">// compute mask</span></div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    cv::Mat maskContours;</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    cv::threshold(red_hue_image, maskContours, 120, 255, CV_THRESH_BINARY_INV | CV_THRESH_OTSU);</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;    cv::subtract(red_hue_image, maskRect, maskContours);</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160; </div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    std::vector&lt;std::vector&lt;cv::Point&gt;&gt; contoursForLine;</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    cv::findContours(maskContours,contoursForLine, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    <span class="comment">// Find biggest contour (if there are other contours in the image, we assume</span></div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    <span class="comment">// the biggest one is the desired rect)</span></div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    <span class="keywordtype">int</span> biggestContourIdxForLine = -1;</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="keywordtype">float</span> biggestContourAreaForLine = 0;</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160; </div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i&lt; contoursForLine.size(); i++) {</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;        <span class="keywordtype">float</span> ctArea= cv::contourArea(contoursForLine[i]);</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;        <span class="keywordflow">if</span>(ctArea &gt; biggestContourAreaForLine)</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;        {</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;            biggestContourAreaForLine = ctArea;</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;            biggestContourIdxForLine = i;</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;        }</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    }</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    std::vector&lt;cv::Point&gt; approx_curve_forLine;</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    approxPolyDP(contoursForLine[biggestContourIdxForLine], approx_curve_forLine,4, <span class="keyword">true</span>);</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160; </div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    <span class="keywordtype">int</span> xsum = 0;</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="keywordtype">int</span> ysum = 0;</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 4; i++) {</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;        xsum += approx_curve_forLine[i].x;</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;        ysum += approx_curve_forLine[i].y;</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    }</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    cv::Point lineCenter(xsum/4.0,ysum/4.0);</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160; </div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    <span class="keywordflow">return</span> lineCenter;</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;}</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160; </div>
-<div class="line"><a name="l00215"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html#ae1a921123f31fd4e0fa2ff7f56b3cb32">  215</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespaceCornerDetection.html#ae1a921123f31fd4e0fa2ff7f56b3cb32">onMouse</a>(<span class="keywordtype">int</span> evt, <span class="keywordtype">int</span> x, <span class="keywordtype">int</span> y, <span class="keywordtype">int</span> flags, <span class="keywordtype">void</span>* param) {</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    <span class="keywordflow">if</span> (evt == CV_EVENT_LBUTTONDOWN) {</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;        std::vector&lt;cv::Point&gt;* ptPtr = (std::vector&lt;cv::Point&gt;*)param;</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;        ptPtr-&gt;push_back(cv::Point(x,y));</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    }</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;}</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160; </div>
-<div class="line"><a name="l00226"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html#a9ec312e6d732d8014903cfe70d2838ae">  226</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespaceCornerDetection.html#a9ec312e6d732d8014903cfe70d2838ae">readSelection</a>(<span class="keyword">const</span> cv::Mat&amp; img_in, std::vector&lt;cv::Point2f&gt;&amp; corners) {</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    std::vector&lt;cv::Point&gt; points;</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    std::string windowname = <span class="stringliteral">&quot;Select corners, counterclockwise, start from red&quot;</span>;</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    cv::namedWindow(windowname);</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;    cv::setMouseCallback(windowname, <a class="code" href="namespaceCornerDetection.html#ae1a921123f31fd4e0fa2ff7f56b3cb32">onMouse</a>, (<span class="keywordtype">void</span>*)&amp;points);</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160; </div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    <span class="keywordflow">while</span> (points.size() &lt; 4) {</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;        cv::imshow(windowname, img_in);</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160; </div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i=0; i &lt; points.size(); i++) {</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;            cv::circle(img_in, points[i], 20, cv::Scalar(240,0,0),CV_FILLED);</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;        }</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;        cv::waitKey(1);</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;    }</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    cv::destroyWindow(windowname);</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160; </div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i=0; i &lt; 4; i++) {</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;        corners.push_back(points[i]);</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    }</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;}</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160; </div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;}</div>
+<div class="line"><a name="l00007"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html">    7</a></span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceCornerDetection.html">CornerDetection</a>{</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;cv::Point <a class="code" href="namespaceCornerDetection.html#ae8222411481626340743d5593ae01bdb">findLineCenter</a>(<span class="keyword">const</span> cv::Mat&amp; img_in, <span class="keyword">const</span> std::vector&lt;cv::Point&gt; &amp;arena);</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespaceCornerDetection.html#ae1a921123f31fd4e0fa2ff7f56b3cb32">onMouse</a>(<span class="keywordtype">int</span> evt, <span class="keywordtype">int</span> x, <span class="keywordtype">int</span> y, <span class="keywordtype">int</span> flags, <span class="keywordtype">void</span>* param);</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespaceCornerDetection.html#a9ec312e6d732d8014903cfe70d2838ae">readSelection</a>(<span class="keyword">const</span> cv::Mat&amp; img_in, std::vector&lt;cv::Point2f&gt;&amp; corners);</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
+<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html#a3a66a2c9e2bf8319cff1627a7d8d707f">   17</a></span>&#160;std::vector&lt;cv::Point2f&gt; <a class="code" href="namespaceCornerDetection.html#a3a66a2c9e2bf8319cff1627a7d8d707f">autodetect</a>(<span class="keyword">const</span> cv::Mat&amp; img_in) {</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    std::vector&lt;cv::Point2f&gt; corners;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="comment">// convert to grayscale</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    cv::Mat gray;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    cv::cvtColor(img_in,gray, CV_BGR2GRAY);</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="comment">// compute mask</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    cv::Mat mask;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    cv::threshold(gray, mask, 120, 255, CV_THRESH_BINARY_INV | CV_THRESH_OTSU);</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="comment">// find contours (if always so easy to segment as your image, you could just add the black/rect pixels to a std::vector)</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    std::vector&lt;std::vector&lt;cv::Point&gt;&gt; contours;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    std::vector&lt;cv::Vec4i&gt; hierarchy;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    cv::findContours(mask,contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="comment">// Find biggest contour (if there are other contours in the image, we assume</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <span class="comment">// the biggest one is the desired rect)</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keywordtype">int</span> biggestContourIdx = -1;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="keywordtype">float</span> biggestContourArea = 0;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">    #ifdef DEBUG_CORNER_AUTODETECT</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;        cv::Mat drawing = cv::Mat::zeros( mask.size(), CV_8UC3 ); <span class="comment">//Todo: REMOVE</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">    #endif</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; contours.size(); i++) {</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        <span class="keywordtype">float</span> ctArea= cv::contourArea(contours[i]);</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        <span class="keywordflow">if</span>(ctArea &gt; biggestContourArea)</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;        {</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;            biggestContourArea = ctArea;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;            biggestContourIdx = i;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        }</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    }</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="preprocessor">    #ifdef DEBUG_CORNER_AUTODETECT</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        cv::Mat display = img_in.clone();</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;        cv::Scalar color = cv::Scalar(0, 0, 255); <span class="comment">// Todo: REMOVE</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        cv::drawContours( display, contours,biggestContourIdx , color, 1, 8, hierarchy, 0, cv::Point() );</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        cv::imshow(<span class="stringliteral">&quot;C3&quot;</span>,display);</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        cv::waitKey(0);</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">    #endif</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    std::vector&lt;cv::Point&gt; approx_curve;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="comment">// repeat until there are only 4 corners</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 3; i &lt; 10; i++)</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    {</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        approxPolyDP(contours[biggestContourIdx], approx_curve, i, <span class="keyword">true</span>);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="keywordflow">if</span> (approx_curve.size() == 4) <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    }</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="comment">// Now that the four corners are found they have to be ordered</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="comment">// The first is the one closer to the red line</span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="comment">// Then counterclockwise order</span></div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="comment">//</span></div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="comment">// Find Red line</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="comment">//                /* Red color requires 2 ranges*/</span></div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    cv::Point redLine = <a class="code" href="namespaceCornerDetection.html#ae8222411481626340743d5593ae01bdb">findLineCenter</a>(img_in,approx_curve);</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="comment">//</span></div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="comment">// Find nearestCorner</span></div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="comment">//</span></div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keywordtype">float</span> lowestDistance = 1000000;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordtype">int</span> nearestCorner = -1;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 4; i++) {</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        <span class="keywordtype">float</span> distance = pow((approx_curve[i].x-redLine.x),2) + pow((approx_curve[i].y-redLine.y),2);</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        <span class="keywordflow">if</span> (distance &lt; lowestDistance) {</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;            lowestDistance = distance;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;            nearestCorner = i;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        }</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    }</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    assert((nearestCorner &gt;= 0)&amp;&amp;(nearestCorner &lt;= 3));</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="comment">//</span></div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="comment">// Order Corners</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="comment">//</span></div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 4; ++i) {</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;        <span class="keywordtype">int</span> index = (nearestCorner + i) % 4;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;        corners.emplace_back(approx_curve[index].x,approx_curve[index].y);</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    }</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160; </div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordflow">return</span> corners;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;}</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160; </div>
+<div class="line"><a name="l00105"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html#a4f3662cd921a975da8069a9e01dbc7d5">  105</a></span>&#160;std::vector&lt;cv::Point2f&gt; <a class="code" href="namespaceCornerDetection.html#a4f3662cd921a975da8069a9e01dbc7d5">manualSelect</a>(<span class="keyword">const</span> cv::Mat&amp; img_in, std::string config_folder) {</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    <span class="comment">//</span></div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="comment">//  Read configuration file or ask for manual selection</span></div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="comment">//</span></div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    std::vector&lt;cv::Point2f&gt; corners;</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    std::string file_path = config_folder + <span class="stringliteral">&quot;/extrinsicCalib.csv&quot;</span>;</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="keywordflow">if</span> (!std::experimental::filesystem::exists(file_path)) {</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        <span class="comment">// File does not exist</span></div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        <a class="code" href="namespaceCornerDetection.html#a9ec312e6d732d8014903cfe70d2838ae">CornerDetection::readSelection</a>(img_in,corners);</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        <span class="comment">// Save the file</span></div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;        std::experimental::filesystem::create_directories(config_folder);</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;        std::ofstream output(file_path);</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;        <span class="keywordflow">if</span> (!output.is_open()) {</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Cannot write file: &quot;</span> + file_path);</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        }</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> pt: corners) {</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;            output &lt;&lt; pt.x &lt;&lt; <span class="stringliteral">&quot; &quot;</span> &lt;&lt; pt.y &lt;&lt; std::endl;</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        }</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;        output.close();</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;        <span class="comment">// Load configuration from file</span></div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;        std::ifstream input(file_path);</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;        <span class="keywordflow">if</span> (!input.is_open()) {</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Cannot read file: &quot;</span> + file_path);</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;        }</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;        <span class="keywordflow">while</span> (!input.eof()) {</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;            <span class="keywordtype">double</span> x, y;</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;            <span class="keywordflow">if</span> (!(input &gt;&gt; x &gt;&gt; y)) {</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;                <span class="keywordflow">if</span> (input.eof())</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;                    <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;                <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;                  <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Malformed file: &quot;</span> + file_path);</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;            }</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;            corners.emplace_back(x, y);</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;        }</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;        input.close();</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;    }</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    <span class="keywordflow">return</span> corners;</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;}</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160; </div>
+<div class="line"><a name="l00152"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html#ae8222411481626340743d5593ae01bdb">  152</a></span>&#160;cv::Point <a class="code" href="namespaceCornerDetection.html#ae8222411481626340743d5593ae01bdb">findLineCenter</a>(<span class="keyword">const</span> cv::Mat&amp; img_in, <span class="keyword">const</span> std::vector&lt;cv::Point&gt; &amp;arena) {</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    cv::Mat lower_red_hue_range; <span class="comment">// the lower range for red hue</span></div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    cv::Mat upper_red_hue_range; <span class="comment">// the higher range for red hue</span></div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    cv::Mat hsv_img;</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;    cv::cvtColor(img_in, hsv_img, cv::COLOR_BGR2HSV);</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    cv::inRange(hsv_img, cv::Scalar(0, 100, 100), cv::Scalar(10, 255, 255), lower_red_hue_range);</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    cv::inRange(hsv_img, cv::Scalar(160, 100, 100), cv::Scalar(180, 255, 255), upper_red_hue_range);</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    cv::Mat red_hue_image;</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    cv::addWeighted(lower_red_hue_range, 1.0, upper_red_hue_range, 1.0, 0.0, red_hue_image);</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160; </div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    cv::Size size(red_hue_image.cols, red_hue_image.rows);</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    cv::Mat maskRect(size, CV_8U, cv::Scalar(0.0));</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160; </div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    std::vector&lt;cv::Point2f&gt; tempcorners;</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 4; ++i)</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;        tempcorners.emplace_back(arena[i].x, arena[i].y);</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    cv::Scalar white = cv::Scalar(255.0); <span class="comment">// white</span></div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;    cv::Point vertices[4];</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 4; ++i) {</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;        vertices[i] = tempcorners[i];</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;    }</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    cv::fillConvexPoly(maskRect, vertices, 4, white);</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160; </div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="comment">// compute mask</span></div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    cv::Mat maskContours;</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;    cv::threshold(red_hue_image, maskContours, 120, 255, CV_THRESH_BINARY_INV | CV_THRESH_OTSU);</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    cv::subtract(red_hue_image, maskRect, maskContours);</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160; </div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    std::vector&lt;std::vector&lt;cv::Point&gt;&gt; contoursForLine;</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    cv::findContours(maskContours,contoursForLine, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    <span class="comment">// Find biggest contour (if there are other contours in the image, we assume</span></div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    <span class="comment">// the biggest one is the desired rect)</span></div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="keywordtype">int</span> biggestContourIdxForLine = -1;</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    <span class="keywordtype">float</span> biggestContourAreaForLine = 0;</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160; </div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i&lt; contoursForLine.size(); i++) {</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;        <span class="keywordtype">float</span> ctArea= cv::contourArea(contoursForLine[i]);</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;        <span class="keywordflow">if</span>(ctArea &gt; biggestContourAreaForLine)</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;        {</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;            biggestContourAreaForLine = ctArea;</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;            biggestContourIdxForLine = i;</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;        }</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    }</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    std::vector&lt;cv::Point&gt; approx_curve_forLine;</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    approxPolyDP(contoursForLine[biggestContourIdxForLine], approx_curve_forLine,4, <span class="keyword">true</span>);</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160; </div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="keywordtype">int</span> xsum = 0;</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="keywordtype">int</span> ysum = 0;</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 4; i++) {</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;        xsum += approx_curve_forLine[i].x;</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;        ysum += approx_curve_forLine[i].y;</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    }</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    cv::Point lineCenter(xsum/4.0,ysum/4.0);</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160; </div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    <span class="keywordflow">return</span> lineCenter;</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;}</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160; </div>
+<div class="line"><a name="l00216"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html#ae1a921123f31fd4e0fa2ff7f56b3cb32">  216</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespaceCornerDetection.html#ae1a921123f31fd4e0fa2ff7f56b3cb32">onMouse</a>(<span class="keywordtype">int</span> evt, <span class="keywordtype">int</span> x, <span class="keywordtype">int</span> y, <span class="keywordtype">int</span> flags, <span class="keywordtype">void</span>* param) {</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;    <span class="keywordflow">if</span> (evt == CV_EVENT_LBUTTONDOWN) {</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;        std::vector&lt;cv::Point&gt;* ptPtr = (std::vector&lt;cv::Point&gt;*)param;</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;        ptPtr-&gt;push_back(cv::Point(x,y));</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    }</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;}</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160; </div>
+<div class="line"><a name="l00227"></a><span class="lineno"><a class="line" href="namespaceCornerDetection.html#a9ec312e6d732d8014903cfe70d2838ae">  227</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="namespaceCornerDetection.html#a9ec312e6d732d8014903cfe70d2838ae">readSelection</a>(<span class="keyword">const</span> cv::Mat&amp; img_in, std::vector&lt;cv::Point2f&gt;&amp; corners) {</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    std::vector&lt;cv::Point&gt; points;</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    std::string windowname = <span class="stringliteral">&quot;Select corners, counterclockwise, start from red&quot;</span>;</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;    cv::namedWindow(windowname);</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    cv::setMouseCallback(windowname, <a class="code" href="namespaceCornerDetection.html#ae1a921123f31fd4e0fa2ff7f56b3cb32">onMouse</a>, (<span class="keywordtype">void</span>*)&amp;points);</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160; </div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    <span class="keywordflow">while</span> (points.size() &lt; 4) {</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;        cv::imshow(windowname, img_in);</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160; </div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i=0; i &lt; points.size(); i++) {</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;            cv::circle(img_in, points[i], 20, cv::Scalar(240,0,0),CV_FILLED);</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;        }</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;        cv::waitKey(1);</div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    }</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    cv::destroyWindow(windowname);</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160; </div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i=0; i &lt; 4; i++) {</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;        corners.push_back(points[i]);</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;    }</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;}</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160; </div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;}</div>
 </div><!-- fragment --></div><!-- contents -->
-<div class="ttc" id="anamespaceCornerDetection_html_ae1a921123f31fd4e0fa2ff7f56b3cb32"><div class="ttname"><a href="namespaceCornerDetection.html#ae1a921123f31fd4e0fa2ff7f56b3cb32">CornerDetection::onMouse</a></div><div class="ttdeci">void onMouse(int evt, int x, int y, int flags, void *param)</div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:215</div></div>
-<div class="ttc" id="anamespaceCornerDetection_html_a3a66a2c9e2bf8319cff1627a7d8d707f"><div class="ttname"><a href="namespaceCornerDetection.html#a3a66a2c9e2bf8319cff1627a7d8d707f">CornerDetection::autodetect</a></div><div class="ttdeci">std::vector&lt; cv::Point2f &gt; autodetect(const cv::Mat &amp;img_in)</div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:16</div></div>
-<div class="ttc" id="anamespaceCornerDetection_html_a9ec312e6d732d8014903cfe70d2838ae"><div class="ttname"><a href="namespaceCornerDetection.html#a9ec312e6d732d8014903cfe70d2838ae">CornerDetection::readSelection</a></div><div class="ttdeci">void readSelection(const cv::Mat &amp;img_in, std::vector&lt; cv::Point2f &gt; &amp;corners)</div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:226</div></div>
-<div class="ttc" id="anamespaceCornerDetection_html"><div class="ttname"><a href="namespaceCornerDetection.html">CornerDetection</a></div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:6</div></div>
-<div class="ttc" id="anamespaceCornerDetection_html_ae8222411481626340743d5593ae01bdb"><div class="ttname"><a href="namespaceCornerDetection.html#ae8222411481626340743d5593ae01bdb">CornerDetection::findLineCenter</a></div><div class="ttdeci">cv::Point findLineCenter(const cv::Mat &amp;img_in, const std::vector&lt; cv::Point &gt; &amp;arena)</div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:151</div></div>
-<div class="ttc" id="anamespaceCornerDetection_html_a4f3662cd921a975da8069a9e01dbc7d5"><div class="ttname"><a href="namespaceCornerDetection.html#a4f3662cd921a975da8069a9e01dbc7d5">CornerDetection::manualSelect</a></div><div class="ttdeci">std::vector&lt; cv::Point2f &gt; manualSelect(const cv::Mat &amp;img_in, std::string config_folder)</div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:104</div></div>
+<div class="ttc" id="anamespaceCornerDetection_html_ae1a921123f31fd4e0fa2ff7f56b3cb32"><div class="ttname"><a href="namespaceCornerDetection.html#ae1a921123f31fd4e0fa2ff7f56b3cb32">CornerDetection::onMouse</a></div><div class="ttdeci">void onMouse(int evt, int x, int y, int flags, void *param)</div><div class="ttdoc">Event handler for mouse event.</div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:216</div></div>
+<div class="ttc" id="anamespaceCornerDetection_html_a3a66a2c9e2bf8319cff1627a7d8d707f"><div class="ttname"><a href="namespaceCornerDetection.html#a3a66a2c9e2bf8319cff1627a7d8d707f">CornerDetection::autodetect</a></div><div class="ttdeci">std::vector&lt; cv::Point2f &gt; autodetect(const cv::Mat &amp;img_in)</div><div class="ttdoc">Detect automatically the arena corners.</div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:17</div></div>
+<div class="ttc" id="anamespaceCornerDetection_html_a9ec312e6d732d8014903cfe70d2838ae"><div class="ttname"><a href="namespaceCornerDetection.html#a9ec312e6d732d8014903cfe70d2838ae">CornerDetection::readSelection</a></div><div class="ttdeci">void readSelection(const cv::Mat &amp;img_in, std::vector&lt; cv::Point2f &gt; &amp;corners)</div><div class="ttdoc">Ask the user to manually select the corners in order.</div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:227</div></div>
+<div class="ttc" id="anamespaceCornerDetection_html"><div class="ttname"><a href="namespaceCornerDetection.html">CornerDetection</a></div><div class="ttdoc">Arena corner detection methods.</div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:7</div></div>
+<div class="ttc" id="anamespaceCornerDetection_html_ae8222411481626340743d5593ae01bdb"><div class="ttname"><a href="namespaceCornerDetection.html#ae8222411481626340743d5593ae01bdb">CornerDetection::findLineCenter</a></div><div class="ttdeci">cv::Point findLineCenter(const cv::Mat &amp;img_in, const std::vector&lt; cv::Point &gt; &amp;arena)</div><div class="ttdoc">Find the center of the redline in the arena.</div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:152</div></div>
+<div class="ttc" id="anamespaceCornerDetection_html_a4f3662cd921a975da8069a9e01dbc7d5"><div class="ttname"><a href="namespaceCornerDetection.html#a4f3662cd921a975da8069a9e01dbc7d5">CornerDetection::manualSelect</a></div><div class="ttdeci">std::vector&lt; cv::Point2f &gt; manualSelect(const cv::Mat &amp;img_in, std::string config_folder)</div><div class="ttdoc">Read the configuration, if not existent ask the user to select points.</div><div class="ttdef"><b>Definition:</b> corner_detection.hpp:105</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">
