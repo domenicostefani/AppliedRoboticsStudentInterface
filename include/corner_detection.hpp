@@ -22,6 +22,7 @@ std::vector<cv::Point2f> autodetect(const cv::Mat& img_in) {
     // compute mask
     cv::Mat mask;
     cv::threshold(gray, mask, 120, 255, CV_THRESH_BINARY_INV | CV_THRESH_OTSU);
+
     // find contours (if always so easy to segment as your image, you could just add the black/rect pixels to a std::vector)
     std::vector<std::vector<cv::Point>> contours;
     std::vector<cv::Vec4i> hierarchy;
@@ -53,7 +54,15 @@ std::vector<cv::Point2f> autodetect(const cv::Mat& img_in) {
     #endif
 
     std::vector<cv::Point> approx_curve;
-    approxPolyDP(contours[biggestContourIdx], approx_curve,4, true);
+
+    // repeat until there are only 4 corners
+    for (int i = 3; i < 10; i++)
+    {
+        approxPolyDP(contours[biggestContourIdx], approx_curve, i, true);
+
+        if (approx_curve.size() == 4) break;
+    }
+
     // Now that the four corners are found they have to be ordered
     // The first is the one closer to the red line
     // Then counterclockwise order

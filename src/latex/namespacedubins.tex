@@ -1,0 +1,135 @@
+\hypertarget{namespacedubins}{}\doxysection{dubins Namespace Reference}
+\label{namespacedubins}\index{dubins@{dubins}}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+typedef bool($\ast$ \mbox{\hyperlink{namespacedubins_a68b9a2363fe624a5f2df9350f8b7bbda}{maneuver}}) (double, double, double, double \&, double \&, double \&)
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \mbox{\hyperlink{namespacedubins_a02c577d260e0e5c35f242c150ab437f2}{circline}} (double s, double x0, double y0, double th0, double k, double \&x, double \&y, double \&th)
+\item 
+double \mbox{\hyperlink{namespacedubins_a97fb3d38283b8c81bf87e7896b4d7ee3}{mod2pi}} (double ang)
+\item 
+double \mbox{\hyperlink{namespacedubins_a3caee571774a336a82fac512ea021162}{sinc}} (double t)
+\item 
+double \mbox{\hyperlink{namespacedubins_a44bffacdaf602d5be016bf13b8672062}{range\+Symm}} (double ang)
+\item 
+bool \mbox{\hyperlink{namespacedubins_a36b8ddfb8c12f1ad4e60cf642d24fcf0}{check}} (double s1, double k0, double s2, double k1, double s3, double k2, double th0, double thf)
+\item 
+void \mbox{\hyperlink{namespacedubins_ab21c2f5c30d7cbe6e92ad299e13c0ae1}{scale\+To\+Standard}} (double x0, double y0, double th0, double xf, double yf, double thf, double Kmax, double \&sc\+\_\+th0, double \&sc\+\_\+thf, double \&sc\+\_\+\+Kmax, double \&lambda)
+\item 
+void \mbox{\hyperlink{namespacedubins_a0eaf23697f89435fd837a6deee63c67b}{scale\+From\+Standard}} (double lambda, double sc\+\_\+s1, double sc\+\_\+s2, double sc\+\_\+s3, double \&s1, double \&s2, double \&s3)
+\item 
+bool \mbox{\hyperlink{namespacedubins_a3ea0597981d5eb33d2246279a2285bb0}{L\+SL}} (double sc\+\_\+th0, double sc\+\_\+thf, double sc\+\_\+\+Kmax, double \&sc\+\_\+s1, double \&sc\+\_\+s2, double \&sc\+\_\+s3)
+\item 
+bool \mbox{\hyperlink{namespacedubins_a8c9128d324cf98f81ec456c548dd9d11}{R\+SR}} (double sc\+\_\+th0, double sc\+\_\+thf, double sc\+\_\+\+Kmax, double \&sc\+\_\+s1, double \&sc\+\_\+s2, double \&sc\+\_\+s3)
+\item 
+bool \mbox{\hyperlink{namespacedubins_a97105d98b05d374972eb247a3b313b9b}{L\+SR}} (double sc\+\_\+th0, double sc\+\_\+thf, double sc\+\_\+\+Kmax, double \&sc\+\_\+s1, double \&sc\+\_\+s2, double \&sc\+\_\+s3)
+\item 
+bool \mbox{\hyperlink{namespacedubins_a9bd60f5d393522adc6c50ed18e625b76}{R\+SL}} (double sc\+\_\+th0, double sc\+\_\+thf, double sc\+\_\+\+Kmax, double \&sc\+\_\+s1, double \&sc\+\_\+s2, double \&sc\+\_\+s3)
+\item 
+bool \mbox{\hyperlink{namespacedubins_a32f6ba83a6ccdbec95e4712c7121ab43}{R\+LR}} (double sc\+\_\+th0, double sc\+\_\+thf, double sc\+\_\+\+Kmax, double \&sc\+\_\+s1, double \&sc\+\_\+s2, double \&sc\+\_\+s3)
+\item 
+bool \mbox{\hyperlink{namespacedubins_a451bfcf3cc9579ec5b45352a38d5d683}{L\+RL}} (double sc\+\_\+th0, double sc\+\_\+thf, double sc\+\_\+\+Kmax, double \&sc\+\_\+s1, double \&sc\+\_\+s2, double \&sc\+\_\+s3)
+\item 
+Curve \mbox{\hyperlink{namespacedubins_a42ee655422e26a9fc3c999959be8a396}{dubins\+\_\+shortest\+\_\+path}} (double x0, double y0, double th0, double xf, double yf, double thf, double Kmax, int \&pidx)
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{namespacedubins_a68b9a2363fe624a5f2df9350f8b7bbda}\label{namespacedubins_a68b9a2363fe624a5f2df9350f8b7bbda}} 
+\index{dubins@{dubins}!maneuver@{maneuver}}
+\index{maneuver@{maneuver}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{maneuver}{maneuver}}
+{\footnotesize\ttfamily typedef bool($\ast$ dubins\+::maneuver) (double, double, double, double \&, double \&, double \&)}
+
+Pointer to maneuver funciton 
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespacedubins_a36b8ddfb8c12f1ad4e60cf642d24fcf0}\label{namespacedubins_a36b8ddfb8c12f1ad4e60cf642d24fcf0}} 
+\index{dubins@{dubins}!check@{check}}
+\index{check@{check}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{check()}{check()}}
+{\footnotesize\ttfamily bool dubins\+::check (\begin{DoxyParamCaption}\item[{double}]{s1,  }\item[{double}]{k0,  }\item[{double}]{s2,  }\item[{double}]{k1,  }\item[{double}]{s3,  }\item[{double}]{k2,  }\item[{double}]{th0,  }\item[{double}]{thf }\end{DoxyParamCaption})}
+
+Validity check functions \mbox{\Hypertarget{namespacedubins_a02c577d260e0e5c35f242c150ab437f2}\label{namespacedubins_a02c577d260e0e5c35f242c150ab437f2}} 
+\index{dubins@{dubins}!circline@{circline}}
+\index{circline@{circline}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{circline()}{circline()}}
+{\footnotesize\ttfamily void dubins\+::circline (\begin{DoxyParamCaption}\item[{double}]{s,  }\item[{double}]{x0,  }\item[{double}]{y0,  }\item[{double}]{th0,  }\item[{double}]{k,  }\item[{double \&}]{x,  }\item[{double \&}]{y,  }\item[{double \&}]{th }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{namespacedubins_a42ee655422e26a9fc3c999959be8a396}\label{namespacedubins_a42ee655422e26a9fc3c999959be8a396}} 
+\index{dubins@{dubins}!dubins\_shortest\_path@{dubins\_shortest\_path}}
+\index{dubins\_shortest\_path@{dubins\_shortest\_path}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{dubins\_shortest\_path()}{dubins\_shortest\_path()}}
+{\footnotesize\ttfamily Curve dubins\+::dubins\+\_\+shortest\+\_\+path (\begin{DoxyParamCaption}\item[{double}]{x0,  }\item[{double}]{y0,  }\item[{double}]{th0,  }\item[{double}]{xf,  }\item[{double}]{yf,  }\item[{double}]{thf,  }\item[{double}]{Kmax,  }\item[{int \&}]{pidx }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{namespacedubins_a451bfcf3cc9579ec5b45352a38d5d683}\label{namespacedubins_a451bfcf3cc9579ec5b45352a38d5d683}} 
+\index{dubins@{dubins}!LRL@{LRL}}
+\index{LRL@{LRL}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{LRL()}{LRL()}}
+{\footnotesize\ttfamily bool dubins\+::\+L\+RL (\begin{DoxyParamCaption}\item[{double}]{sc\+\_\+th0,  }\item[{double}]{sc\+\_\+thf,  }\item[{double}]{sc\+\_\+\+Kmax,  }\item[{double \&}]{sc\+\_\+s1,  }\item[{double \&}]{sc\+\_\+s2,  }\item[{double \&}]{sc\+\_\+s3 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{namespacedubins_a3ea0597981d5eb33d2246279a2285bb0}\label{namespacedubins_a3ea0597981d5eb33d2246279a2285bb0}} 
+\index{dubins@{dubins}!LSL@{LSL}}
+\index{LSL@{LSL}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{LSL()}{LSL()}}
+{\footnotesize\ttfamily bool dubins\+::\+L\+SL (\begin{DoxyParamCaption}\item[{double}]{sc\+\_\+th0,  }\item[{double}]{sc\+\_\+thf,  }\item[{double}]{sc\+\_\+\+Kmax,  }\item[{double \&}]{sc\+\_\+s1,  }\item[{double \&}]{sc\+\_\+s2,  }\item[{double \&}]{sc\+\_\+s3 }\end{DoxyParamCaption})}
+
+Manouver computation methods (One for each possible solution) \mbox{\Hypertarget{namespacedubins_a97105d98b05d374972eb247a3b313b9b}\label{namespacedubins_a97105d98b05d374972eb247a3b313b9b}} 
+\index{dubins@{dubins}!LSR@{LSR}}
+\index{LSR@{LSR}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{LSR()}{LSR()}}
+{\footnotesize\ttfamily bool dubins\+::\+L\+SR (\begin{DoxyParamCaption}\item[{double}]{sc\+\_\+th0,  }\item[{double}]{sc\+\_\+thf,  }\item[{double}]{sc\+\_\+\+Kmax,  }\item[{double \&}]{sc\+\_\+s1,  }\item[{double \&}]{sc\+\_\+s2,  }\item[{double \&}]{sc\+\_\+s3 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{namespacedubins_a97fb3d38283b8c81bf87e7896b4d7ee3}\label{namespacedubins_a97fb3d38283b8c81bf87e7896b4d7ee3}} 
+\index{dubins@{dubins}!mod2pi@{mod2pi}}
+\index{mod2pi@{mod2pi}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{mod2pi()}{mod2pi()}}
+{\footnotesize\ttfamily double dubins\+::mod2pi (\begin{DoxyParamCaption}\item[{double}]{ang }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{namespacedubins_a44bffacdaf602d5be016bf13b8672062}\label{namespacedubins_a44bffacdaf602d5be016bf13b8672062}} 
+\index{dubins@{dubins}!rangeSymm@{rangeSymm}}
+\index{rangeSymm@{rangeSymm}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{rangeSymm()}{rangeSymm()}}
+{\footnotesize\ttfamily double dubins\+::range\+Symm (\begin{DoxyParamCaption}\item[{double}]{ang }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{namespacedubins_a32f6ba83a6ccdbec95e4712c7121ab43}\label{namespacedubins_a32f6ba83a6ccdbec95e4712c7121ab43}} 
+\index{dubins@{dubins}!RLR@{RLR}}
+\index{RLR@{RLR}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{RLR()}{RLR()}}
+{\footnotesize\ttfamily bool dubins\+::\+R\+LR (\begin{DoxyParamCaption}\item[{double}]{sc\+\_\+th0,  }\item[{double}]{sc\+\_\+thf,  }\item[{double}]{sc\+\_\+\+Kmax,  }\item[{double \&}]{sc\+\_\+s1,  }\item[{double \&}]{sc\+\_\+s2,  }\item[{double \&}]{sc\+\_\+s3 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{namespacedubins_a9bd60f5d393522adc6c50ed18e625b76}\label{namespacedubins_a9bd60f5d393522adc6c50ed18e625b76}} 
+\index{dubins@{dubins}!RSL@{RSL}}
+\index{RSL@{RSL}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{RSL()}{RSL()}}
+{\footnotesize\ttfamily bool dubins\+::\+R\+SL (\begin{DoxyParamCaption}\item[{double}]{sc\+\_\+th0,  }\item[{double}]{sc\+\_\+thf,  }\item[{double}]{sc\+\_\+\+Kmax,  }\item[{double \&}]{sc\+\_\+s1,  }\item[{double \&}]{sc\+\_\+s2,  }\item[{double \&}]{sc\+\_\+s3 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{namespacedubins_a8c9128d324cf98f81ec456c548dd9d11}\label{namespacedubins_a8c9128d324cf98f81ec456c548dd9d11}} 
+\index{dubins@{dubins}!RSR@{RSR}}
+\index{RSR@{RSR}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{RSR()}{RSR()}}
+{\footnotesize\ttfamily bool dubins\+::\+R\+SR (\begin{DoxyParamCaption}\item[{double}]{sc\+\_\+th0,  }\item[{double}]{sc\+\_\+thf,  }\item[{double}]{sc\+\_\+\+Kmax,  }\item[{double \&}]{sc\+\_\+s1,  }\item[{double \&}]{sc\+\_\+s2,  }\item[{double \&}]{sc\+\_\+s3 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{namespacedubins_a0eaf23697f89435fd837a6deee63c67b}\label{namespacedubins_a0eaf23697f89435fd837a6deee63c67b}} 
+\index{dubins@{dubins}!scaleFromStandard@{scaleFromStandard}}
+\index{scaleFromStandard@{scaleFromStandard}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{scaleFromStandard()}{scaleFromStandard()}}
+{\footnotesize\ttfamily void dubins\+::scale\+From\+Standard (\begin{DoxyParamCaption}\item[{double}]{lambda,  }\item[{double}]{sc\+\_\+s1,  }\item[{double}]{sc\+\_\+s2,  }\item[{double}]{sc\+\_\+s3,  }\item[{double \&}]{s1,  }\item[{double \&}]{s2,  }\item[{double \&}]{s3 }\end{DoxyParamCaption})}
+
+\mbox{\Hypertarget{namespacedubins_ab21c2f5c30d7cbe6e92ad299e13c0ae1}\label{namespacedubins_ab21c2f5c30d7cbe6e92ad299e13c0ae1}} 
+\index{dubins@{dubins}!scaleToStandard@{scaleToStandard}}
+\index{scaleToStandard@{scaleToStandard}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{scaleToStandard()}{scaleToStandard()}}
+{\footnotesize\ttfamily void dubins\+::scale\+To\+Standard (\begin{DoxyParamCaption}\item[{double}]{x0,  }\item[{double}]{y0,  }\item[{double}]{th0,  }\item[{double}]{xf,  }\item[{double}]{yf,  }\item[{double}]{thf,  }\item[{double}]{Kmax,  }\item[{double \&}]{sc\+\_\+th0,  }\item[{double \&}]{sc\+\_\+thf,  }\item[{double \&}]{sc\+\_\+\+Kmax,  }\item[{double \&}]{lambda }\end{DoxyParamCaption})}
+
+Transform functions \mbox{\Hypertarget{namespacedubins_a3caee571774a336a82fac512ea021162}\label{namespacedubins_a3caee571774a336a82fac512ea021162}} 
+\index{dubins@{dubins}!sinc@{sinc}}
+\index{sinc@{sinc}!dubins@{dubins}}
+\doxysubsubsection{\texorpdfstring{sinc()}{sinc()}}
+{\footnotesize\ttfamily double dubins\+::sinc (\begin{DoxyParamCaption}\item[{double}]{t }\end{DoxyParamCaption})}
+
+Auxiliary functions 

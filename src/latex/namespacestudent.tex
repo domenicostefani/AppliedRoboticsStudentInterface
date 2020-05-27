@@ -1,0 +1,805 @@
+\hypertarget{namespacestudent}{}\doxysection{student Namespace Reference}
+\label{namespacestudent}\index{student@{student}}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structstudent_1_1Color__config}{Color\+\_\+config}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \mbox{\hyperlink{namespacestudent_aacb26aebecf0a57160aadff8f4ac5429}{points\+Equals}} (Point pa, Point pb)
+\item 
+void \mbox{\hyperlink{namespacestudent_ab99b5e1d9883a93f4f58b47121a06a8b}{load\+Image}} (cv\+::\+Mat \&img\+\_\+out, const string \&config\+\_\+folder)
+\item 
+void \mbox{\hyperlink{namespacestudent_a71ecb46160bae8229c5545d81499cbe1}{generic\+Image\+Listener}} (const cv\+::\+Mat \&img\+\_\+in, string topic, const string \&config\+\_\+folder)
+\item 
+\mbox{\hyperlink{structstudent_1_1Color__config}{Color\+\_\+config}} \mbox{\hyperlink{namespacestudent_abdbe12fa5f061a35e0d3df30bec1a872}{read\+\_\+colors}} (const string \&config\+\_\+folder)
+\item 
+void \mbox{\hyperlink{namespacestudent_ac31ebca52b34d038f0ef94d7aa81be13}{tune\+\_\+color\+\_\+parameters}} (const cv\+::\+Mat \&image, const string \&config\+\_\+folder)
+\item 
+bool \mbox{\hyperlink{namespacestudent_a0c862ea36dd735ed630bd4ade893d692}{extrinsic\+Calib}} (const cv\+::\+Mat \&img\+\_\+in, vector$<$ cv\+::\+Point3f $>$ object\+\_\+points, const cv\+::\+Mat \&camera\+\_\+matrix, cv\+::\+Mat \&rvec, cv\+::\+Mat \&tvec, const string \&config\+\_\+folder)
+\item 
+void \mbox{\hyperlink{namespacestudent_a6f0e094ceaac869cef0f5056d3a79452}{image\+Undistort}} (const cv\+::\+Mat \&img\+\_\+in, cv\+::\+Mat \&img\+\_\+out, const cv\+::\+Mat \&cam\+\_\+matrix, const cv\+::\+Mat \&dist\+\_\+coeffs, const string \&config\+\_\+folder)
+\item 
+void \mbox{\hyperlink{namespacestudent_abab4b372a0d7817c60ac1315991a3d24}{find\+Plane\+Transform}} (const cv\+::\+Mat \&cam\+\_\+matrix, const cv\+::\+Mat \&rvec, const cv\+::\+Mat \&tvec, const vector$<$ cv\+::\+Point3f $>$ \&object\+\_\+points\+\_\+plane, const vector$<$ cv\+::\+Point2f $>$ \&dest\+\_\+image\+\_\+points\+\_\+plane, cv\+::\+Mat \&plane\+\_\+transf, const string \&config\+\_\+folder)
+\item 
+void \mbox{\hyperlink{namespacestudent_af1e350455611261c051053268de6d579}{unwarp}} (const cv\+::\+Mat \&img\+\_\+in, cv\+::\+Mat \&img\+\_\+out, const cv\+::\+Mat \&transf, const string \&config\+\_\+folder)
+\item 
+void \mbox{\hyperlink{namespacestudent_a86371df933f2682ffb543020c09b9b37}{find\+Obstacles}} (const cv\+::\+Mat \&hsv\+\_\+img, const double scale, vector$<$ Polygon $>$ \&obstacle\+\_\+list, const \mbox{\hyperlink{structstudent_1_1Color__config}{Color\+\_\+config}} \&color\+\_\+config)
+\item 
+bool \mbox{\hyperlink{namespacestudent_ac147aa0ef901ceb20469551084e92583}{find\+Gate}} (const cv\+::\+Mat \&hsv\+\_\+img, const double scale, Polygon \&gate, const \mbox{\hyperlink{structstudent_1_1Color__config}{Color\+\_\+config}} \&color\+\_\+config)
+\item 
+bool \mbox{\hyperlink{namespacestudent_ae736e2baa1e7b96612cea01993e5969a}{find\+Victims}} (const cv\+::\+Mat \&hsv\+\_\+img, const double scale, vector$<$ pair$<$ int, Polygon $>$$>$ \&victim\+\_\+list, const \mbox{\hyperlink{structstudent_1_1Color__config}{Color\+\_\+config}} \&color\+\_\+config, const string \&config\+\_\+folder)
+\item 
+bool \mbox{\hyperlink{namespacestudent_af4f3ef58b787dd48aa05c05e4dc4e8b7}{process\+Map}} (const cv\+::\+Mat \&img\+\_\+in, const double scale, vector$<$ Polygon $>$ \&obstacle\+\_\+list, vector$<$ pair$<$ int, Polygon $>$$>$ \&victim\+\_\+list, Polygon \&gate, const string \&config\+\_\+folder)
+\item 
+void \mbox{\hyperlink{namespacestudent_afa1ef0c7d0350a8c3a84078bd7cfb14f}{baricenter}} (const Polygon \&polygon, double \&cx, double \&cy)
+\item 
+Point \mbox{\hyperlink{namespacestudent_af56a77ece3c368e8190419f5fa703a2f}{baricenter}} (const Polygon \&polygon)
+\item 
+bool \mbox{\hyperlink{namespacestudent_ae962c3cdbd728fb697fc39c8e946ffc2}{find\+Robot}} (const cv\+::\+Mat \&img\+\_\+in, const double scale, Polygon \&triangle, double \&x, double \&y, double \&theta, const string \&config\+\_\+folder)
+\item 
+void \mbox{\hyperlink{namespacestudent_a0b73564a32b0038042221449619b34ef}{center\+Gate}} (const Polygon \&gate, const Polygon \&borders, double \&x, double \&y, double \&theta)
+\item 
+bool \mbox{\hyperlink{namespacestudent_a14b0bbd19b5e7e10ee5c0c895266e72e}{is\+Arc\+Colliding}} (dubins\+::\+Arc a, Point pA, Point pB)
+\item 
+bool \mbox{\hyperlink{namespacestudent_a80bfc131afebdd7aa895617dbacaaa54}{is\+Segment\+Colliding}} (Point a1, Point a2, Point p1, Point p2)
+\item 
+bool \mbox{\hyperlink{namespacestudent_aebe5fd22fa49e0d75b299582d1a4f76b}{is\+Discretized\+Arc\+Colliding}} (dubins\+::\+Arc \&a, Point pA, Point pB)
+\item 
+bool \mbox{\hyperlink{namespacestudent_a729bdbfd1191f178132bfe1f99c22bc1}{is\+Colliding\+With\+Polygon}} (dubins\+::\+Arc \&a, Polygon p)
+\item 
+bool \mbox{\hyperlink{namespacestudent_aca04a876683af27dbfa8cefc7b655874}{is\+Curve\+Colliding}} (dubins\+::\+Curve \&curve, const vector$<$ Polygon $>$ \&obstacle\+\_\+list)
+\item 
+void \mbox{\hyperlink{namespacestudent_afce03b7c8e81fc3758e472f38aa084ec}{draw\+Dubins\+Arc}} (dubins\+::\+Arc \&da)
+\item 
+std\+::pair$<$ bool, std\+::vector$<$ dubins\+::\+Curve $>$ $>$ \mbox{\hyperlink{namespacestudent_a9ad92236880efbc81b4f44ac57024d83}{M\+DP}} (const std\+::vector$<$ Point $>$ \&path, unsigned int start\+Idx, unsigned int arrive\+Idx, double start\+Angle, double arrive\+Angle, double \&returned\+Length, const vector$<$ Polygon $>$ \&obstacle\+\_\+list)
+\item 
+bool \mbox{\hyperlink{namespacestudent_aa0d628521f7d445e696a62e1d7ae4fda}{is\+Path\+Colliding}} (vector$<$ Point $>$ vertices, vector$<$ Polygon $>$ obstacle\+\_\+list)
+\item 
+bool \mbox{\hyperlink{namespacestudent_ab137921db513654a5a0cbbbb04e41b73}{path\+Smoothing}} (int start\+\_\+index, int finish\+\_\+index, vector$<$ Point $>$ vertices, vector$<$ Polygon $>$ obstacle\+\_\+list, vector$<$ Point $>$ \&short\+\_\+path)
+\item 
+vector$<$ Point $>$ \mbox{\hyperlink{namespacestudent_a318eb1ddb436643469a1e076e7961688}{R\+R\+Tplanner}} (const Polygon \&borders, const vector$<$ Polygon $>$ \&obstacle\+\_\+list, const float x0, const float y0, const float xf, const float yf, const string \&config\+\_\+folder)
+\item 
+vector$<$ Point $>$ \mbox{\hyperlink{namespacestudent_a01f3ef767edcfbba6b63a32d0265500b}{complete\+Smoothing}} (const vector$<$ Point $>$ \&path, const vector$<$ Polygon $>$ \&obstacle\+\_\+list)
+\item 
+void \mbox{\hyperlink{namespacestudent_a36ce5592b75c63c853f30c4eb8b6c883}{draw\+Debug\+Path}} (std\+::vector$<$ Point $>$ path)
+\item 
+void \mbox{\hyperlink{namespacestudent_a274add89a9a406df4a2c10e4f5a298f3}{draw\+Debug\+Image}} (const Polygon \&borders, const vector$<$ Polygon $>$ \&obstacle\+\_\+list, const vector$<$ pair$<$ int, Polygon $>$$>$ \&victim\+\_\+list)
+\item 
+vector$<$ dubins\+::\+Curve $>$ \mbox{\hyperlink{namespacestudent_a191a0a4b875ab8e51667a0e1d102634a}{collect\+Victims\+Path}} (const Polygon \&borders, const vector$<$ Polygon $>$ \&obstacle\+\_\+list, const vector$<$ pair$<$ int, Polygon $>$$>$ \&victim\+\_\+list, float x, float y, float theta, float xf, float yf, float thf, const string \&config\+\_\+folder)
+\item 
+float \mbox{\hyperlink{namespacestudent_a1e444b8fa1e5101e71318775a0247c6b}{get\+Point\+Path\+Length}} (const vector$<$ Point $>$ \&path)
+\item 
+float \mbox{\hyperlink{namespacestudent_a79e57884d6d72c214eae050a1980d499}{get\+Pose\+Path\+Length}} (const vector$<$ Pose $>$ \&path)
+\item 
+float \mbox{\hyperlink{namespacestudent_a1ed9f8d3bd9ca7f77e060a0f927680ff}{get\+Path\+Length}} (const vector$<$ dubins\+::\+Curve $>$ \&multipoint\+Path)
+\item 
+bool \mbox{\hyperlink{namespacestudent_ab247edd9beb1bcd4071f35ba700a7d78}{sor\+By\+Distance}} (const pair$<$ int, float $>$ \&p1, const pair$<$ int, float $>$ \&p2)
+\item 
+vector$<$ dubins\+::\+Curve $>$ \mbox{\hyperlink{namespacestudent_a11cce2cd1028ac4cbd8932e5e06721bf}{best\+Score\+Greedy}} (const Polygon \&borders, const vector$<$ Polygon $>$ \&obstacle\+\_\+list, const vector$<$ pair$<$ int, Polygon $>$$>$ \&victim\+\_\+list, float x, float y, float theta, float xf, float yf, float thf, const string \&config\+\_\+folder)
+\item 
+bool \mbox{\hyperlink{namespacestudent_a7246f78ee75ada13dedc36bd4e354aa9}{plan\+Path}} (const Polygon \&borders, const vector$<$ Polygon $>$ \&obstacle\+\_\+list, const vector$<$ pair$<$ int, Polygon $>$$>$ \&victim\+\_\+list, const Polygon \&gate, const float x, const float y, const float theta, Path \&path, const string \&config\+\_\+folder)
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+cv\+::\+Mat \mbox{\hyperlink{namespacestudent_ac79fbde433a9fb6df9d0b05c3deaac0e}{dc\+Img}} = cv\+::\+Mat(600, 800, C\+V\+\_\+8\+U\+C3, cv\+::\+Scalar(255,255,255))
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Function Documentation}
+\mbox{\Hypertarget{namespacestudent_af56a77ece3c368e8190419f5fa703a2f}\label{namespacestudent_af56a77ece3c368e8190419f5fa703a2f}} 
+\index{student@{student}!baricenter@{baricenter}}
+\index{baricenter@{baricenter}!student@{student}}
+\doxysubsubsection{\texorpdfstring{baricenter()}{baricenter()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily Point student\+::baricenter (\begin{DoxyParamCaption}\item[{const Polygon \&}]{polygon }\end{DoxyParamCaption})}
+
+Finds the baricenter Point of a utils\+::\+Polygon. 
+\begin{DoxyParams}{Parameters}
+{\em polygon} & Input polygon. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The baricenter Point. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_afa1ef0c7d0350a8c3a84078bd7cfb14f}\label{namespacestudent_afa1ef0c7d0350a8c3a84078bd7cfb14f}} 
+\index{student@{student}!baricenter@{baricenter}}
+\index{baricenter@{baricenter}!student@{student}}
+\doxysubsubsection{\texorpdfstring{baricenter()}{baricenter()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void student\+::baricenter (\begin{DoxyParamCaption}\item[{const Polygon \&}]{polygon,  }\item[{double \&}]{cx,  }\item[{double \&}]{cy }\end{DoxyParamCaption})}
+
+Finds the baricenter coordinates of a utils\+::\+Polygon. 
+\begin{DoxyParams}{Parameters}
+{\em polygon} & Input polygon. \\
+\hline
+{\em cx} & Output x coordinate. \\
+\hline
+{\em cy} & Output y coordinate. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacestudent_a11cce2cd1028ac4cbd8932e5e06721bf}\label{namespacestudent_a11cce2cd1028ac4cbd8932e5e06721bf}} 
+\index{student@{student}!bestScoreGreedy@{bestScoreGreedy}}
+\index{bestScoreGreedy@{bestScoreGreedy}!student@{student}}
+\doxysubsubsection{\texorpdfstring{bestScoreGreedy()}{bestScoreGreedy()}}
+{\footnotesize\ttfamily vector$<$dubins\+::\+Curve$>$ student\+::best\+Score\+Greedy (\begin{DoxyParamCaption}\item[{const Polygon \&}]{borders,  }\item[{const vector$<$ Polygon $>$ \&}]{obstacle\+\_\+list,  }\item[{const vector$<$ pair$<$ int, Polygon $>$$>$ \&}]{victim\+\_\+list,  }\item[{float}]{x,  }\item[{float}]{y,  }\item[{float}]{theta,  }\item[{float}]{xf,  }\item[{float}]{yf,  }\item[{float}]{thf,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Plans a path that maximizes the time-\/score of the mission. For each victim collected a time-\/bonus is granted. At each step, the greedy function picks the victim ~\newline
+ that better improves the final score. To avoid loops and improve the search, the victims to test are ordered by distance from the starting point. 
+\begin{DoxyParams}{Parameters}
+{\em borders} & Borders of the arena \\
+\hline
+{\em obstacle\+\_\+list} & List of obstacle polygons. \\
+\hline
+{\em victim\+\_\+list} & List of victim polygons. \\
+\hline
+{\em x} & Starting point x coordinate. \\
+\hline
+{\em y} & Starting point y coordinate. \\
+\hline
+{\em theta} & Starting angle. \\
+\hline
+{\em xf} & Arrival point x coordinate. \\
+\hline
+{\em yf} & Arrival point y coordinate. \\
+\hline
+{\em thf} & Arrival angle. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The multi-\/point dubins curve solution. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a0b73564a32b0038042221449619b34ef}\label{namespacestudent_a0b73564a32b0038042221449619b34ef}} 
+\index{student@{student}!centerGate@{centerGate}}
+\index{centerGate@{centerGate}!student@{student}}
+\doxysubsubsection{\texorpdfstring{centerGate()}{centerGate()}}
+{\footnotesize\ttfamily void student\+::center\+Gate (\begin{DoxyParamCaption}\item[{const Polygon \&}]{gate,  }\item[{const Polygon \&}]{borders,  }\item[{double \&}]{x,  }\item[{double \&}]{y,  }\item[{double \&}]{theta }\end{DoxyParamCaption})}
+
+Find the arrival point. 
+\begin{DoxyParams}{Parameters}
+{\em gate} & Gate polygon. \\
+\hline
+{\em borders} & Arena borders polygon. \\
+\hline
+{\em x} & Output arrival x coordinate. \\
+\hline
+{\em y} & Output arrival y coordinate. \\
+\hline
+{\em theta} & Output arrival angle. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The baricenter of the gate polygon with the correct arrival angle. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a191a0a4b875ab8e51667a0e1d102634a}\label{namespacestudent_a191a0a4b875ab8e51667a0e1d102634a}} 
+\index{student@{student}!collectVictimsPath@{collectVictimsPath}}
+\index{collectVictimsPath@{collectVictimsPath}!student@{student}}
+\doxysubsubsection{\texorpdfstring{collectVictimsPath()}{collectVictimsPath()}}
+{\footnotesize\ttfamily vector$<$dubins\+::\+Curve$>$ student\+::collect\+Victims\+Path (\begin{DoxyParamCaption}\item[{const Polygon \&}]{borders,  }\item[{const vector$<$ Polygon $>$ \&}]{obstacle\+\_\+list,  }\item[{const vector$<$ pair$<$ int, Polygon $>$$>$ \&}]{victim\+\_\+list,  }\item[{float}]{x,  }\item[{float}]{y,  }\item[{float}]{theta,  }\item[{float}]{xf,  }\item[{float}]{yf,  }\item[{float}]{thf,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Plans a path in which every victim is collected in the correct order. Calls the planning steps for each sub-\/path in the following order\+: R\+RT planner, path smoothing, multi-\/point dubins curve problem. 
+\begin{DoxyParams}{Parameters}
+{\em borders} & Borders of the arena \\
+\hline
+{\em obstacle\+\_\+list} & List of obstacle polygons. \\
+\hline
+{\em victim\+\_\+list} & List of victim polygons. \\
+\hline
+{\em x} & Starting point x coordinate. \\
+\hline
+{\em y} & Starting point y coordinate. \\
+\hline
+{\em theta} & Starting angle. \\
+\hline
+{\em xf} & Arrival point x coordinate. \\
+\hline
+{\em yf} & Arrival point y coordinate. \\
+\hline
+{\em thf} & Arrival angle. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The multi-\/point dubins curve solution. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a01f3ef767edcfbba6b63a32d0265500b}\label{namespacestudent_a01f3ef767edcfbba6b63a32d0265500b}} 
+\index{student@{student}!completeSmoothing@{completeSmoothing}}
+\index{completeSmoothing@{completeSmoothing}!student@{student}}
+\doxysubsubsection{\texorpdfstring{completeSmoothing()}{completeSmoothing()}}
+{\footnotesize\ttfamily vector$<$Point$>$ student\+::complete\+Smoothing (\begin{DoxyParamCaption}\item[{const vector$<$ Point $>$ \&}]{path,  }\item[{const vector$<$ Polygon $>$ \&}]{obstacle\+\_\+list }\end{DoxyParamCaption})}
+
+Tries to reduce the number of points in a path by combinaning different techniques. The function performs recursive smoothing iteratively until no change is observed. An additional step is performed on the points of the path in reversed order to achieve further smoothing. 
+\begin{DoxyParams}{Parameters}
+{\em path} & Input path to smooth. \\
+\hline
+{\em obstacle\+\_\+list} & List of obstacle polygons. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The smoothed path. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a274add89a9a406df4a2c10e4f5a298f3}\label{namespacestudent_a274add89a9a406df4a2c10e4f5a298f3}} 
+\index{student@{student}!drawDebugImage@{drawDebugImage}}
+\index{drawDebugImage@{drawDebugImage}!student@{student}}
+\doxysubsubsection{\texorpdfstring{drawDebugImage()}{drawDebugImage()}}
+{\footnotesize\ttfamily void student\+::draw\+Debug\+Image (\begin{DoxyParamCaption}\item[{const Polygon \&}]{borders,  }\item[{const vector$<$ Polygon $>$ \&}]{obstacle\+\_\+list,  }\item[{const vector$<$ pair$<$ int, Polygon $>$$>$ \&}]{victim\+\_\+list }\end{DoxyParamCaption})}
+
+Draws borders, obstacles and victims on a debug image 
+\begin{DoxyParams}{Parameters}
+{\em borders} & Borders of the arena \\
+\hline
+{\em obstacle\+\_\+list} & List of obstacle polygons. \\
+\hline
+{\em victim\+\_\+list} & List of victim polygons. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacestudent_a36ce5592b75c63c853f30c4eb8b6c883}\label{namespacestudent_a36ce5592b75c63c853f30c4eb8b6c883}} 
+\index{student@{student}!drawDebugPath@{drawDebugPath}}
+\index{drawDebugPath@{drawDebugPath}!student@{student}}
+\doxysubsubsection{\texorpdfstring{drawDebugPath()}{drawDebugPath()}}
+{\footnotesize\ttfamily void student\+::draw\+Debug\+Path (\begin{DoxyParamCaption}\item[{std\+::vector$<$ Point $>$}]{path }\end{DoxyParamCaption})}
+
+Draws the path on a debug image. 
+\begin{DoxyParams}{Parameters}
+{\em path} & The path to draw. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacestudent_afce03b7c8e81fc3758e472f38aa084ec}\label{namespacestudent_afce03b7c8e81fc3758e472f38aa084ec}} 
+\index{student@{student}!drawDubinsArc@{drawDubinsArc}}
+\index{drawDubinsArc@{drawDubinsArc}!student@{student}}
+\doxysubsubsection{\texorpdfstring{drawDubinsArc()}{drawDubinsArc()}}
+{\footnotesize\ttfamily void student\+::draw\+Dubins\+Arc (\begin{DoxyParamCaption}\item[{dubins\+::\+Arc \&}]{da }\end{DoxyParamCaption})}
+
+Draws a dubins\+::\+Arc on a debug image. 
+\begin{DoxyParams}{Parameters}
+{\em da} & Arc to draw. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacestudent_a0c862ea36dd735ed630bd4ade893d692}\label{namespacestudent_a0c862ea36dd735ed630bd4ade893d692}} 
+\index{student@{student}!extrinsicCalib@{extrinsicCalib}}
+\index{extrinsicCalib@{extrinsicCalib}!student@{student}}
+\doxysubsubsection{\texorpdfstring{extrinsicCalib()}{extrinsicCalib()}}
+{\footnotesize\ttfamily bool student\+::extrinsic\+Calib (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{img\+\_\+in,  }\item[{vector$<$ cv\+::\+Point3f $>$}]{object\+\_\+points,  }\item[{const cv\+::\+Mat \&}]{camera\+\_\+matrix,  }\item[{cv\+::\+Mat \&}]{rvec,  }\item[{cv\+::\+Mat \&}]{tvec,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Performs extrinsic calibration. 
+\begin{DoxyParams}{Parameters}
+{\em img\+\_\+in} & Input image. \\
+\hline
+{\em object\+\_\+points} & Array of object points in the object coordinate space. \\
+\hline
+{\em camera\+\_\+matrix} & Input camera matrix. \\
+\hline
+{\em rvec} & Output rotation vector. \\
+\hline
+{\em tvec} & Output translation vector. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the function is executed successfully. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_ac147aa0ef901ceb20469551084e92583}\label{namespacestudent_ac147aa0ef901ceb20469551084e92583}} 
+\index{student@{student}!findGate@{findGate}}
+\index{findGate@{findGate}!student@{student}}
+\doxysubsubsection{\texorpdfstring{findGate()}{findGate()}}
+{\footnotesize\ttfamily bool student\+::find\+Gate (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{hsv\+\_\+img,  }\item[{const double}]{scale,  }\item[{Polygon \&}]{gate,  }\item[{const \mbox{\hyperlink{structstudent_1_1Color__config}{Color\+\_\+config}} \&}]{color\+\_\+config }\end{DoxyParamCaption})}
+
+Finds the gate in the arena given the arena image. Gate color is green. 
+\begin{DoxyParams}{Parameters}
+{\em hsv\+\_\+img} & H\+SV input image. \\
+\hline
+{\em scale} & Scaling factor. \\
+\hline
+{\em gate} & Polygon that represents the gate. \\
+\hline
+{\em color\+\_\+config} & Color bounds configuration. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if gate was found. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a86371df933f2682ffb543020c09b9b37}\label{namespacestudent_a86371df933f2682ffb543020c09b9b37}} 
+\index{student@{student}!findObstacles@{findObstacles}}
+\index{findObstacles@{findObstacles}!student@{student}}
+\doxysubsubsection{\texorpdfstring{findObstacles()}{findObstacles()}}
+{\footnotesize\ttfamily void student\+::find\+Obstacles (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{hsv\+\_\+img,  }\item[{const double}]{scale,  }\item[{vector$<$ Polygon $>$ \&}]{obstacle\+\_\+list,  }\item[{const \mbox{\hyperlink{structstudent_1_1Color__config}{Color\+\_\+config}} \&}]{color\+\_\+config }\end{DoxyParamCaption})}
+
+Finds the obstacles in the arena given the arena image and dilate to account for robot dimensions. Obstacle color is red. 
+\begin{DoxyParams}{Parameters}
+{\em hsv\+\_\+img} & H\+SV input image. \\
+\hline
+{\em scale} & Scaling factor. \\
+\hline
+{\em obstacle\+\_\+list} & List of output obstacle polygons. \\
+\hline
+{\em color\+\_\+config} & Color bounds configuration. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacestudent_abab4b372a0d7817c60ac1315991a3d24}\label{namespacestudent_abab4b372a0d7817c60ac1315991a3d24}} 
+\index{student@{student}!findPlaneTransform@{findPlaneTransform}}
+\index{findPlaneTransform@{findPlaneTransform}!student@{student}}
+\doxysubsubsection{\texorpdfstring{findPlaneTransform()}{findPlaneTransform()}}
+{\footnotesize\ttfamily void student\+::find\+Plane\+Transform (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{cam\+\_\+matrix,  }\item[{const cv\+::\+Mat \&}]{rvec,  }\item[{const cv\+::\+Mat \&}]{tvec,  }\item[{const vector$<$ cv\+::\+Point3f $>$ \&}]{object\+\_\+points\+\_\+plane,  }\item[{const vector$<$ cv\+::\+Point2f $>$ \&}]{dest\+\_\+image\+\_\+points\+\_\+plane,  }\item[{cv\+::\+Mat \&}]{plane\+\_\+transf,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Calculates a perspetive transform from four pairs of the corresponding points. 
+\begin{DoxyParams}{Parameters}
+{\em cam\+\_\+matrix} & Input camera matrix. \\
+\hline
+{\em rvec} & Output rotation vector. \\
+\hline
+{\em tvec} & Output translation vector. \\
+\hline
+{\em object\+\_\+points\+\_\+plane} & Array of object points. \\
+\hline
+{\em dest\+\_\+image\+\_\+points\+\_\+plane} & Coordinates of the corresponding quadrangle vertices in the destination image. \\
+\hline
+{\em plane\+\_\+transf} & Output perspective transform. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacestudent_ae962c3cdbd728fb697fc39c8e946ffc2}\label{namespacestudent_ae962c3cdbd728fb697fc39c8e946ffc2}} 
+\index{student@{student}!findRobot@{findRobot}}
+\index{findRobot@{findRobot}!student@{student}}
+\doxysubsubsection{\texorpdfstring{findRobot()}{findRobot()}}
+{\footnotesize\ttfamily bool student\+::find\+Robot (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{img\+\_\+in,  }\item[{const double}]{scale,  }\item[{Polygon \&}]{triangle,  }\item[{double \&}]{x,  }\item[{double \&}]{y,  }\item[{double \&}]{theta,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Finds the robot in the arena given the arena image. 
+\begin{DoxyParams}{Parameters}
+{\em img\+\_\+in} & Input image. \\
+\hline
+{\em scale} & Scaling factor. \\
+\hline
+{\em triangle} & Triangular polygon representing the robot. \\
+\hline
+{\em x} & Robot position x coordinate. \\
+\hline
+{\em y} & Robot position y coordinate. \\
+\hline
+{\em theta} & Robot position angle. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if robot was found. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_ae736e2baa1e7b96612cea01993e5969a}\label{namespacestudent_ae736e2baa1e7b96612cea01993e5969a}} 
+\index{student@{student}!findVictims@{findVictims}}
+\index{findVictims@{findVictims}!student@{student}}
+\doxysubsubsection{\texorpdfstring{findVictims()}{findVictims()}}
+{\footnotesize\ttfamily bool student\+::find\+Victims (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{hsv\+\_\+img,  }\item[{const double}]{scale,  }\item[{vector$<$ pair$<$ int, Polygon $>$$>$ \&}]{victim\+\_\+list,  }\item[{const \mbox{\hyperlink{structstudent_1_1Color__config}{Color\+\_\+config}} \&}]{color\+\_\+config,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Finds the victims in the arena given the arena image and detects victim number. Victim color is green. Number is detected by template matching. Template matching is performed by extracting the axes-\/aligned minimal bounding rectangle for each region of interest and comparing it with the templates in four 90 degree orientations to maximize the matching score. 
+\begin{DoxyParams}{Parameters}
+{\em hsv\+\_\+img} & H\+SV input image. \\
+\hline
+{\em scale} & Scaling factor. \\
+\hline
+{\em victim\+\_\+list} & List of output victim polygons. \\
+\hline
+{\em color\+\_\+config} & Color bounds configuration. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if victims were found. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a71ecb46160bae8229c5545d81499cbe1}\label{namespacestudent_a71ecb46160bae8229c5545d81499cbe1}} 
+\index{student@{student}!genericImageListener@{genericImageListener}}
+\index{genericImageListener@{genericImageListener}!student@{student}}
+\doxysubsubsection{\texorpdfstring{genericImageListener()}{genericImageListener()}}
+{\footnotesize\ttfamily void student\+::generic\+Image\+Listener (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{img\+\_\+in,  }\item[{string}]{topic,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Saves an image when S key is pressed. 
+\begin{DoxyParams}{Parameters}
+{\em img\+\_\+in} & Input image. \\
+\hline
+{\em topic} & Image topic name. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacestudent_a1ed9f8d3bd9ca7f77e060a0f927680ff}\label{namespacestudent_a1ed9f8d3bd9ca7f77e060a0f927680ff}} 
+\index{student@{student}!getPathLength@{getPathLength}}
+\index{getPathLength@{getPathLength}!student@{student}}
+\doxysubsubsection{\texorpdfstring{getPathLength()}{getPathLength()}}
+{\footnotesize\ttfamily float student\+::get\+Path\+Length (\begin{DoxyParamCaption}\item[{const vector$<$ dubins\+::\+Curve $>$ \&}]{multipoint\+Path }\end{DoxyParamCaption})}
+
+Computes the length of a multi-\/point dubins curve. 
+\begin{DoxyParams}{Parameters}
+{\em multipoint\+Path} & Input dubins curve. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The legth of the multi-\/point dubins curve. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a1e444b8fa1e5101e71318775a0247c6b}\label{namespacestudent_a1e444b8fa1e5101e71318775a0247c6b}} 
+\index{student@{student}!getPointPathLength@{getPointPathLength}}
+\index{getPointPathLength@{getPointPathLength}!student@{student}}
+\doxysubsubsection{\texorpdfstring{getPointPathLength()}{getPointPathLength()}}
+{\footnotesize\ttfamily float student\+::get\+Point\+Path\+Length (\begin{DoxyParamCaption}\item[{const vector$<$ Point $>$ \&}]{path }\end{DoxyParamCaption})}
+
+Computes the length of a path of points. 
+\begin{DoxyParams}{Parameters}
+{\em path} & Input path points. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The legth of the path. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a79e57884d6d72c214eae050a1980d499}\label{namespacestudent_a79e57884d6d72c214eae050a1980d499}} 
+\index{student@{student}!getPosePathLength@{getPosePathLength}}
+\index{getPosePathLength@{getPosePathLength}!student@{student}}
+\doxysubsubsection{\texorpdfstring{getPosePathLength()}{getPosePathLength()}}
+{\footnotesize\ttfamily float student\+::get\+Pose\+Path\+Length (\begin{DoxyParamCaption}\item[{const vector$<$ Pose $>$ \&}]{path }\end{DoxyParamCaption})}
+
+Computes the length of a path of poses. 
+\begin{DoxyParams}{Parameters}
+{\em path} & Input path poses. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The legth of the path. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a6f0e094ceaac869cef0f5056d3a79452}\label{namespacestudent_a6f0e094ceaac869cef0f5056d3a79452}} 
+\index{student@{student}!imageUndistort@{imageUndistort}}
+\index{imageUndistort@{imageUndistort}!student@{student}}
+\doxysubsubsection{\texorpdfstring{imageUndistort()}{imageUndistort()}}
+{\footnotesize\ttfamily void student\+::image\+Undistort (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{img\+\_\+in,  }\item[{cv\+::\+Mat \&}]{img\+\_\+out,  }\item[{const cv\+::\+Mat \&}]{cam\+\_\+matrix,  }\item[{const cv\+::\+Mat \&}]{dist\+\_\+coeffs,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Undistorts the input image. 
+\begin{DoxyParams}{Parameters}
+{\em img\+\_\+in} & Input distorted image. \\
+\hline
+{\em img\+\_\+out} & Output corrected image. \\
+\hline
+{\em cam\+\_\+matrix} & Input camera matrix. \\
+\hline
+{\em dist\+\_\+coeffs} & Input vector of distortion coefficients. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacestudent_a14b0bbd19b5e7e10ee5c0c895266e72e}\label{namespacestudent_a14b0bbd19b5e7e10ee5c0c895266e72e}} 
+\index{student@{student}!isArcColliding@{isArcColliding}}
+\index{isArcColliding@{isArcColliding}!student@{student}}
+\doxysubsubsection{\texorpdfstring{isArcColliding()}{isArcColliding()}}
+{\footnotesize\ttfamily bool student\+::is\+Arc\+Colliding (\begin{DoxyParamCaption}\item[{dubins\+::\+Arc}]{a,  }\item[{Point}]{pA,  }\item[{Point}]{pB }\end{DoxyParamCaption})}
+
+Checks if a dubins\+::\+Arc is colliding with a segment. 
+\begin{DoxyParams}{Parameters}
+{\em a} & Arc to check. \\
+\hline
+{\em pA} & First point of the segment. \\
+\hline
+{\em pB} & Second point of the segment. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if arc and segment are intersecting. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a729bdbfd1191f178132bfe1f99c22bc1}\label{namespacestudent_a729bdbfd1191f178132bfe1f99c22bc1}} 
+\index{student@{student}!isCollidingWithPolygon@{isCollidingWithPolygon}}
+\index{isCollidingWithPolygon@{isCollidingWithPolygon}!student@{student}}
+\doxysubsubsection{\texorpdfstring{isCollidingWithPolygon()}{isCollidingWithPolygon()}}
+{\footnotesize\ttfamily bool student\+::is\+Colliding\+With\+Polygon (\begin{DoxyParamCaption}\item[{dubins\+::\+Arc \&}]{a,  }\item[{Polygon}]{p }\end{DoxyParamCaption})}
+
+Checks if a dubins\+::\+Arc is colliding with a given polygon. A dubins\+::\+Arc can also be a segment. 
+\begin{DoxyParams}{Parameters}
+{\em a} & Arc to check. \\
+\hline
+{\em p} & The polygon to check. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the arc is intersecting the polygon. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_aca04a876683af27dbfa8cefc7b655874}\label{namespacestudent_aca04a876683af27dbfa8cefc7b655874}} 
+\index{student@{student}!isCurveColliding@{isCurveColliding}}
+\index{isCurveColliding@{isCurveColliding}!student@{student}}
+\doxysubsubsection{\texorpdfstring{isCurveColliding()}{isCurveColliding()}}
+{\footnotesize\ttfamily bool student\+::is\+Curve\+Colliding (\begin{DoxyParamCaption}\item[{dubins\+::\+Curve \&}]{curve,  }\item[{const vector$<$ Polygon $>$ \&}]{obstacle\+\_\+list }\end{DoxyParamCaption})}
+
+Checks if a dubins\+::\+Curve is colliding with any obstacle. The function performs three checks, one for each dubins\+::\+Arc component of the dubins\+::\+Curve. 
+\begin{DoxyParams}{Parameters}
+{\em curve} & Curve to check. \\
+\hline
+{\em obstacle\+\_\+list} & The list of obstacle polygons to check. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the curve is intersecting any obstacle. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_aebe5fd22fa49e0d75b299582d1a4f76b}\label{namespacestudent_aebe5fd22fa49e0d75b299582d1a4f76b}} 
+\index{student@{student}!isDiscretizedArcColliding@{isDiscretizedArcColliding}}
+\index{isDiscretizedArcColliding@{isDiscretizedArcColliding}!student@{student}}
+\doxysubsubsection{\texorpdfstring{isDiscretizedArcColliding()}{isDiscretizedArcColliding()}}
+{\footnotesize\ttfamily bool student\+::is\+Discretized\+Arc\+Colliding (\begin{DoxyParamCaption}\item[{dubins\+::\+Arc \&}]{a,  }\item[{Point}]{pA,  }\item[{Point}]{pB }\end{DoxyParamCaption})}
+
+Approximate approach to check for collisions between dubins\+::\+Arc and segment using arc discretization. 
+\begin{DoxyParams}{Parameters}
+{\em a} & Arc to check. \\
+\hline
+{\em pA} & First point of the segment. \\
+\hline
+{\em pB} & Second point of the segment. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the arc and segment are intersecting. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_aa0d628521f7d445e696a62e1d7ae4fda}\label{namespacestudent_aa0d628521f7d445e696a62e1d7ae4fda}} 
+\index{student@{student}!isPathColliding@{isPathColliding}}
+\index{isPathColliding@{isPathColliding}!student@{student}}
+\doxysubsubsection{\texorpdfstring{isPathColliding()}{isPathColliding()}}
+{\footnotesize\ttfamily bool student\+::is\+Path\+Colliding (\begin{DoxyParamCaption}\item[{vector$<$ Point $>$}]{vertices,  }\item[{vector$<$ Polygon $>$}]{obstacle\+\_\+list }\end{DoxyParamCaption})}
+
+Checks if a path is colliding with any obstacle. 
+\begin{DoxyParams}{Parameters}
+{\em vertices} & List of points in the path. \\
+\hline
+{\em obstacle\+\_\+list} & List of obstacle polygons. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the path is colliding with any obstacle. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a80bfc131afebdd7aa895617dbacaaa54}\label{namespacestudent_a80bfc131afebdd7aa895617dbacaaa54}} 
+\index{student@{student}!isSegmentColliding@{isSegmentColliding}}
+\index{isSegmentColliding@{isSegmentColliding}!student@{student}}
+\doxysubsubsection{\texorpdfstring{isSegmentColliding()}{isSegmentColliding()}}
+{\footnotesize\ttfamily bool student\+::is\+Segment\+Colliding (\begin{DoxyParamCaption}\item[{Point}]{a1,  }\item[{Point}]{a2,  }\item[{Point}]{p1,  }\item[{Point}]{p2 }\end{DoxyParamCaption})}
+
+Checks if a segment is colliding with another segment. 
+\begin{DoxyParams}{Parameters}
+{\em a1} & First point of the first segment. \\
+\hline
+{\em a2} & Second point of the second segment. \\
+\hline
+{\em p1} & First point of the second segment. \\
+\hline
+{\em p2} & Second point of the second segment. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the segments are intersecting. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_ab99b5e1d9883a93f4f58b47121a06a8b}\label{namespacestudent_ab99b5e1d9883a93f4f58b47121a06a8b}} 
+\index{student@{student}!loadImage@{loadImage}}
+\index{loadImage@{loadImage}!student@{student}}
+\doxysubsubsection{\texorpdfstring{loadImage()}{loadImage()}}
+{\footnotesize\ttfamily void student\+::load\+Image (\begin{DoxyParamCaption}\item[{cv\+::\+Mat \&}]{img\+\_\+out,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Loads images from the file system. 
+\begin{DoxyParams}{Parameters}
+{\em img\+\_\+out} & Output image. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+{\em initialized} & True if images were found. \\
+\hline
+{\em img\+\_\+list} & List of images to load. \\
+\hline
+{\em idx} & Index of the current image. \\
+\hline
+{\em function\+\_\+call\+\_\+counter} & Iterations count. \\
+\hline
+{\em freeze\+\_\+img\+\_\+n\+\_\+step} & Hold the current image for this number of iterations. \\
+\hline
+{\em current\+\_\+img} & Store the image for a period, avoid to load it from file every time. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacestudent_a9ad92236880efbc81b4f44ac57024d83}\label{namespacestudent_a9ad92236880efbc81b4f44ac57024d83}} 
+\index{student@{student}!MDP@{MDP}}
+\index{MDP@{MDP}!student@{student}}
+\doxysubsubsection{\texorpdfstring{MDP()}{MDP()}}
+{\footnotesize\ttfamily std\+::pair$<$bool,std\+::vector$<$dubins\+::\+Curve$>$ $>$ student\+::\+M\+DP (\begin{DoxyParamCaption}\item[{const std\+::vector$<$ Point $>$ \&}]{path,  }\item[{unsigned int}]{start\+Idx,  }\item[{unsigned int}]{arrive\+Idx,  }\item[{double}]{start\+Angle,  }\item[{double}]{arrive\+Angle,  }\item[{double \&}]{returned\+Length,  }\item[{const vector$<$ Polygon $>$ \&}]{obstacle\+\_\+list }\end{DoxyParamCaption})}
+
+Finds the shortest multi-\/point dubins curve for the given path. The recursive function has two base cases\+: two-\/points dubins\+::\+Curve and three-\/points dubins\+::\+Curve. The recursion step is called on N-\/points dubins\+::\+Curve. Free angles are chosen among a number of test angles. The choice is optimized by adding the average between the fixed angles. 
+\begin{DoxyParams}{Parameters}
+{\em path} & List of points in the path. \\
+\hline
+{\em start\+Idx} & Recursion start index. \\
+\hline
+{\em arrive\+Idx} & Recursion arrival index. \\
+\hline
+{\em start\+Angle} & Starting angle. \\
+\hline
+{\em arrive\+Angle} & Arrival angle. \\
+\hline
+{\em returned\+Length} & Output length of the shortest path. \\
+\hline
+{\em obstacle\+\_\+list} & List of obstacle polygons. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+A pair with true if the path does not collide and the shortest multi-\/point dubins\+::\+Curve. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_ab137921db513654a5a0cbbbb04e41b73}\label{namespacestudent_ab137921db513654a5a0cbbbb04e41b73}} 
+\index{student@{student}!pathSmoothing@{pathSmoothing}}
+\index{pathSmoothing@{pathSmoothing}!student@{student}}
+\doxysubsubsection{\texorpdfstring{pathSmoothing()}{pathSmoothing()}}
+{\footnotesize\ttfamily bool student\+::path\+Smoothing (\begin{DoxyParamCaption}\item[{int}]{start\+\_\+index,  }\item[{int}]{finish\+\_\+index,  }\item[{vector$<$ Point $>$}]{vertices,  }\item[{vector$<$ Polygon $>$}]{obstacle\+\_\+list,  }\item[{vector$<$ Point $>$ \&}]{short\+\_\+path }\end{DoxyParamCaption})}
+
+Tries to reduce the number of points in a path recursively. Splits the path into two and performs recursion. 
+\begin{DoxyParams}{Parameters}
+{\em start\+\_\+index} & Index of the starting point. \\
+\hline
+{\em finish\+\_\+index} & Index of the arrival point. \\
+\hline
+{\em vertices} & Path to smooth. \\
+\hline
+{\em obstacle\+\_\+list} & List of obstacle polygons. \\
+\hline
+{\em short\+\_\+path} & Output smoothed path. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if a path with fewer points was found. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_a7246f78ee75ada13dedc36bd4e354aa9}\label{namespacestudent_a7246f78ee75ada13dedc36bd4e354aa9}} 
+\index{student@{student}!planPath@{planPath}}
+\index{planPath@{planPath}!student@{student}}
+\doxysubsubsection{\texorpdfstring{planPath()}{planPath()}}
+{\footnotesize\ttfamily bool student\+::plan\+Path (\begin{DoxyParamCaption}\item[{const Polygon \&}]{borders,  }\item[{const vector$<$ Polygon $>$ \&}]{obstacle\+\_\+list,  }\item[{const vector$<$ pair$<$ int, Polygon $>$$>$ \&}]{victim\+\_\+list,  }\item[{const Polygon \&}]{gate,  }\item[{const float}]{x,  }\item[{const float}]{y,  }\item[{const float}]{theta,  }\item[{Path \&}]{path,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Plans a path according to the mission selected. 
+\begin{DoxyParams}{Parameters}
+{\em borders} & Borders of the arena \\
+\hline
+{\em obstacle\+\_\+list} & List of obstacle polygons. \\
+\hline
+{\em victim\+\_\+list} & List of victim polygons. \\
+\hline
+{\em gate} & Gate polygon. \\
+\hline
+{\em x} & Starting point x coordinate. \\
+\hline
+{\em y} & Starting point y coordinate. \\
+\hline
+{\em theta} & Starting angle. \\
+\hline
+{\em path} & Output planned path. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the path was planned correctly. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_aacb26aebecf0a57160aadff8f4ac5429}\label{namespacestudent_aacb26aebecf0a57160aadff8f4ac5429}} 
+\index{student@{student}!pointsEquals@{pointsEquals}}
+\index{pointsEquals@{pointsEquals}!student@{student}}
+\doxysubsubsection{\texorpdfstring{pointsEquals()}{pointsEquals()}}
+{\footnotesize\ttfamily bool student\+::points\+Equals (\begin{DoxyParamCaption}\item[{Point}]{pa,  }\item[{Point}]{pb }\end{DoxyParamCaption})}
+
+Returns true if the two Points have the same x and y coordinates. 
+\begin{DoxyParams}{Parameters}
+{\em pa} & First Point. \\
+\hline
+{\em pb} & Second Point. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The test result. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_af4f3ef58b787dd48aa05c05e4dc4e8b7}\label{namespacestudent_af4f3ef58b787dd48aa05c05e4dc4e8b7}} 
+\index{student@{student}!processMap@{processMap}}
+\index{processMap@{processMap}!student@{student}}
+\doxysubsubsection{\texorpdfstring{processMap()}{processMap()}}
+{\footnotesize\ttfamily bool student\+::process\+Map (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{img\+\_\+in,  }\item[{const double}]{scale,  }\item[{vector$<$ Polygon $>$ \&}]{obstacle\+\_\+list,  }\item[{vector$<$ pair$<$ int, Polygon $>$$>$ \&}]{victim\+\_\+list,  }\item[{Polygon \&}]{gate,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Initiates the map processing starting from an image of the arena. Converts the input image in H\+SV space for better color detection and calls the functions that detect gate, obstacles and victims. 
+\begin{DoxyParams}{Parameters}
+{\em img\+\_\+in} & Input image. \\
+\hline
+{\em scale} & Scaling factor. \\
+\hline
+{\em obstacle\+\_\+list} & List of output obstacle polygons. \\
+\hline
+{\em victim\+\_\+list} & List of output victim polygons. \\
+\hline
+{\em gate} & Polygon that represents the gate. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if function was executed successfully. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_abdbe12fa5f061a35e0d3df30bec1a872}\label{namespacestudent_abdbe12fa5f061a35e0d3df30bec1a872}} 
+\index{student@{student}!read\_colors@{read\_colors}}
+\index{read\_colors@{read\_colors}!student@{student}}
+\doxysubsubsection{\texorpdfstring{read\_colors()}{read\_colors()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structstudent_1_1Color__config}{Color\+\_\+config}} student\+::read\+\_\+colors (\begin{DoxyParamCaption}\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Loads color bounds configuration from file. 
+\begin{DoxyParams}{Parameters}
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacestudent_a318eb1ddb436643469a1e076e7961688}\label{namespacestudent_a318eb1ddb436643469a1e076e7961688}} 
+\index{student@{student}!RRTplanner@{RRTplanner}}
+\index{RRTplanner@{RRTplanner}!student@{student}}
+\doxysubsubsection{\texorpdfstring{RRTplanner()}{RRTplanner()}}
+{\footnotesize\ttfamily vector$<$Point$>$ student\+::\+R\+R\+Tplanner (\begin{DoxyParamCaption}\item[{const Polygon \&}]{borders,  }\item[{const vector$<$ Polygon $>$ \&}]{obstacle\+\_\+list,  }\item[{const float}]{x0,  }\item[{const float}]{y0,  }\item[{const float}]{xf,  }\item[{const float}]{yf,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Plans the path with R\+RT. Prepares a file with input data\+: starting point, arrival point, borders and obstacles. The R\+RT library will output another file with the coordinates of the points in the path found. 
+\begin{DoxyParams}{Parameters}
+{\em borders} & Borders of the arena. \\
+\hline
+{\em obstacle\+\_\+list} & List of obstacle polygons. \\
+\hline
+{\em x0} & Starting point x coordinate. \\
+\hline
+{\em y0} & Starting point y coordinate. \\
+\hline
+{\em xf} & Arrival point x coordinate. \\
+\hline
+{\em yf} & Arrival point y coordinate. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The planned path. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_ab247edd9beb1bcd4071f35ba700a7d78}\label{namespacestudent_ab247edd9beb1bcd4071f35ba700a7d78}} 
+\index{student@{student}!sorByDistance@{sorByDistance}}
+\index{sorByDistance@{sorByDistance}!student@{student}}
+\doxysubsubsection{\texorpdfstring{sorByDistance()}{sorByDistance()}}
+{\footnotesize\ttfamily bool student\+::sor\+By\+Distance (\begin{DoxyParamCaption}\item[{const pair$<$ int, float $>$ \&}]{p1,  }\item[{const pair$<$ int, float $>$ \&}]{p2 }\end{DoxyParamCaption})}
+
+Custom sorting function for pairs of indexed distances. 
+\begin{DoxyParams}{Parameters}
+{\em p1} & First $<$index,distance$>$ pair. \\
+\hline
+{\em p2} & Second $<$index,distance$>$ pair. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if the first distance value is smaller. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{namespacestudent_ac31ebca52b34d038f0ef94d7aa81be13}\label{namespacestudent_ac31ebca52b34d038f0ef94d7aa81be13}} 
+\index{student@{student}!tune\_color\_parameters@{tune\_color\_parameters}}
+\index{tune\_color\_parameters@{tune\_color\_parameters}!student@{student}}
+\doxysubsubsection{\texorpdfstring{tune\_color\_parameters()}{tune\_color\_parameters()}}
+{\footnotesize\ttfamily void student\+::tune\+\_\+color\+\_\+parameters (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{image,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Open a series of panels to tune the color threshold for better detection 
+\begin{DoxyParams}{Parameters}
+{\em image} & Reference image for color tuning. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{namespacestudent_af1e350455611261c051053268de6d579}\label{namespacestudent_af1e350455611261c051053268de6d579}} 
+\index{student@{student}!unwarp@{unwarp}}
+\index{unwarp@{unwarp}!student@{student}}
+\doxysubsubsection{\texorpdfstring{unwarp()}{unwarp()}}
+{\footnotesize\ttfamily void student\+::unwarp (\begin{DoxyParamCaption}\item[{const cv\+::\+Mat \&}]{img\+\_\+in,  }\item[{cv\+::\+Mat \&}]{img\+\_\+out,  }\item[{const cv\+::\+Mat \&}]{transf,  }\item[{const string \&}]{config\+\_\+folder }\end{DoxyParamCaption})}
+
+Applies a perspective transform to an image. 
+\begin{DoxyParams}{Parameters}
+{\em img\+\_\+in} & Input image. \\
+\hline
+{\em img\+\_\+out} & Output unwarped image. \\
+\hline
+{\em transf} & Transformation matrix. \\
+\hline
+{\em config\+\_\+folder} & Configuration folder path. \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Variable Documentation}
+\mbox{\Hypertarget{namespacestudent_ac79fbde433a9fb6df9d0b05c3deaac0e}\label{namespacestudent_ac79fbde433a9fb6df9d0b05c3deaac0e}} 
+\index{student@{student}!dcImg@{dcImg}}
+\index{dcImg@{dcImg}!student@{student}}
+\doxysubsubsection{\texorpdfstring{dcImg}{dcImg}}
+{\footnotesize\ttfamily cv\+::\+Mat student\+::dc\+Img = cv\+::\+Mat(600, 800, C\+V\+\_\+8\+U\+C3, cv\+::\+Scalar(255,255,255))}
+
+Image used for debug drawing. 
