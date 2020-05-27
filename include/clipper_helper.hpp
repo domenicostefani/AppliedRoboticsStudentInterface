@@ -7,7 +7,7 @@
  *
  * (*)  https://github.com/ValerioMa/AppliedRoboticsEnvironment/blob/master/src/9_project_interface/include/utils.hpp
  * (**) http://www.angusj.com/delphi/clipper.php
- * Author: Domenico Stefani
+ *
  * Date: 11/05/2020
 */
 #pragma once
@@ -22,8 +22,7 @@ const int clipperScale = 10000;
 // Clipper Lib conversion utilities
 //------------------------------------------------------------------------------
 
-/**
- * Convert Point objects into ClipperLib::IntPoint
+/** Convert Point objects into ClipperLib::IntPoint
  * This converts Point objects (*** read below) into IntPoint
  * objects. The Clipper Library uses integer values for numeric stability so
  * float values have to be scaled with an appropriate scaling factor that
@@ -32,15 +31,14 @@ const int clipperScale = 10000;
  * (***) struct from https://github.com/ValerioMa/AppliedRoboticsEnvironment/blob/master/src/9_project_interface/include/utils.hpp
  *
  * @param pt point to convert
- * #return Converted IntPoint
+ * @return Converted IntPoint
 */
 ClipperLib::IntPoint Point2CIntPoint(const Point& pt) {
     return ClipperLib::IntPoint((ClipperLib::cInt)(pt.x * clipperScale),
                                 (ClipperLib::cInt)(pt.y * clipperScale));
 }
 
-/**
- * Convert ClipperLib::IntPoint to Point
+/** Convert ClipperLib::IntPoint to Point
  * This converts ClipperLib::IntPoint objects into Point objects (*** read
  * below) by applying a scale factor (equivalent to the factor applied during
  * the inverse tranformation).
@@ -55,8 +53,7 @@ Point CIntPoint2Point(const ClipperLib::IntPoint& pt) {
                  (float)pt.Y /clipperScale);
 }
 
-/**
- * Convert Polygon into ClipperLib::Path
+/** Convert Polygon into ClipperLib::Path
  * This converts Polygon objects (*** read below) to ClipperLib::Path objects.
  *
  * (***) struct from https://github.com/ValerioMa/AppliedRoboticsEnvironment/blob/master/src/9_project_interface/include/utils.hpp
@@ -72,8 +69,7 @@ ClipperLib::Path Polygon2CPath(const Polygon& poly) {
     return path;
 }
 
-/**
- * Convert ClipperLib::Path into Polygon
+/** Convert ClipperLib::Path into Polygon
  * This converts ClipperLib::Path objects to Polygon objects (*** read below).
  *
  * (***) struct from https://github.com/ValerioMa/AppliedRoboticsEnvironment/blob/master/src/9_project_interface/include/utils.hpp
@@ -89,8 +85,7 @@ Polygon CPath2Polygon(const ClipperLib::Path& path) {
     return poly;
 }
 
-/**
- * Inflater method
+/** Inflater method
  * This inflates (or deflates) a Polygon (*** read below) of a specified amount
  * using the Clipper library.
  *
@@ -113,8 +108,7 @@ Polygon inflateWithClipper(const Polygon& poly, float amount) {
     return CPath2Polygon(inflated[0]);
 }
 
-/**
- * Polygon vector inflater method
+/** Polygon vector inflater method
  * This inflates (or deflates) a vector of Polygon objects (*** read below) of a
  * specified amount using the Clipper library.
  *
@@ -131,8 +125,7 @@ std::vector<Polygon> inflatePolygons(const std::vector<Polygon>& polygons, float
     return res;
 }
 
-/**
- * Specific border inflation method
+/** Specific border inflation method
  * This inflates/deflates border polygon objects (***) and ensures that the
  * points returned are ordered
  *
@@ -140,7 +133,7 @@ std::vector<Polygon> inflatePolygons(const std::vector<Polygon>& polygons, float
  *
  * @param borders poligon describing borders
  * @param amount inflation amount (deflation if negative)
- * @returns offset border polygon
+ * @return offset border polygon
 */
 Polygon offsetBorders(const Polygon& borders, float amount) {
     Polygon correctedBorders = ClipperHelper::inflateWithClipper(borders, amount);
@@ -172,13 +165,12 @@ Polygon offsetBorders(const Polygon& borders, float amount) {
     return correctedBorders;
 }
 
-/**
- * Perform polygon union
+/** Perform polygon union
  * Use the clupper union to merge polygon A and B
  *
  * @param A first polygon
  * @param B second polygon
- * @returns polygon union
+ * @return polygon union
 */
 Polygon mergePolygons(const Polygon& A, const Polygon& B) {
     ClipperLib::Paths polyPathA = { Polygon2CPath(A) };

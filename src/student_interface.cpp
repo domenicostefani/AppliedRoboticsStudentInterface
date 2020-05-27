@@ -273,7 +273,6 @@ void tune_color_parameters(const cv::Mat &image, const string& config_folder) {
  * @param config_folder Configuration folder path.
  * @return True if the function is executed successfully.
 */
-// TODO: check why this function does not have a return value
 bool extrinsicCalib(const cv::Mat& img_in, vector<cv::Point3f> object_points,
                     const cv::Mat& camera_matrix, cv::Mat& rvec,
                     cv::Mat& tvec, const string& config_folder) {
@@ -413,7 +412,7 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     // compute robot dimension from barycenter for obstacle dilation
     // distance between robot triangle front vertex and barycenter is triangle height/3*2
     // from documentation, triangle height is 16 cm
-    float robot_dim = ceil(ROBOT_RADIUS*scale);   //TODO: correct using ROBOT_RADIUS
+    float robot_dim = ceil(ROBOT_RADIUS * scale);
 
     cout << "robot dim: " << robot_dim << endl;
 
@@ -1585,10 +1584,10 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     // write the problem parameters to a file that will be fed to a planning lib
     //
 
-    const string vcd_dir = config_folder + "/../src/path-planning";
-    ofstream output(vcd_dir + "/i.txt");
+    const string plan_script_lib = config_folder + "/../src/path-planning";
+    ofstream output(plan_script_lib + "/i.txt");
     if (!output.is_open()) {
-        throw runtime_error("Cannot write file: " + vcd_dir + "/i.txt");
+        throw runtime_error("Cannot write file: " + plan_script_lib + "/i.txt");
     }
 
     #ifdef DEBUG_RRT
@@ -1636,7 +1635,7 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     //
 
     // prepare script command
-    string cmd = "python " + vcd_dir + "/rrt.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt";
+    string cmd = "python " + plan_script_lib + "/rrt.py -in " + plan_script_lib + "/i.txt -out " + plan_script_lib + "/output.txt";
     // call library script
     int state = system(cmd.c_str());
     if (state != 0)
@@ -1647,7 +1646,7 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     //
 
     // read vertices and path from output.txt
-    ifstream input(vcd_dir + "/output.txt");
+    ifstream input(plan_script_lib + "/output.txt");
     vector<Point> vertices;
 
     bool path_not_found = false;

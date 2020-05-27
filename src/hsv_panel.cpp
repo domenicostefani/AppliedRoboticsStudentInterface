@@ -1,6 +1,9 @@
-// color_space_hsv.cpp
-// Adapted from OpenCV sample: samples/cpp/tutorial_code/ImgProc/Threshold_inRange.cpp
-
+/**
+ * HSV Panel library
+ * This library allow to show a configuration panel for the Hue-Saturation-Value
+ * ranges for different colors of differen elements.
+ * Configurations are saved on a text file that can later be read.
+*/
 #include "hsv_panel.hpp"
 
 #include "opencv2/imgproc.hpp"

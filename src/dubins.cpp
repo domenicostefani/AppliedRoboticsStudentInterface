@@ -11,8 +11,8 @@
 
 namespace dubins{
 
-/*!
-* Pointer to maneuver funciton
+/**
+ * Pointer to maneuver funciton
 */
 typedef bool(*maneuver)(double, double, double, double&, double&, double&);
 
@@ -28,21 +28,6 @@ double sinc(double t);
 /// Class Methods
 ///
 
-/*!
-* Set all class fields values at once
-*/
-
-/*
-void Arc::set(double x0, double y0, double th0, double k, double L) {
-  this->x0 = x0;
-  this->y0 = y0;
-  this->th0 = th0;
-  this->k = k;
-  this->L = L;
-  circline(L, x0, y0, th0, k, xf, yf, thf);
-}
-*/
-
 void Arc::set(double x0, double y0, double th0, double k, double L) {
     this->x0 = x0;
     this->y0 = y0;
@@ -54,20 +39,12 @@ void Arc::set(double x0, double y0, double th0, double k, double L) {
     this->thf = mod2pi(this->th0 + this->k * this->L);
 }
 
-/*!
-* Curve constructor 1
-*/
-
 Curve::Curve() {
     a1.set(0.0,0.0,0.0,0.0,0.0);
     a2.set(a1.xf, a1.yf, a1.thf, 0.0, 0.0);
     a3.set(a2.xf, a2.yf, a2.thf, 0.0, 0.0);
     L = a1.L + a2.L + a3.L;
 }
-
-/*!
-* Curve constructor 2
-*/
 
 Curve::Curve(double x0, double y0, double th0, double s1, double s2,
            double s3, double k0, double k1, double k2) {
@@ -81,9 +58,11 @@ Curve::Curve(double x0, double y0, double th0, double s1, double s2,
 /// Auxiliary functions
 ///
 
-/*
+/**
 * Implementation of function sinc(t), returning 1 for t==0, and sin(t)/t
 * otherwise
+* @param t input value
+* @return sinc(t) math function approximation
 */
 double sinc(double t) {
     double s = (double) 0.0;
@@ -95,8 +74,10 @@ double sinc(double t) {
     return s;
 }
 
-/*
+/**
 * Normalize an angle (in range [0,2*pi))
+* @param ang input angle
+* @return normalized angle
 */
 double mod2pi(double ang) {
     double out = ang;
@@ -107,8 +88,10 @@ double mod2pi(double ang) {
     return out;
 }
 
-/*
+/**
 * Normalize an angular difference (range (-pi, pi])
+* @param ang input angle
+* @return normalized angular difference
 */
 double rangeSymm(double ang) {
     double out = ang;
@@ -123,9 +106,18 @@ double rangeSymm(double ang) {
 /// Validity check functions
 ///
 
-/*
+/** Check solution validity
 * Check validity of a solution by evaluating explicitly the 3 equations
 * defining a Dubins problem (in standard form)
+* @param s1 first curvilinear abscissa
+* @param k0 first curvature
+* @param s2 secondt curvilinear abscissa
+* @param k1 second curvature
+* @param s3 thirdt curvilinear abscissa
+* @param k2 third curvature
+* @param th0 initial angle
+* @param thf final angle
+* @return true if the solution is correct
 */
 bool check(double s1, double k0, double s2, double k1, double s3, double k2,
            double th0, double thf) {
@@ -162,7 +154,7 @@ bool check(double s1, double k0, double s2, double k1, double s3, double k2,
 /// Transform functions
 ///
 
-/*
+/**
 * Scale the input problem to standard form (x0: -1, y0: 0, xf: 1, yf: 0)
 */
 void
@@ -181,7 +173,7 @@ scaleToStandard(double x0, double y0, double th0, double xf, double yf,
     sc_Kmax = Kmax * lambda;
 }
 
-/*
+/**
 * Scale the solution to the standard problem back to the original problem
 */
 void
@@ -196,7 +188,7 @@ scaleFromStandard(double lambda, double sc_s1, double sc_s2, double sc_s3,
 /// Manouver computation methods  (One for each possible solution)
 ///
 
-/*
+/**
 * LSL  (Left-Straight-Left soluton)
 */
 bool LSL(double sc_th0, double sc_thf, double sc_Kmax,double& sc_s1,
@@ -225,7 +217,7 @@ bool LSL(double sc_th0, double sc_thf, double sc_Kmax,double& sc_s1,
     return ok;
 }
 
-/*
+/**
 * RSR  (Right-Straight-Right soluton)
 */
 bool RSR(double sc_th0, double sc_thf, double sc_Kmax,
@@ -253,7 +245,7 @@ bool RSR(double sc_th0, double sc_thf, double sc_Kmax,
     return ok;
 }
 
-/*
+/**
 * LSR  (Left-Straight-Right soluton)
 */
 bool LSR(double sc_th0, double sc_thf, double sc_Kmax,
@@ -277,7 +269,7 @@ bool LSR(double sc_th0, double sc_thf, double sc_Kmax,
     return ok;
 }
 
-/*
+/**
 * RSL  (Right-Straight-Left soluton)
 */
 bool RSL(double sc_th0, double sc_thf, double sc_Kmax,
@@ -304,7 +296,7 @@ bool RSL(double sc_th0, double sc_thf, double sc_Kmax,
     return ok;
 }
 
-/*
+/**
 * RLR  (Right-Left-Right soluton)
 */
 bool RLR(double sc_th0, double sc_thf, double sc_Kmax,
@@ -332,7 +324,7 @@ bool RLR(double sc_th0, double sc_thf, double sc_Kmax,
     return ok;
 }
 
-/*
+/**
 * LRL  (Left-Right-Left soluton)
 */
 bool LRL(double sc_th0, double sc_thf, double sc_Kmax,
@@ -360,10 +352,6 @@ bool LRL(double sc_th0, double sc_thf, double sc_Kmax,
     return ok;
 }
 
-/*
-* Solve the Dubins problem for the given input parameters.
-* Return the type and the parameters of the optimal curve
-*/
 Curve
 dubins_shortest_path(double x0, double y0, double th0, double xf, double yf,
                      double thf, double Kmax, int& pidx) {
@@ -454,7 +442,7 @@ dubins_shortest_path(double x0, double y0, double th0, double xf, double yf,
     return Curve(); // in case no curve was found return empty curve
 }
 
-/*
+/**
 * Evaluate an arc (circular or straight) composing a Dubins curve, at a
 * given arc-length s
 */
@@ -473,7 +461,7 @@ Position::Position(double s, double x, double y, double th, double k) {
     this->k  = k;
 }
 
-/*
+/**
 * Returns a discrete point vector, sampling at every delta interval
 * @param[in]  arc             arc object to discretize
 * @param[in]  delta           interval at which to sample points
@@ -510,9 +498,6 @@ Arc::discretizeArc(double delta, double& remainingDelta, double& last_s,
 
             // In this case remainingDelta was 0 and now it's not 0
             // It will be considered by the next discretize
-
-            //TODO: Remember that the last point is not the final point and we should remember the final points
-            //TODO: also we should compute the sum of the s when adding a curve to a curve
         }
     } else {
         // remainingDelta is not 0, meaning that a previous discretization left a

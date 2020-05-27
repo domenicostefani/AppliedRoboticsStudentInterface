@@ -1,8 +1,6 @@
 /*
-  CHECK FOR TODO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  Library is not complete
+ * Dubins Path Computation library
 */
-
 #pragma once
 
 #include <vector>
@@ -21,8 +19,7 @@ namespace dubins{
     Position(double s, double x, double y, double th, double k);
   };
 
-  /*!
-  * Class representing one of the three arcs of every path of Dubin's maneuvers
+  /** Class representing one of the three arcs of every path of Dubin's maneuvers
   */
   class Arc {
   public:
@@ -33,32 +30,39 @@ namespace dubins{
 
     Arc() {};
 
-    /*!
-    * Set all class fields values at once
+    /** Set all class fields values at once
     * @param[in] x0        x position value of the start of the arc
     * @param[in] y0        y position value of the start of the arc
     * @param[in] th0       orientation angle of the start of the arc
     * @param[in] k         curvature of the arc
     * @param[in] L         arc length
     */
-
     void set(double x0, double y0, double th0, double k, double L);
+
+    /** Discretize a Dubins Arc
+     * Discretize a Dubins arc, sampling positions from the arc with fixed
+     * distance delta.
+     *
+     * @param[in] delta sampling step size
+     * @param[in/out] remainingDelta remaining value of delta at the end of the arc, carry over
+     * @param[in/out] last_s last curvilinear abscissa value
+     * @param[in] add_endpoint flag that states whether the last point must be added or not
+     * @return vector of path samples (positions)
+    */
     std::vector<Position> discretizeArc(double delta, double& remainingDelta, double& last_s, bool add_endpoint);
   };
 
-  /*!
-  * Class representing a Dubin's curve or maneuver, composed by three arcs
+  /** Class representing a Dubin's curve or maneuver, composed by three arcs
   */
   class Curve {
   public:
     Arc a1, a2, a3; // arcs
     double L;       // path length
-    /*!
-    * Class constructor 1
+
+    /** Class constructor 1
     */
     Curve();
-    /*!
-    * Class constructor 2
+    /** Class constructor 2
     * @param[in] x0        x position value of the start of the maneuver
     * @param[in] y0        y position value of the start of the maneuver
     * @param[in] th0       orientation angle of the start of the maneuver
@@ -72,12 +76,33 @@ namespace dubins{
     Curve(double x0, double y0, double th0, double s1, double s2, double s3,
           double k0, double k1, double k2);
 
+    /** Discretize a Dubins Curve
+     * Discretize a Dubins curve, sampling positions from the curve with fixed
+     * distance delta.
+     *
+     * @param[in] delta sampling step size
+     * @param[in/out] remainingDelta remaining value of delta at the end of the curve, carry over
+     * @param[in/out] last_s last curvilinear abscissa value
+     * @param[in] add_endpoint flag that states whether the last curve point must be added or not
+     * @return vector of path samples (positions)
+    */
     std::vector<Position> discretizeCurve(double delta, double& remainingDelta, double& last_s, bool add_endpoint);
+
+    /** Discretize a SINGLE Dubins Curve
+     * Discretize a single Dubins curve, sampling positions from the curve with
+     * fixed distance delta.
+     * The fact that it's a single curve means that there is no need to carry
+     * over the delta remainder value or the last abscissa.
+     * NOTE: Using this for a multicurve/multipoint causes inconsistency of
+     * sample spacing at the end of each curve.
+     *
+     * @param[in] delta sampling step size
+     * @return vector of path samples (positions)
+    */
     std::vector<Position> discretizeSingleCurve(double delta);
   };
 
-  /*!
-  * Compute the shortest path as a Dubin's maneuver.
+  /** Compute the shortest path as a Dubin's maneuver.
   * @param[in]  x0        x position value of the start of the maneuver
   * @param[in]  y0        y position value of the start of the maneuver
   * @param[in]  th0       orientation angle of the start of the maneuver

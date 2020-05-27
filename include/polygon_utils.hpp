@@ -5,14 +5,15 @@
 
  * (*)  https://github.com/ValerioMa/AppliedRoboticsEnvironment/blob/master/src/9_project_interface/include/utils.hpp
  *
- * Author: Domenico Stefani
  * Date: 25/05/2020
 */
 #pragma once
 
 namespace PUtils {
-    /*!
-    * Finds the baricenter of a utils::Polygon
+    /** Finds the baricenter coordinates of a utils::Polygon.
+     * @param polygon Input polygon.
+     * @param cx Output x coordinate.
+     * @param cy Output y coordinate.
     */
     void baricenter(const Polygon& polygon, double& cx, double& cy) {
         cx = 0;
@@ -25,6 +26,10 @@ namespace PUtils {
         cy /=  static_cast<double>(polygon.size());
     }
 
+    /** Finds the baricenter Point of a utils::Polygon.
+     * @param polygon Input polygon.
+     * @return The baricenter Point.
+    */
     Point baricenter(const Polygon& polygon) {
         double cx = 0,cy = 0;
         baricenter(polygon,cx,cy);
@@ -35,15 +40,14 @@ namespace PUtils {
     //  Polygon points reordering
     //
 
-    /**
-     * Point comparison operator
+    /** Point comparison operator
      * It's used to establish a less-than relationship that allows to order
      * points of a polygon in either clockwise or counter-clockwise.
      *
      * @param a first point
      * @param b second point
      * @param center baricenter of the polygon
-     * @returns true if a less than b
+     * @return true if a less than b
     */
     bool pointOrderComparison(Point a, Point b, Point center)
     {
@@ -71,8 +75,7 @@ namespace PUtils {
         return d1 > d2;
     }
 
-    /**
-     * Sort points of a polygon in clockwise order
+    /** Sort points of a polygon in clockwise order
      *
      * @param polygon the polygon which points have to be sorter
     */
@@ -94,12 +97,11 @@ namespace PUtils {
         }
     }
 
-    /**
-     * Project point P to the line passing between A and B
+    /** Project point P to the line passing between A and B
      * @param pA first point of the line
      * @param pB second point of the line
      * @param pP point to project
-     * @returns the orthogonal projection point
+     * @return the orthogonal projection point
     */
     Point projectPointToLine(Point pA, Point pB, Point pP) {
 
@@ -123,12 +125,11 @@ namespace PUtils {
         }
     }
 
-    /**
-     * Find the point in the vector that is nearest to A
+    /** Find the point in the vector that is nearest to A
      *
      * @param pa point A
      * @param points vector of points
-     * @returns the points in the vector closer to pA
+     * @return the points in the vector closer to pA
     */
     Point nearestPoint(Point pA, const std::vector<Point>& points) {
         float smallestDistance = std::numeric_limits<float>::max();
@@ -143,12 +144,11 @@ namespace PUtils {
         return res;
     }
 
-    /**
-     * Returns true if two poins have the same coordinates
+    /** return true if two poins have the same coordinates
      *
      * @param pa first point
      * @param pa second point
-     * @returns true if two poins have the same coordinates
+     * @return true if two poins have the same coordinates
     */
     bool pointsEquals(Point pa, Point pb){
         return ((pa.x == pb.x)&&(pa.y == pb.y));
