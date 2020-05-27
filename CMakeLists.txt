@@ -3,7 +3,9 @@ project(student_project)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11
-                    -O3)
+                    -O3
+                    -Wall
+                    -Wpedantic)
 
 find_package(OpenCV REQUIRED )
 find_package(project_interface REQUIRED )

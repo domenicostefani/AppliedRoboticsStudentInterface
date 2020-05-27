@@ -161,7 +161,7 @@ WindowData displayControl(const cv::Mat& frame, string windowName,
     createTrackbar("Low V" , windowName, &wd.low_v , 255,  on_low_v_thresh_change, (void *)&wd);
     createTrackbar("High V", windowName, &wd.high_v, 255, on_high_v_thresh_change, (void *)&wd);
 
-    createButton("OK", on_ok_button_pressed, NULL, CV_PUSH_BUTTON, (void*)&keepopen);
+    createButton("OK", on_ok_button_pressed, (void*)&keepopen, CV_PUSH_BUTTON);
     cvSetWindowProperty("", CV_WND_PROP_AUTOSIZE, CV_WINDOW_NORMAL);
 
     while (((char)waitKey(1)!='n') && (keepopen == true)) {

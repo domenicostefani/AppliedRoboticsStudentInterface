@@ -52,7 +52,7 @@ void Arc::set(double x0, double y0, double th0, double k, double L) {
     this->xf = this->x0 + this->L * sinc(this->k *  this->L / 2.0) * cos(th0 + k * this->L / 2);
     this->yf = this->y0 + this->L * sinc(this->k *  this->L / 2.0) * sin(th0 + k * this->L / 2);
     this->thf = mod2pi(this->th0 + this->k * this->L);
-};
+}
 
 /*!
 * Curve constructor 1
@@ -63,7 +63,7 @@ Curve::Curve() {
     a2.set(a1.xf, a1.yf, a1.thf, 0.0, 0.0);
     a3.set(a2.xf, a2.yf, a2.thf, 0.0, 0.0);
     L = a1.L + a2.L + a3.L;
-};
+}
 
 /*!
 * Curve constructor 2
@@ -75,7 +75,7 @@ Curve::Curve(double x0, double y0, double th0, double s1, double s2,
     a2.set(a1.xf, a1.yf, a1.thf, k1, s2);
     a3.set(a2.xf, a2.yf, a2.thf, k2, s3);
     L = a1.L + a2.L + a3.L;
-};
+}
 
 ///
 /// Auxiliary functions
@@ -395,7 +395,7 @@ dubins_shortest_path(double x0, double y0, double th0, double xf, double yf,
     // Try all the possible primitives, to find the optimal solution
     pidx = -1;  // set index to impossible value
     double L = std::numeric_limits<double>::infinity();
-    double sc_s1, sc_s2, sc_s3; // current s values
+    double sc_s1 = 0.0, sc_s2 = 0.0, sc_s3 = 0.0; // current s values
 
     for (int i = 0; i < 6; ++i) {
         // current values
@@ -451,6 +451,7 @@ dubins_shortest_path(double x0, double y0, double th0, double xf, double yf,
         );
         return res;
     }
+    return Curve(); // in case no curve was found return empty curve
 }
 
 /*
@@ -470,7 +471,7 @@ Position::Position(double s, double x, double y, double th, double k) {
     this->y  = y;
     this->th = th;
     this->k  = k;
-};
+}
 
 /*
 * Returns a discrete point vector, sampling at every delta interval

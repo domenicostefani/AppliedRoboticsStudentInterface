@@ -152,7 +152,7 @@ Polygon offsetBorders(const Polygon& borders, float amount) {
         int closerToFirst = -1;
         float minDistance = std::numeric_limits<float>::max();
         Polygon correctedBordersCopy = correctedBorders;
-        for (int i = 0; i < correctedBorders.size(); ++i) {
+        for (size_t i = 0; i < correctedBorders.size(); ++i) {
             float distanceFromFirst = pow(borders[0].x - correctedBordersCopy[i].x,2) + pow(borders[0].y - correctedBordersCopy[i].y,2);
             if (distanceFromFirst < minDistance) {
                 minDistance = distanceFromFirst;
@@ -163,7 +163,7 @@ Polygon offsetBorders(const Polygon& borders, float amount) {
         assert(closerToFirst != -1);
 
         // Actual reorder
-        for (int i = 0; i < correctedBorders.size(); ++i) {
+        for (size_t i = 0; i < correctedBorders.size(); ++i) {
             int copyIndex = (i + closerToFirst)%correctedBorders.size();
             correctedBorders[i] = correctedBordersCopy[copyIndex];
         }
