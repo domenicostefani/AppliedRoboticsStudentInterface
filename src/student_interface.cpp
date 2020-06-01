@@ -44,7 +44,7 @@
 // #define DEBUG_PLANPATH_SEGMENTS   ///< show images with the goals of every planned segment
 // #define DEBUG_RRT                 ///< inner planning algorithm
 // #define DEBUG_PATH_SMOOTHING      ///< path smoothing pipeline
-// #define DEBUG_DRAWCURVE             ///< dubins path plotting
+ #define DEBUG_DRAWCURVE             ///< dubins path plotting
 #define DEBUG_SCORES              ///< track times and scores of victims to collect
 // #define DEBUG_COLLISION           ///< plot for collision detection
 
@@ -52,9 +52,12 @@ using namespace std;
 
 using matrix = std::vector<std::vector<float>>;
 
-// --------------------------------- CONSTANTS ---------------------------------
-enum class Mission { mission1, mission2}; ///< Planning tasks available.
+// --------------------------------- GLOBAL VARIABLES ---------------------------------
+enum class Mission { mission1, mission2 }; ///< Planning tasks available.
 
+float BONUS = 0.08f;                  ///< Time bonus for each victim collected.
+
+// --------------------------------- CONSTANTS ---------------------------------
 Mission mission = Mission::mission2;   ///< Planning task chosen.
 
 const string COLOR_CONFIG_FILE = "/color_parameters.config";
@@ -94,7 +97,7 @@ const unsigned short NUMBER_OF_MP_ANGLES = 10;  ///< Number of possible planning
                                                 ///< normally to plan the
                                                 ///< multipoint curve.
 
-const unsigned short MP_IT_LIMIT = 10;  ///< Iteration limit for
+const unsigned short MP_IT_LIMIT = 5;  ///< Iteration limit for
                                         ///< multipoint Dubins curve
                                         ///< path planning attempts.
                                                 
@@ -108,7 +111,6 @@ const double K_MAX = 10.0;            ///< Maximum robot curvature.
 const double PATH_RESOLUTION = 0.01;  ///< Path resolution (sampling).
 
 const float ROBOT_SPEED = 0.1f;       ///< Robot speed: 0.1 m/s.
-const float BONUS = 0.08f;            ///< Time bonus for each victim collected.
 
 //! Main namespace containing student interface methods
 namespace student {
@@ -1317,6 +1319,7 @@ void drawDubinsArc(dubins::Arc& da) {
  * @param arriveAngle Arrival angle.
  * @param returnedLength Output length of the shortest path.
  * @param obstacle_list List of obstacle polygons.
+ * @param num_angles Number of angles to test.
  * @return A pair with true if the path does not collide and the shortest multi-point dubins::Curve.
 */
 std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
@@ -1324,7 +1327,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
                                                double startAngle, double arriveAngle,
                                                double& returnedLength,
                                                const vector<Polygon>& obstacle_list,
-                                               const unsigned short NUM_ANGLES) {
+                                               const unsigned short num_angles) {
     // RECURSION ERROR CASES:
     if (arriveIdx == startIdx)
         throw std::invalid_argument("Error: arriveIdx cannot be equal to startIdx");
@@ -1355,7 +1358,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
         return std::make_pair(!isColliding,multipointPath);  // Return true if the path does not collide
     }
 
-    // RECURSION BASE CASE 2: Called on three points it checks for NUM_ANGLES for the middle point
+    // RECURSION BASE CASE 2: Called on three points it checks for num_angles for the middle point
     //            o---o---o
     // nodes:     1   2   3
     // segments:    A   B
@@ -1364,8 +1367,8 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
         double bestLength =  std::numeric_limits<double>::max();
         bool allAnglesResultInCollision = true; // If no angle choice provides a non-colliding path, the call must fail
 
-        for (int i = 0; i < NUM_ANGLES; ++i) {
-            double alpha_middlepoint = (2*M_PI)/NUM_ANGLES * i;
+        for (int i = 0; i < num_angles; ++i) {
+            double alpha_middlepoint = (2*M_PI)/num_angles * i;
             if (USE_ANGLE_HEURISTIC)
                 alpha_middlepoint += (startAngle + arriveAngle)/2;   // adding the average of the other angles should improve the angle choice
 
@@ -1421,7 +1424,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
     // path for indexes in the middle and the final segment.
     // The initial and final angles are fixed (exit angle from node 1 and
     // arrival angle in node n. The arrival angle in node 2 and the exit angle
-    // from node n-1 are free and they are chosen from a pool of NUM_ANGLES
+    // from node n-1 are free and they are chosen from a pool of num_angles
     // according to which ones correspond to the shortest non-colliding path.
     // NOTE: the arrival angle for node 2 is called alpha_first and the exit
     // angle from node n-1 is called alpha_second
@@ -1431,10 +1434,10 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
     std::vector<dubins::Curve> bestRecursivePath;
     bool allAnglesResultInCollision = true; // If no angle choice provides a non-colliding path, the call must fail
 
-    for (int i = 0; i < NUM_ANGLES; ++i) {
-        for (int j = 0; j < NUM_ANGLES; ++j) {
-            double alpha_first = (2*M_PI)/NUM_ANGLES * i;
-            double alpha_second = (2*M_PI)/NUM_ANGLES * j;
+    for (int i = 0; i < num_angles; ++i) {
+        for (int j = 0; j < num_angles; ++j) {
+            double alpha_first = (2*M_PI)/num_angles * i;
+            double alpha_second = (2*M_PI)/num_angles * j;
 
             if (USE_ANGLE_HEURISTIC) {
                 alpha_first += startAngle;
@@ -1476,7 +1479,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
                             alpha_first,alpha_second,
                             recursivelyReturnedLength,
                             obstacle_list,
-                            NUM_ANGLES);
+                            num_angles);
                 result = tuple.first;
                 recursiveReturnedPath = tuple.second;
             }
@@ -1788,6 +1791,7 @@ void drawDebugImage(const Polygon& borders, const vector<Polygon>& obstacle_list
     //
     //  Draw Curves to debug errors
     //
+    dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255));
 
     // draw borders
     for (size_t i = 0; i < borders.size(); i++) {
@@ -1909,6 +1913,7 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& safeBorders,
     #endif
 
     #ifdef DEBUG_DRAWCURVE
+        drawDebugImage(slotBorders, obstacle_list, victim_list);
         drawDebugPath(short_path);
         cv::imshow("Curves",dcImg);
         cv::waitKey(0);
@@ -1947,7 +1952,7 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& safeBorders,
             cout << "------------------------------------------------------------" << endl;
         #endif
         } else {
-            unsigned short newAngles = numberOfMpAngles+2;
+            unsigned short newAngles = numberOfMpAngles+4;
 
             #ifdef DEBUG_PLANPATH
                 cout << "> Planning Step 3: Could not plan path, increase angles (" << numberOfMpAngles << " > " << newAngles << ") " << endl;
@@ -1960,7 +1965,7 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& safeBorders,
     } while (!path_planned && (it_count < MP_IT_LIMIT));
 
     if (!path_planned){
-        throw runtime_error("Could not plan path, iteration limit reached.");
+        cout << "Could not plan path, iteration limit reached.";
     }
 
     #ifdef DEBUG_DRAWCURVE
@@ -2057,7 +2062,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
                                       const vector<Polygon>& obstacle_list,
                                       const vector<pair<int,Polygon>>& victim_list,
                                       float x, float y, float theta,
-                                      float xf, float yf, float thf, float bonus,
+                                      float xf, float yf, float thf,
                                       const string& config_folder) {
 
     vector<dubins::Curve> multipointPath;
@@ -2084,6 +2089,10 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
 
     vector<pair<int,Polygon>> empty_victims_vector;
 
+    #ifdef DEBUG_SCORES
+        cout << "Choosing victims for best scoring path." << endl;
+    #endif
+
     multipointPath = collectVictimsPath(safeBorders, slotBorders, obstacle_list, empty_victims_vector, x, y, theta, xf, yf, thf, config_folder);
 
     float length = getPathLength(multipointPath);
@@ -2091,8 +2100,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
     best_partial_time = length / ROBOT_SPEED;
 
     #ifdef DEBUG_SCORES
-        cout << "no victim, lentgh: " << (length) << endl;
-        cout << "no victim, time-score: " << (length / ROBOT_SPEED) << endl;
+        cout << "No victim. Time-score: " << (length / ROBOT_SPEED) << endl;
     #endif
 
     vector<pair<int,Polygon>> victims_to_collect;
@@ -2120,25 +2128,31 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
                     temp_victim_list.push_back(victim_list[temp_ordered_distances[i].first]);
                 }
 
+                #ifdef DEBUG_SCORES
+                        cout << "Adding victim " << victim_list[j].first << endl;
+                #endif
+
                 current_path = collectVictimsPath(safeBorders, slotBorders, obstacle_list, temp_victim_list, x, y, theta, xf, yf, thf, config_folder);
 
                 length = getPathLength(current_path);
 
-                #ifdef DEBUG_SCORES
-                    cout << "victim " << victim_list[j].first << ", time: " << (length / ROBOT_SPEED);
-                #endif
+                if (length > 0){
+                    #ifdef DEBUG_SCORES
+                        cout << "Victim " << victim_list[j].first << ". Time: " << (length / ROBOT_SPEED);
+                    #endif
 
-                float current_partial_time = (length / ROBOT_SPEED) - (BONUS * bonus_multiplier);
+                    float current_partial_time = (length / ROBOT_SPEED) - (BONUS * bonus_multiplier);
 
-                #ifdef DEBUG_SCORES
-                    cout << ", time-score: " << current_partial_time << endl;
-                #endif
+                    #ifdef DEBUG_SCORES
+                        cout << ", time-score: " << current_partial_time << endl;
+                    #endif
 
-                // update score and path
-                if (current_partial_time < best_partial_time) {
-                    best_partial_time = current_partial_time;
-                    multipointPath = current_path;
-                    victim_idx = j;
+                    // update score and path
+                    if (current_partial_time < best_partial_time) {
+                        best_partial_time = current_partial_time;
+                        multipointPath = current_path;
+                        victim_idx = j;
+                    }
                 }
             }
         }
@@ -2182,6 +2196,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
     #endif
     
     int mission_selected;
+    float bonus;
 
     cout << "Select mission type.\n 1: collect all victims in numbered order\n 2: collect victims with highest scoring path\n";
 
@@ -2193,6 +2208,13 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         mission = Mission::mission1;
     } else if(mission_selected == 2){
         mission = Mission::mission2;
+        cout << "Choose time bonus amount.\n";
+
+        cin >> bonus;
+
+        BONUS = bonus;
+
+        cout << "Set bonus to " << bonus << endl;
     }
 
     if (!savedPath.empty()) {
@@ -2243,8 +2265,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
             multipointPath = collectVictimsPath(safeBorders, slottedBorders, obstacle_list, orderedVictimList, x, y, theta, xf, yf, thf, config_folder);
         }
         else if (mission == Mission::mission2) {
-            float bonus = 0.08f;
-            multipointPath = bestScoreGreedy(safeBorders, slottedBorders, obstacle_list, victim_list, x, y, theta, xf, yf, thf, bonus, config_folder);
+            multipointPath = bestScoreGreedy(safeBorders, slottedBorders, obstacle_list, victim_list, x, y, theta, xf, yf, thf, config_folder);
             #ifdef DEBUG_SCORES
                 cout << "Highest scoring path found\n";
             #endif
