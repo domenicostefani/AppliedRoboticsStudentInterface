@@ -1,6 +1,10 @@
-// color_space_hsv.cpp
-// Adapted from OpenCV sample: samples/cpp/tutorial_code/ImgProc/Threshold_inRange.cpp
-
+/** \file hsv_panel.cpp
+ * @brief HSV Panel library.
+ *
+ * This library allow to show a configuration panel for the Hue-Saturation-Value
+ * ranges for different colors of differen elements.
+ * Configurations are saved on a text file that can later be read.
+*/
 #include "hsv_panel.hpp"
 
 #include "opencv2/imgproc.hpp"
@@ -11,11 +15,18 @@
 using namespace std;
 using namespace cv;
 
+/**
+ * Data for rang tuning window panels.
+*/
 class WindowData {
 public:
-    string windowName;
-    int low_h, low_s, low_v;
-    int high_h, high_s, high_v;
+    string windowName;  ///< Name od the control panel window
+    int low_h,          ///< Low Hue parameter
+        low_s,          ///< Low Saturation parameter
+        low_v;          ///< Low Value parameter
+    int high_h,         ///< High Hue parameter
+        high_s,         ///< High Saturation parameter
+        high_v;         ///< High Value parameter
     WindowData(string windowName, int low_h, int low_s, int low_v, int high_h,
                int high_s, int high_v) {
         this->windowName = windowName;
@@ -27,14 +38,47 @@ public:
         this->high_v = high_v;
     }
 };
-/** Function Headers */
+
+/** Low Hue Slider listener.
+ * @param userdata callback data
+*/
 void on_low_h_thresh_change(int, void *userdata);
+/** High Hue Slider listener.
+ * @param userdata callback data
+*/
 void on_high_h_thresh_change(int, void *userdata);
+/** Low Saturation Slider listener.
+ * @param userdata callback data
+*/
 void on_low_s_thresh_change(int, void *userdata);
+/** High Saturation Slider listener.
+ * @param userdata callback data
+*/
 void on_high_s_thresh_change(int, void *userdata);
+/** Low Value Slider listener.
+ * @param userdata callback data
+*/
 void on_low_v_thresh_change(int, void *userdata);
+/** High Value Slider listener.
+ * @param userdata callback data
+*/
 void on_high_v_thresh_change(int, void *userdata);
+/** Ok button listener.
+ * @param userdata callback data
+*/
 void on_ok_button_pressed(int, void *userdata);
+
+/** Display single control panel
+ * Display the tuning panel for a single color range
+ * @param frame image
+ * @param windowName name of the window
+ * @param low_h initial low Hue parameter
+ * @param low_s initial low Saturation parameter
+ * @param low_v initial low Value parameter
+ * @param high_h initial high Hue parameter
+ * @param high_s initial high Saturation parameter
+ * @param high_v initial high Value parameter
+*/
 WindowData displayControl(const cv::Mat& frame, string windowName,
                           int low_h, int low_s, int low_v,
                           int high_h, int high_s, int high_v);
@@ -161,7 +205,7 @@ WindowData displayControl(const cv::Mat& frame, string windowName,
     createTrackbar("Low V" , windowName, &wd.low_v , 255,  on_low_v_thresh_change, (void *)&wd);
     createTrackbar("High V", windowName, &wd.high_v, 255, on_high_v_thresh_change, (void *)&wd);
 
-    createButton("OK", on_ok_button_pressed, NULL, CV_PUSH_BUTTON, (void*)&keepopen);
+    createButton("OK", on_ok_button_pressed, (void*)&keepopen, CV_PUSH_BUTTON);
     cvSetWindowProperty("", CV_WND_PROP_AUTOSIZE, CV_WINDOW_NORMAL);
 
     while (((char)waitKey(1)!='n') && (keepopen == true)) {

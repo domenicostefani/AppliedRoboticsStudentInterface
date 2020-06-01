@@ -1,3 +1,7 @@
+/** \file student_interface.cpp
+ * @brief Main project library
+ * Library containing main functions for the functiong of the robot
+*/
 #include "student_image_elab_interface.hpp"
 #include "student_planning_interface.hpp"
 #include "dubins.hpp"
@@ -13,9 +17,10 @@
 
 #include "clipper_helper.hpp"
 #include "corner_detection.hpp"
+#include "polygon_utils.hpp"
 
-#define AUTO_CORNER_DETECTION true
-#define COLOR_TUNING_WIZARD false
+#define AUTO_CORNER_DETECTION true  ///< Use Automatic corner detection
+#define COLOR_TUNING_WIZARD true    ///< Use color tuning panel
 
 // -------------------------------- DEBUG FLAGS --------------------------------
 // - Configuration Debug flags - //
@@ -25,6 +30,7 @@
 // - Calibration Debug flags - //
 // #define DEBUG_EXTRINSIC_CALIB
 // #define DEBUG_CORNER_AUTODETECT
+// #define DEBUG_FINDPLANETRANSFORM
 
 // - Image Analysis Debug flags - //
 // #define DEBUG_FINDOBSTACLES
@@ -33,65 +39,91 @@
 // #define DEBUG_FINDROBOT
 
 // - Planning Debug flags - //
-// #define DEBUG_PLANPATH            // generic info about the whole planner
- #define DEBUG_RRT                 // inner planning algorithm
-// #define DEBUG_PATH_SMOOTHING      // path smoothing pipeline
-// #define DEBUG_DRAWCURVE             // dubins path plotting
-#define DEBUG_SCORES              // track times and scores of victims to collect
-// #define DEBUG_COLLISION           // plot for collision detection
+#define DEBUG_PLANPATH            ///< generic info about the whole planner
+// #define DEBUG_COMPUTEARRIVAL
+// #define DEBUG_PLANPATH_SEGMENTS   ///< show images with the goals of every planned segment
+// #define DEBUG_RRT                 ///< inner planning algorithm
+// #define DEBUG_PATH_SMOOTHING      ///< path smoothing pipeline
+// #define DEBUG_DRAWCURVE             ///< dubins path plotting
+#define DEBUG_SCORES              ///< track times and scores of victims to collect
+// #define DEBUG_COLLISION           ///< plot for collision detection
 
 using namespace std;
 
 using matrix = std::vector<std::vector<float>>;
 
 // --------------------------------- CONSTANTS ---------------------------------
-enum class Mission { mission1, mission2};
-const Mission mission = Mission::mission2;   // 1 = rescue all victims in order, 2 = maximize score
+enum class Mission { mission1, mission2}; ///< Planning tasks available.
+
+const Mission mission = Mission::mission1;   ///< Planning task chosen.
 
 const string COLOR_CONFIG_FILE = "/color_parameters.config";
-const int pythonUpscale = 1000; // scale factor used to convert parameters to a
-                                // int represetation for the planning library
-const double debugImagesScale = 512.82; // arbitrary scale factor used for
-                                        // displaying debug images
-const float obstaclesInflationAmount = 0.001; // (Note: value in meters)
-                                              // obstacles are slightly inflated
-                                              // by this amount to account for
-                                              // approximation errors in the
-                                              // computation of // collisions
-                                              // (in the RRT script)
-//Planning
-const double K_MAX = 10.0;                    // Maximum curvature
-const double PATH_RESOLUTION = 0.01;          // Path resolution (sampling)
-const float ROBOT_SPEED = 1.0f;               // TODO: insert correct robot ROBOT_SPEED
-const float BONUS = 0.08f;                      // time bonus for each victim collected
 
+const int pythonUpscale = 1000; ///< Scale factor for planner script.
+                                ///< Scale factor used to convert parameters to
+                                ///< an int represetation for the planning
+                                ///> library
+const double debugImagesScale = 512.82; ///< Arbitrary scale factor used for
+                                        ///< displaying debug images
+const float SAFETY_INFLATE_AMOUNT = 0.04;    ///< Obstacles inflation amount.
+                                             ///< obstacles are slightly inflated
+                                             ///< by this amount to account for
+                                             ///< approximation errors in the
+                                             ///< computation of collisions
+                                             ///< (in the RRT script)
+                                             ///< (Note: value in meters)
+const bool DO_CUT_GATE_SLOT = true;   ///< Cut a slot for the gate in the
+                                      ///< safe arena border polygon.
+                                      ///< if False, the robot only
+                                      ///< arrives near the gate (not
+                                      ///< inside) to avoid the possible
+                                      ///< virtual collision with the arena
+                                      ///< border behind the gate
+const float SAFETY_GATE_INFLATE_AMOUNT = 0.01; ///<< Gate polygon inflate amount
+
+const float ROBOT_RADIUS = 0.1491;  ///< Robot radius for obstacles and
+                                    ///< borders inflation.
+                                    ///< Computed as the maximum
+                                    ///< distance between the wheels
+                                    ///< center and the robot footprint
+                                    ///< borders.
+
+const unsigned short NUMBER_OF_MP_ANGLES = 10;  ///< Number of possible planning
+                                                ///< angles.
+                                                ///< Number of angles used
+                                                ///> normally to plan the
+                                                ///< multipoint curve.
+
+constexpr bool USE_ANGLE_HEURISTIC = false;///< Enable heuristic on angle
+                                           ///< computation.
+                                           ///< Setting this to true improves the
+                                           ///< way that free angles are chosen
+                                           ///< when planning
+//Planning
+const double K_MAX = 10.0;            ///< Maximum robot curvature.
+const double PATH_RESOLUTION = 0.01;  ///< Path resolution (sampling).
+
+const float ROBOT_SPEED = 0.1f;       ///< Robot speed: 0.1 m/s.
+const float BONUS = 0.08f;            ///< Time bonus for each victim collected.
+
+//! Main namespace containing student interface methods
 namespace student {
 
 /** Color bounds configuration for victims, robot and obstacles. */
 struct Color_config {
-    tuple<int,int,int> victims_lowbound; /**< Color lower-bound for victims. */
-    tuple<int,int,int> victims_highbound; /**< Color higher-bound for victims. */
-    tuple<int,int,int> robot_lowbound; /**< Color lower-bound for robot. */
-    tuple<int,int,int> robot_highbound; /**< Color higher-bound for robot. */
-    tuple<int,int,int> obstacle_lowbound1; /**< Color first lower-bound for obstacles. */
-    tuple<int,int,int> obstacle_highbound1; /**< Color first higher-bound for obstacles. */
-    tuple<int,int,int> obstacle_lowbound2; /**< Color second lower-bound for obstacles. */
-    tuple<int,int,int> obstacle_highbound2; /**< Color second higher-bound for obstacles. */
+    tuple<int,int,int> victims_lowbound; ///< Color lower-bound for victims.
+    tuple<int,int,int> victims_highbound; ///< Color higher-bound for victims.
+    tuple<int,int,int> robot_lowbound; ///< Color lower-bound for robot.
+    tuple<int,int,int> robot_highbound; ///< Color higher-bound for robot.
+    tuple<int,int,int> obstacle_lowbound1; ///< Color first lower-bound for obstacles.
+    tuple<int,int,int> obstacle_highbound1; ///< Color first higher-bound for obstacles.
+    tuple<int,int,int> obstacle_lowbound2; ///< Color second lower-bound for obstacles.
+    tuple<int,int,int> obstacle_highbound2; ///< Color second higher-bound for obstacles.
 };
 
 //-------------------DRAWING DUBINS CURVES-------------------
 /** Image used for debug drawing. */
 cv::Mat dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255));
-
-/**
- * Returns true if the two Points have the same x and y coordinates.
- * @param pa First Point.
- * @param pb Second Point.
- * @return The test result.
-*/
-bool pointsEquals(Point pa, Point pb){
-    return ((pa.x == pb.x)&&(pa.y == pb.y));
-}
 
 /** Loads images from the file system.
  * @param img_out Output image.
@@ -159,8 +191,9 @@ void genericImageListener(const cv::Mat& img_in, string topic,
         string foldername = config_folder;
         foldername += "/image";      //This is the folder used in the topic string
         string command = "mkdir -p " + foldername;  //-p creates only if non exists
-        system(command.c_str());  //use bash command
-
+        int state = system(command.c_str());  //use bash command
+        if (state != 0)
+            throw std::logic_error("Python script returned bad value");
         /* Save current image */
         string filename = config_folder;
         filename += topic;
@@ -230,7 +263,7 @@ Color_config read_colors(const string& config_folder) {
     return color_config;
 }
 
-/**
+/** Open color tuning panel.
  * Open a series of panels to tune the color threshold for better detection
  * @param image Reference image for color tuning.
  * @param config_folder Configuration folder path.
@@ -242,6 +275,7 @@ void tune_color_parameters(const cv::Mat &image, const string& config_folder) {
     file_path += COLOR_CONFIG_FILE;
     // Call routine in panel library
     hsvpanel::show_panel(image,file_path);
+    cout << "tuned" << endl;
 }
 
 /** Performs extrinsic calibration.
@@ -253,7 +287,6 @@ void tune_color_parameters(const cv::Mat &image, const string& config_folder) {
  * @param config_folder Configuration folder path.
  * @return True if the function is executed successfully.
 */
-// TODO: check why this function does not have a return value
 bool extrinsicCalib(const cv::Mat& img_in, vector<cv::Point3f> object_points,
                     const cv::Mat& camera_matrix, cv::Mat& rvec,
                     cv::Mat& tvec, const string& config_folder) {
@@ -290,7 +323,9 @@ bool extrinsicCalib(const cv::Mat& img_in, vector<cv::Point3f> object_points,
     cv::solvePnP(object_points,corners, camera_matrix, nullmat, rvec, tvec);
 
     // Call the routine with gui to tune the color values
-    //tune_color_parameters(img_in, config_folder);
+    if(COLOR_TUNING_WIZARD)
+        tune_color_parameters(img_in, config_folder);
+    return true;
 }
 
 /** Undistorts the input image.
@@ -306,7 +341,8 @@ void imageUndistort(const cv::Mat& img_in, cv::Mat& img_out,
     cv::undistort(img_in,img_out,cam_matrix,dist_coeffs);
 }
 
-/** Calculates a perspetive transform from four pairs of the corresponding points.
+/** Calculates a perspetive transform.
+ * Calculates a perspetive transform from four pairs of the corresponding points.
  * @param cam_matrix Input camera matrix.
  * @param rvec Output rotation vector.
  * @param tvec Output translation vector.
@@ -319,7 +355,9 @@ void findPlaneTransform(const cv::Mat& cam_matrix, const cv::Mat& rvec,
                         const vector<cv::Point3f>& object_points_plane,
                         const vector<cv::Point2f>& dest_image_points_plane,
                         cv::Mat& plane_transf, const string& config_folder) {
-
+    #ifdef DEBUG_FINDPLANETRANSFORM
+        cout << "findPlaneTransform called" << endl;
+    #endif
     cv::Mat image_points;
 
     // project points
@@ -340,7 +378,9 @@ void unwarp(const cv::Mat& img_in, cv::Mat& img_out, const cv::Mat& transf,
     cv::warpPerspective(img_in, img_out, transf, img_in.size());
 }
 
-/** Finds the obstacles in the arena given the arena image and dilate to account for robot dimensions.
+/** Find arena obstacles.
+ * Finds the obstacles in the arena given the arena image and dilate to account
+ * for robot dimensions.
  * Obstacle color is red.
  * @param hsv_img HSV input image.
  * @param scale Scaling factor.
@@ -389,7 +429,7 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     // compute robot dimension from barycenter for obstacle dilation
     // distance between robot triangle front vertex and barycenter is triangle height/3*2
     // from documentation, triangle height is 16 cm
-    float robot_dim = ceil(0.1117*scale);
+    float robot_dim = ceil(ROBOT_RADIUS * scale);
 
     cout << "robot dim: " << robot_dim << endl;
 
@@ -409,7 +449,7 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     cv::findContours(red_hue_image, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
     drawContours(contours_img, contours, -1, cv::Scalar(40,190,40), 3, cv::LINE_AA); //REMOVE
-    for (int i=0; i<contours.size(); ++i) {
+    for (size_t i=0; i<contours.size(); ++i) {
         approxPolyDP(contours[i], approx_curve, 3, true);
 
         Polygon scaled_contour;
@@ -428,7 +468,7 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     #endif
 }
 
-/** Finds the gate in the arena given the arena image.
+/** Finds the gate in the arena.
  * Gate color is green.
  * @param hsv_img HSV input image.
  * @param scale Scaling factor.
@@ -500,7 +540,7 @@ bool findGate(const cv::Mat& hsv_img, const double scale, Polygon& gate,
  * @param scale Scaling factor.
  * @param victim_list List of output victim polygons.
  * @param color_config Color bounds configuration.
- * @param config_folder Configuration folder path. 
+ * @param config_folder Configuration folder path.
  * @return True if victims were found.
 */
 bool findVictims(const cv::Mat& hsv_img, const double scale,
@@ -536,7 +576,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
     vector<cv::RotatedRect> minRect(contours.size());
     vector<Polygon> polygonsFound(contours.size());
 
-    for (int i=0; i<contours.size(); ++i) {
+    for (size_t i=0; i<contours.size(); ++i) {
         approxPolyDP(contours[i], approx_curve, 10, true);
 
         if (approx_curve.size() != 4) {  // ignore gate
@@ -575,7 +615,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
 
     // Load digits template images
     vector<cv::Mat> templROIs;
-    for (int i=0; i<=5; ++i) {
+    for (int i = 0; i <= 5; ++i) {
         curr_num = cv::imread(config_folder + "/../imgs/template/" + to_string(i) + ".png");
         templROIs.emplace_back(curr_num);
 
@@ -592,7 +632,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
     contours.clear();
 
     // For each green blob in the original image containing a digit
-    for (int i=0; i < boundRect.size(); ++i) {
+    for (size_t i=0; i < boundRect.size(); ++i) {
         cv::Mat processROI(filtered, boundRect[i]); // extract the ROI containing the digit
 
         // FLIP HERE
@@ -630,7 +670,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
         // Find the template digit with the best matching
         double maxScore = 0;
         int maxIdx = -1;
-        for (int j = 0; j < templROIs.size(); ++j) {
+        for (size_t j = 0; j < templROIs.size(); ++j) {
             cv::Mat result;
             cv::matchTemplate(processROI, templROIs[j], result, cv::TM_CCOEFF);
             double score;
@@ -645,7 +685,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
             victim_list.push_back({maxIdx, polygonsFound[i]});
         }
 
-        cout << "Best fitting template: " << ((maxIdx==-1) ? "None (rejected)" : to_string(maxIdx)) << endl;
+        cout << "Best fitting template: " << ((maxIdx==-1) ? "None (rejected)" : to_string(maxIdx)) << " coordinates: (" << PUtils::baricenter(polygonsFound[i]).x << "," << PUtils::baricenter(polygonsFound[i]).y << ")" << endl;
 
         #ifdef DEBUG_FINDVICTIMS
             cv::waitKey(0);
@@ -656,7 +696,7 @@ bool findVictims(const cv::Mat& hsv_img, const double scale,
 }
 
 /** Initiates the map processing starting from an image of the arena.
- * Converts the input image in HSV space for better color detection and 
+ * Converts the input image in HSV space for better color detection and
  * calls the functions that detect gate, obstacles and victims.
  * @param img_in Input image.
  * @param scale Scaling factor.
@@ -682,30 +722,6 @@ bool processMap(const cv::Mat& img_in, const double scale,
     findVictims(img_hsv, scale, victim_list, color_config, config_folder);
 
     return true;
-}
-
-/** Finds the baricenter coordinates of a utils::Polygon.
- * @param polygon Input polygon.
- * @param cx Output x coordinate.
- * @param cy Output y coordinate.
-*/
-void baricenter(const Polygon& polygon, double& cx, double& cy) {
-    for (auto vertex: polygon) {
-        cx += vertex.x;
-        cy += vertex.y;
-    }
-    cx /= static_cast<double>(polygon.size());
-    cy /=  static_cast<double>(polygon.size());
-}
-
-/** Finds the baricenter Point of a utils::Polygon.
- * @param polygon Input polygon.
- * @return The baricenter Point.
-*/
-Point baricenter(const Polygon& polygon) {
-    double cx,cy;
-    baricenter(polygon,cx,cy);
-    return Point(cx,cy);
 }
 
 /** Finds the robot in the arena given the arena image.
@@ -758,7 +774,7 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
     vector<cv::Point> approx_curve;
     vector<vector<cv::Point>> contours_approx;
     bool found = false;
-    for (int i=0; i<contours.size(); ++i) {
+    for (size_t i = 0; i<contours.size(); ++i) {
         // Approximate the i-th contours
         cv::approxPolyDP(contours[i], approx_curve, 10, true);
 
@@ -790,7 +806,7 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
         double cx = 0, cy = 0;
 
         // Compute the triangle baricenter
-        baricenter(triangle,cx,cy);
+        PUtils::baricenter(triangle,cx,cy);
 
         // Find the robot orientation (i.e the angle of height relative to the base with the x axis)
         double dst = 0;
@@ -814,12 +830,12 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
         const double dy = cy - top_vertex.y;
         theta = atan2(dy, dx);
 
-        cv::Point cv_baricenter(x*scale, y*scale); // convert back m to px
+        cv::Point cv_center(x*scale, y*scale); // convert back m to px
         cv::Point cv_vertex(top_vertex.x*scale, top_vertex.y*scale); // convert back m to px
         #ifdef DEBUG_FINDROBOT
             // Draw over the image
-            cv::line(contours_img, cv_baricenter, cv_vertex, cv::Scalar(0,255,0), 3);
-            cv::circle(contours_img, cv_baricenter, 5, cv::Scalar(0,0,255), -1);
+            cv::line(contours_img, cv_center, cv_vertex, cv::Scalar(0,255,0), 3);
+            cv::circle(contours_img, cv_center, 5, cv::Scalar(0,0,255), -1);
             cv::circle(contours_img, cv_vertex, 5, cv::Scalar(0,255,0), -1);
             cout << "(x, y, theta) = " << x << ", " << y << ", " << theta*180/M_PI << endl;
         #endif
@@ -834,28 +850,33 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
 }
 
 /** Find the arrival point.
+ * Returns the baricenter of the gate polygon with the correct arrival angle,
+ * along with the projection of the gate center into the neares arena border line
+ *
  * @param gate Gate polygon.
  * @param borders Arena borders polygon.
+ * @param cBorders Safe-corrected arena borders polygon (offsetted borders).
  * @param x Output arrival x coordinate.
  * @param y Output arrival y coordinate.
  * @param theta Output arrival angle.
- * @return The baricenter of the gate polygon with the correct arrival angle.
+ * @param xProj Output gate center projected on cBorders, x coordinate.
+ * @param yProj Output gate center projected on cBorders, y coordinate.
 */
-void centerGate(const Polygon& gate, const Polygon& borders, double& x,
-                 double& y, double& theta) {
+void computeArrival(const Polygon& gate, const Polygon& borders, const Polygon& cBorders, double& x,
+                 double& y, double& theta, double& xProj, double& yProj) {
 
     assert(gate.size() == 4);
     assert(borders.size() == 4);
-    #ifdef DEBUG_GATE
+    #ifdef DEBUG_COMPUTEARRIVAL
         printf("---Center gate called---\n");
         printf("There are %zd points\n", gate.size());
     #endif
 
     ////   GATE BARICENTER
     double gc_x=0, gc_y=0;
-    baricenter(gate,gc_x,gc_y);
+    PUtils::baricenter(gate,gc_x,gc_y);
 
-    //Find shortest rectangle side between the first two
+    ////   Find shortest gate side (between the first two)
     Point shortest_p0;
     Point shortest_p1;
     double distance0 = pow((gate.at(0).x - gate.at(1).x), 2) +
@@ -873,31 +894,126 @@ void centerGate(const Polygon& gate, const Polygon& borders, double& x,
         shortest_p1.x = gate.at(2).x;
         shortest_p1.y = gate.at(2).y;
     }
-    ////   GATE ANGLE
+
+    ////   Find GATE ANGLE
     double angle;
     angle = atan2(shortest_p0.y-shortest_p1.y,shortest_p0.x-shortest_p1.x);
     if (angle < 0)
         angle += 2 * CV_PI;
-
-    // Decide if the angle is the found one or the opposite (+180°) based on
-    // the position of the gate
+    // Decide if the angle is the found one or the opposite (+180°) based on the position of the gate
     double ac_x = 0, ac_y = 0;
-    baricenter(borders,ac_x,ac_y);
-
-    #ifdef DEBUG_GATE
-        printf("Gate baricenter %f,%f\n",gc_x,gc_y);
-        printf("Arena baricenter %f,%f\n",ac_x,ac_y);
-    #endif
-
+    PUtils::baricenter(borders,ac_x,ac_y);
     if (gc_y > ac_y) {
         angle -= CV_PI;
         if (angle < 0)
             angle += 2 * CV_PI;
     }
+
+    //
+    //   Project the solution into the corrected borders
+    //
+
+    // cBorders are the restricted borders that account for robot footprint when
+    // planning a line path and this projection places the arrival point inside
+    // this space
+
+    // Offset cBorders of a small safety amount to be sure that the arrival
+    // doesn't lie exactly on the border
+    Polygon safecBorders = ClipperHelper::offsetBorders(cBorders, -1.0 * SAFETY_GATE_INFLATE_AMOUNT);
+
+    vector<Point> projections;
+    for (size_t i = 0; i < safecBorders.size(); ++i) {
+        Point pA = safecBorders[i],
+              pB = safecBorders[(i+1)%safecBorders.size()];
+        Point pP = PUtils::projectPointToLine(pA,pB,Point(gc_x, gc_y));
+        projections.push_back(pP);
+    }
+
+    Point pointProjection = PUtils::nearestPoint(Point(gc_x,gc_y),projections);
+
+    #ifdef DEBUG_COMPUTEARRIVAL
+        cv::circle(dcImg, cv::Point(gc_x * debugImagesScale, gc_y * debugImagesScale), 5, cv::Scalar(255,0,0), -1);
+        cv::circle(dcImg, cv::Point(pointProjection.x * debugImagesScale,pointProjection.y * debugImagesScale), 5, cv::Scalar(0,255,0), -1);
+    #endif
+
     ////   Assign Output
     x = gc_x;
     y = gc_y;
+    xProj = pointProjection.x;
+    yProj = pointProjection.y;
     theta = angle;
+}
+
+/** Cut a slot in the safeBorders polygon for the gate.
+ *
+ * @param gate gate polygon
+ * @param cBorders safe Corrected Borders polygon
+ * @param xf xcoord of the projection of the gate center on the safe Borders
+ * @param yf ycoord of the projection of the gate center on the safe Borders
+*/
+Polygon cutGateSlot(const Polygon& gate, const Polygon& cBorders, double xf,
+                    double yf) {
+    Polygon slottedBorders = cBorders;
+    // Find the two corners of the side of the gate
+    int aIdx = -1,bIdx = -1;
+    for (size_t i = 0; i < cBorders.size(); ++i) {
+        if ((abs(cBorders[i].x - xf) < (SAFETY_GATE_INFLATE_AMOUNT*1.1)) || \
+            (abs(cBorders[i].y - yf) < (SAFETY_GATE_INFLATE_AMOUNT*1.1))) {
+            if(aIdx == -1) {
+                aIdx = i;
+            } else if(bIdx == -1) {
+                bIdx = i;
+            }
+        }
+    }
+    assert((aIdx != -1) && (bIdx != -1));
+
+    //find the outer points of the gate, to project into the borders
+    int gAidx = -1, gBidx = -1;
+    float maxDistance = std::numeric_limits<float>::min();
+    for (size_t i = 0; i < gate.size(); ++i) {
+        float distance = pow(gate[i].x - xf,2) + pow(gate[i].y - yf,2);
+        if (distance > maxDistance) {
+            maxDistance = distance;
+            gAidx = i;
+        }
+    }
+    maxDistance = std::numeric_limits<float>::min();
+    for (size_t i = 0; i < gate.size(); ++i) {
+        if(i != (size_t)gAidx) {
+            float distance = pow(gate[i].x - xf,2) + pow(gate[i].y - yf,2);
+            if (distance > maxDistance) {
+                maxDistance = distance;
+                gBidx = i;
+            }
+        }
+    }
+
+    assert((gAidx != -1) && (gBidx != -1));
+
+    //Project points into the cBorders
+    Point gAproj = PUtils::projectPointToLine(cBorders[aIdx],cBorders[bIdx],gate[gAidx]);
+    Point gBproj = PUtils::projectPointToLine(cBorders[aIdx],cBorders[bIdx],gate[gBidx]);
+
+    // Create the polygon to add to the arena safe borders
+    Polygon gatePoly = {gAproj, gBproj, gate[gAidx], gate[gBidx]};
+    PUtils::sortPolygonPoints(gatePoly);
+
+    // Merge gate and borders polygon
+    slottedBorders = ClipperHelper::mergePolygons(cBorders,gatePoly);
+
+    #ifdef DEBUG_CUTSLOT
+        int counter = 0;
+        for (Point bp : slottedBorders) {
+            counter++;
+            cv::circle(dcImg, cv::Point(bp.x * debugImagesScale, bp.y * debugImagesScale), 5, cv::Scalar(0,0,255), -1);
+            cv::putText(dcImg, std::to_string(counter), cv::Point(bp.x*debugImagesScale, bp.y*debugImagesScale), cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,0), 2);
+        }
+        cv::imshow("CutSlot", dcImg);
+        cv::waitKey(0);
+    #endif
+
+    return slottedBorders;
 }
 
 /** Checks if a dubins::Arc is colliding with a segment.
@@ -1032,7 +1148,8 @@ bool isSegmentColliding(Point a1, Point a2, Point p1, Point p2) {
     return isSegColliding;
 }
 
-/** Approximate approach to check for collisions between dubins::Arc and segment using arc discretization.
+/** Approximate collision checker.
+ * Approximate approach to check for collisions between dubins::Arc and segment using arc discretization.
  * @param a Arc to check.
  * @param pA First point of the segment.
  * @param pB Second point of the segment.
@@ -1054,7 +1171,7 @@ bool isDiscretizedArcColliding(dubins::Arc& a, Point pA, Point pB) {
     }
 
     #ifdef DEBUG_COLLISION
-        for (int j = 0; j < d_arc.size()-1; j++)
+        for (size_t j = 0; j < d_arc.size()-1; j++)
         {
             cv::line(img, cv::Point(d_arc[j].x*debugImagesScale, d_arc[j].y*debugImagesScale),
                 cv::Point(d_arc[j+1].x*debugImagesScale, d_arc[j+1].y*debugImagesScale), cv::Scalar(255,200,0),1); // draw the line
@@ -1066,7 +1183,7 @@ bool isDiscretizedArcColliding(dubins::Arc& a, Point pA, Point pB) {
             cv::Point(p[i+1].x*debugImagesScale, p[i+1].y*debugImagesScale), cv::Scalar(0,0,255),1); // draw the line
     #endif
 
-    for (int j = 0; j < d_arc.size()-1; j++)
+    for (size_t j = 0; j < d_arc.size()-1; j++)
     {
         if (isSegmentColliding(d_arc[j], d_arc[j+1], pA, pB)) {
 
@@ -1097,7 +1214,7 @@ bool isCollidingWithPolygon(dubins::Arc& a, Polygon p) {
     // if k=0 a is a segment, else it is an arc
 
     // check each segment in polygon p
-    for (int i = 0; i < p.size()-1; i++) {
+    for (size_t i = 0; i < p.size()-1; i++) {
         if (k == 0) {
             if (isSegmentColliding(Point(a.x0, a.y0), Point(a.xf, a.yf), p[i], p[i+1])) {
                 return true;
@@ -1187,7 +1304,7 @@ void drawDubinsArc(dubins::Arc& da) {
 
 /** Finds the shortest multi-point dubins curve for the given path.
  * The recursive function has two base cases: two-points dubins::Curve and three-points dubins::Curve.
- * The recursion step is called on N-points dubins::Curve. Free angles are chosen among a number of 
+ * The recursion step is called on N-points dubins::Curve. Free angles are chosen among a number of
  * test angles. The choice is optimized by adding the average between the fixed angles.
  * @param path List of points in the path.
  * @param startIdx Recursion start index.
@@ -1202,15 +1319,8 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
                                                unsigned int startIdx, unsigned int arriveIdx,
                                                double startAngle, double arriveAngle,
                                                double& returnedLength,
-                                               const vector<Polygon>& obstacle_list) {
-    /* ----------------------------- PARAMETERS ----------------------------- */
-    const unsigned short NUM_ANGLES = 4;   // Number of angles to test for each free point
-    const bool MDP_VERBOSE = false;        // Setting this to true prints additional info for debug (Warning: it can get verbose)
-    const bool USE_ANGLE_HEURISTIC = true; // Setting this to true tries to improve the way that free angles are chosen
-
-    /* ------------------------- RECURSIVE ALGORITHM ------------------------ */
-    if (MDP_VERBOSE) cout << "called with indexes " << startIdx << ", "<< arriveIdx << endl;
-
+                                               const vector<Polygon>& obstacle_list,
+                                               const unsigned short NUM_ANGLES) {
     // RECURSION ERROR CASES:
     if (arriveIdx == startIdx)
         throw std::invalid_argument("Error: arriveIdx cannot be equal to startIdx");
@@ -1222,7 +1332,6 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
     // nodes:    1   2
     // segments:   A
     if (arriveIdx-startIdx == 1) {
-        if (MDP_VERBOSE) cout << "MDP(): Recursion BASE Case 1" << endl;
         // Compute the curve for segment A and check for collisions
         int pidx = 0;
         double x1 = path[startIdx].x;
@@ -1247,12 +1356,11 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
     // nodes:     1   2   3
     // segments:    A   B
     if (arriveIdx-startIdx == 2) {
-        if (MDP_VERBOSE) cout << "MDP(): Recursion BASE Case 2" << endl;
         std::pair<dubins::Curve,dubins::Curve> bestCurves;
         double bestLength =  std::numeric_limits<double>::max();
         bool allAnglesResultInCollision = true; // If no angle choice provides a non-colliding path, the call must fail
 
-        for(int i = 0; i < NUM_ANGLES; ++i) {
+        for (int i = 0; i < NUM_ANGLES; ++i) {
             double alpha_middlepoint = (2*M_PI)/NUM_ANGLES * i;
             if (USE_ANGLE_HEURISTIC)
                 alpha_middlepoint += (startAngle + arriveAngle)/2;   // adding the average of the other angles should improve the angle choice
@@ -1313,15 +1421,14 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
     // according to which ones correspond to the shortest non-colliding path.
     // NOTE: the arrival angle for node 2 is called alpha_first and the exit
     // angle from node n-1 is called alpha_second
-    if (MDP_VERBOSE) cout << "MDP(): RECURSIVE step" << endl;
 
     std::pair<dubins::Curve,dubins::Curve> bestCurves;  // best dubins curves yet
     double bestLength = std::numeric_limits<double>::max();
     std::vector<dubins::Curve> bestRecursivePath;
     bool allAnglesResultInCollision = true; // If no angle choice provides a non-colliding path, the call must fail
 
-    for(int i = 0; i < NUM_ANGLES; ++i) {
-        for(int j = 0; j < NUM_ANGLES; ++j) {
+    for (int i = 0; i < NUM_ANGLES; ++i) {
+        for (int j = 0; j < NUM_ANGLES; ++j) {
             double alpha_first = (2*M_PI)/NUM_ANGLES * i;
             double alpha_second = (2*M_PI)/NUM_ANGLES * j;
 
@@ -1364,11 +1471,11 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
                 tuple = MDP(path, startIdx+1,arriveIdx-1,
                             alpha_first,alpha_second,
                             recursivelyReturnedLength,
-                            obstacle_list);
+                            obstacle_list,
+                            NUM_ANGLES);
                 result = tuple.first;
                 recursiveReturnedPath = tuple.second;
             }
-
             double totLength = curveA.L + recursivelyReturnedLength + curveB.L;
 
             if (result)
@@ -1398,7 +1505,7 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
  * @return True if the path is colliding with any obstacle.
 */
 bool isPathColliding(vector<Point> vertices, vector<Polygon> obstacle_list) {
-    for (int i = 1; i < vertices.size(); ++i) {
+    for (size_t i = 1; i < vertices.size(); ++i) {
         double x0, y0, xf, yf;
         x0 = vertices[i-1].x;
         y0 = vertices[i-1].y;
@@ -1406,7 +1513,7 @@ bool isPathColliding(vector<Point> vertices, vector<Polygon> obstacle_list) {
         yf = vertices[i].y;
 
         for (Polygon p : obstacle_list) {
-            for (int k = 0; k < p.size(); k++) {
+            for (size_t k = 0; k < p.size(); k++) {
                 bool collision = false;
                 if (k == p.size()-1)
                     collision = isSegmentColliding(Point(x0,y0), Point(xf,yf), p[k], p[0]);
@@ -1442,7 +1549,7 @@ bool pathSmoothing(int start_index, int finish_index, vector<Point> vertices,
     yf = vertices[finish_index].y;
 
     for (Polygon p : obstacle_list) {
-        for (int k = 0; k < p.size(); k++) {
+        for (size_t k = 0; k < p.size(); k++) {
             if (k == p.size()-1) {
                 collision = isSegmentColliding(Point(x0,y0), Point(xf,yf), p[k], p[0]);
             } else {
@@ -1495,17 +1602,17 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     // write the problem parameters to a file that will be fed to a planning lib
     //
 
-    const string vcd_dir = config_folder + "/../src/path-planning";
-    ofstream output(vcd_dir + "/i.txt");
+    const string plan_script_lib = config_folder + "/../src/path-planning";
+    ofstream output(plan_script_lib + "/i.txt");
     if (!output.is_open()) {
-        throw runtime_error("Cannot write file: " + vcd_dir + "/i.txt");
+        throw runtime_error("Cannot write file: " + plan_script_lib + "/i.txt");
     }
 
     #ifdef DEBUG_RRT
-        printf("To avoid approximation errors, obstacles are inflated by %f meters (%f cm)\n",obstaclesInflationAmount,obstaclesInflationAmount*100);
+        printf("To avoid approximation errors, obstacles are inflated by %f meters (%f cm)\n",SAFETY_INFLATE_AMOUNT,SAFETY_INFLATE_AMOUNT*100);
     #endif
 
-    vector<Polygon> inflated_obstacle_list = ClipperHelper::inflatePolygons(obstacle_list,obstaclesInflationAmount);
+    vector<Polygon> inflated_obstacle_list = ClipperHelper::inflatePolygons(obstacle_list,SAFETY_INFLATE_AMOUNT);
 
     #ifdef DEBUG_RRT
         printf("Writing problem parameters to file\n");
@@ -1513,7 +1620,7 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     #endif
 
     // write borders on the first line
-    for (int i = 0; i < borders.size(); i++) {
+    for (size_t i = 0; i < borders.size(); i++) {
         if (i < borders.size()-1) {
             output << "(" << int(borders[i].x*pythonUpscale) << "," << int(borders[i].y * pythonUpscale) << "),";
         } else {
@@ -1522,9 +1629,9 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     }
 
     //  write vertices on the second line
-    for (int i = 0; i < inflated_obstacle_list.size(); i++) {
+    for (size_t i = 0; i < inflated_obstacle_list.size(); i++) {
         //add each vertex in (x,y) format
-        for (int j = 0; j < inflated_obstacle_list[i].size(); j++) {
+        for (size_t j = 0; j < inflated_obstacle_list[i].size(); j++) {
             int pt_x = int(inflated_obstacle_list[i][j].x * pythonUpscale);
             int pt_y = int(inflated_obstacle_list[i][j].y * pythonUpscale);
 
@@ -1546,18 +1653,18 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
     //
 
     // prepare script command
-    string cmd = "python " + vcd_dir + "/rrt.py -in " + vcd_dir + "/i.txt -out " + vcd_dir + "/output.txt";
-    char str[cmd.size()+1];
-    strcpy(str, cmd.c_str());
+    string cmd = "python " + plan_script_lib + "/rrt.py -in " + plan_script_lib + "/i.txt -out " + plan_script_lib + "/output.txt";
     // call library script
-    system(str);
+    int state = system(cmd.c_str());
+    if (state != 0)
+        throw std::logic_error("Python script returned bad value");
 
     //
     // Read the resulting path
     //
 
     // read vertices and path from output.txt
-    ifstream input(vcd_dir + "/output.txt");
+    ifstream input(plan_script_lib + "/output.txt");
     vector<Point> vertices;
 
     bool path_not_found = false;
@@ -1568,7 +1675,7 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
             istringstream ss(line);
             string token;
 
-            float v1, v2;
+            float v1 = 0.0, v2 = 0.0;
             int count = 0;
 
             while (getline(ss, token, ',')) {
@@ -1595,8 +1702,8 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
 }
 
 /** Tries to reduce the number of points in a path by combinaning different techniques.
- * The function performs recursive smoothing iteratively until 
- * no change is observed. An additional step is performed on the points of the path 
+ * The function performs recursive smoothing iteratively until
+ * no change is observed. An additional step is performed on the points of the path
  * in reversed order to achieve further smoothing.
  * @param path Input path to smooth.
  * @param obstacle_list List of obstacle polygons.
@@ -1611,8 +1718,9 @@ vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>
         #ifdef DEBUG_PATH_SMOOTHING
             cout << "\t>Path shortened ONCE  (size: " << smoothedPath.size() << ")" << endl;
         #endif
-        bool additional_shortening;
-        do{
+        bool additional_shortening = true;
+
+        while (additional_shortening) {
             vector<Point> shorter_path;
             shorter_path.push_back(path[0]);
             bool success = pathSmoothing(0, smoothedPath.size()-1, smoothedPath, obstacle_list, shorter_path);
@@ -1623,10 +1731,10 @@ vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>
                 #endif
                 smoothedPath = shorter_path;
             }
-        }while(additional_shortening);
+        }
 
-        assert(pointsEquals(smoothedPath.front(),path.front()));
-        assert(pointsEquals(smoothedPath.back(),path.back()));
+        assert(PUtils::pointsEquals(smoothedPath.front(),path.front()));
+        assert(PUtils::pointsEquals(smoothedPath.back(),path.back()));
 
         {
             // additional iteration on reversed path
@@ -1643,8 +1751,8 @@ vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>
             std::reverse(smoothedPath.begin(), smoothedPath.end());
         }
 
-        assert(pointsEquals(smoothedPath.front(),path.front()));
-        assert(pointsEquals(smoothedPath.back(),path.back()));
+        assert(PUtils::pointsEquals(smoothedPath.front(),path.front()));
+        assert(PUtils::pointsEquals(smoothedPath.back(),path.back()));
         return smoothedPath;
 
     }else{
@@ -1658,8 +1766,8 @@ vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>
 /** Draws the path on a debug image.
  * @param path The path to draw.
 */
-void drawDebugPath(std::vector<Point> path){
-    for (int i = 0; i < path.size(); i++) {
+void drawDebugPath(std::vector<Point> path) {
+    for (size_t i = 0; i < path.size(); i++) {
         cv::circle(dcImg, cv::Point(path[i].x*debugImagesScale, path[i].y*debugImagesScale), 2, cv::Scalar(0,0,0),CV_FILLED);
         if (i > 0)
             cv::line(dcImg, cv::Point(path[i-1].x*debugImagesScale, path[i-1].y*debugImagesScale),
@@ -1667,7 +1775,7 @@ void drawDebugPath(std::vector<Point> path){
     }
 }
 
-/** Draws borders, obstacles and victims on a debug image
+/** Draws borders, obstacles and victims on a debug image.
  * @param borders Borders of the arena
  * @param obstacle_list List of obstacle polygons.
  * @param victim_list List of victim polygons.
@@ -1678,12 +1786,15 @@ void drawDebugImage(const Polygon& borders, const vector<Polygon>& obstacle_list
     //
 
     // draw borders
-    for (int i = 0; i < borders.size(); i++)
-        cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[i+1].x*debugImagesScale,borders[i+1].y*debugImagesScale), cv::Scalar(0,0,0),3); // draw the line
+    for (size_t i = 0; i < borders.size(); i++) {
+        int next = (i+1)%borders.size();
+        cv::line(dcImg, cv::Point(borders[i].x*debugImagesScale, borders[i].y*debugImagesScale), cv::Point(borders[next].x*debugImagesScale,borders[next].y*debugImagesScale), cv::Scalar(0,0,0),3); // draw the line
 
+        cv::putText(dcImg, std::to_string(i), cv::Point(borders[i].x*debugImagesScale,  borders[i].y*debugImagesScale), cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,0), 1);
+    }
     //Draw obstacles
     for (const Polygon &pol : obstacle_list) {
-        for (int i=1; i<pol.size(); ++i) {
+        for (size_t i = 1; i<pol.size(); ++i) {
             cv::line(dcImg, cv::Point(pol[i-1].x*debugImagesScale, pol[i-1].y*debugImagesScale),
                      cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(0,0,255),2);
         }
@@ -1693,22 +1804,23 @@ void drawDebugImage(const Polygon& borders, const vector<Polygon>& obstacle_list
     //Draw victims
     for (const pair<int, Polygon> victim : victim_list) {
         const Polygon &pol = victim.second;
-        for (int i=1; i<pol.size(); ++i) {
+        for (size_t i = 1; i<pol.size(); ++i) {
             cv::line(dcImg, cv::Point(pol[i-1].x*debugImagesScale, pol[i-1].y*debugImagesScale),
                      cv::Point(pol[i].x*debugImagesScale, pol[i].y*debugImagesScale), cv::Scalar(0,255,0),2);
         }
         cv::line(dcImg, cv::Point(pol[0].x*debugImagesScale, pol[0].y*debugImagesScale),
                      cv::Point(pol[pol.size()-1].x*debugImagesScale, pol[pol.size()-1].y*debugImagesScale), cv::Scalar(0,255,0),2);
 
-        Point center = baricenter(pol);
+        Point center = PUtils::baricenter(pol);
         cv::putText(dcImg, std::to_string(victim.first), cv::Point(center.x*debugImagesScale, center.y*debugImagesScale), cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,0), 2);
     }
 }
 
 /** Plans a path in which every victim is collected in the correct order.
- * Calls the planning steps for each sub-path in the following order: RRT planner, path smoothing, multi-point 
- * dubins curve problem. 
- * @param borders Borders of the arena
+ * Calls the planning steps for each sub-path in the following order: RRT planner, path smoothing, multi-point
+ * dubins curve problem.
+ * @param safeBorders safe borders without gate slot (used to prevent RRT bug)
+ * @param slotBorders borders with gate slot (used for collision detection)
  * @param obstacle_list List of obstacle polygons.
  * @param victim_list List of victim polygons.
  * @param x Starting point x coordinate.
@@ -1720,19 +1832,20 @@ void drawDebugImage(const Polygon& borders, const vector<Polygon>& obstacle_list
  * @param config_folder Configuration folder path.
  * @return The multi-point dubins curve solution.
 */
-vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
-            const vector<Polygon>& obstacle_list,
-            const vector<pair<int,Polygon>>& victim_list,
-            float x, float y, float theta,
-            float xf, float yf, float thf,
-            const string& config_folder){
+vector<dubins::Curve> collectVictimsPath(const Polygon& safeBorders,
+                                         const Polygon& slotBorders,
+                                         const vector<Polygon>& obstacle_list,
+                                         const vector<pair<int,Polygon>>& victim_list,
+                                         float x, float y, float theta,
+                                         float xf, float yf, float thf,
+                                         const string& config_folder) {
     //
     // Create a vector of crucial points (start, victims, end);
     //
     vector<Point> pathObjectives;
     pathObjectives.push_back(Point(x,y));              // push initial point
-    for(const pair<int,Polygon>& victim : victim_list)
-        pathObjectives.push_back(baricenter(victim.second));  //push each victim center
+    for (const pair<int,Polygon>& victim : victim_list)
+        pathObjectives.push_back(PUtils::baricenter(victim.second));  //push each victim center
     pathObjectives.push_back(Point(xf,yf));            // push final point
 
     //
@@ -1743,9 +1856,9 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
     full_path.push_back(Point(x,y));
     vector<Point> short_path;
     short_path.push_back(Point(x,y));
-    for(int i = 1; i < pathObjectives.size(); ++i) {
+    for (size_t i = 1; i < pathObjectives.size(); ++i) {
         #ifdef DEBUG_PLANPATH
-            cout << "Planning segment " << i << "/" << pathObjectives.size() << endl;
+            cout << "Planning segment " << i << "/" << (pathObjectives.size()-1) << endl;
         #endif
         //
         // PLANNING Step 1: Call RRT planner
@@ -1755,7 +1868,22 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
         y1 = pathObjectives[i-1].y;
         x2 = pathObjectives[i].x;
         y2 = pathObjectives[i].y;
-        vector<Point> partialPath = RRTplanner(borders,obstacle_list,x1,y1,x2,y2,config_folder);
+
+        #ifdef DEBUG_PLANPATH_SEGMENTS
+            cout << "Segment (" << x1 << "," << y1 << ")->(" << x2 << "," << y2 << ")" << endl;
+            dcImg = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255));
+            drawDebugImage(slotBorders, obstacle_list, victim_list);
+            cv::Point pointA(x1*debugImagesScale,y1*debugImagesScale);
+            cv::Point pointB(x2*debugImagesScale,y2*debugImagesScale);
+            cv::circle(dcImg, pointA, 20, cv::Scalar(0,255,0),4);
+            cv::putText(dcImg, "A", pointA, cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+            cv::circle(dcImg, pointB, 20, cv::Scalar(0,0,255),4);
+            cv::putText(dcImg, "B", pointB, cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+            cv::imshow("Current goal", dcImg);
+            cv::waitKey(0);
+        #endif
+
+        vector<Point> partialPath = RRTplanner(safeBorders,obstacle_list,x1,y1,x2,y2,config_folder);
         full_path.insert(full_path.end(),partialPath.begin()+1,partialPath.end());    // begin()+1 not to repeat points
         assert(!isPathColliding(partialPath, obstacle_list));  // If the rrt path collides there is an error in the python script or conversion
 
@@ -1765,8 +1893,8 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
         vector<Point> partialShortPath = completeSmoothing(partialPath,obstacle_list);
         short_path.insert(short_path.end(), partialShortPath.begin()+1, partialShortPath.end());    // begin()+1 not to repeat points
     }
-    assert(pointsEquals(short_path.front(),full_path.front()));
-    assert(pointsEquals(short_path.back(),full_path.back()));
+    assert(PUtils::pointsEquals(short_path.front(),full_path.front()));
+    assert(PUtils::pointsEquals(short_path.back(),full_path.back()));
 
     #ifdef DEBUG_PLANPATH
         cout << "------------------------------------------------------------" << endl;
@@ -1783,41 +1911,50 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
     #endif
 
     //
-    // PLANNING Step 3: Multi-point dubins curve to path points
+    // PLANNING Step 3: plan a Multi-point(or Multi-curve) Dubins path
     //
-    // add borders for collision check
-    vector<Polygon> boundaries = obstacle_list;
-    boundaries.push_back(borders);
 
-    double returnedLength = 0;  // unused here, just for recursion
+    vector<Polygon> boundaries = obstacle_list;
+    boundaries.push_back(slotBorders); // add slotted borders for collision check
+
     #ifdef DEBUG_PLANPATH
         cout << "Computing Multi Point Dubins path..." << endl;
     #endif
-    std::pair<bool,vector<dubins::Curve>> multipointResult;
-    multipointResult = MDP(short_path,
-                           0, short_path.size()-1,   // start and arrival indexes
-                           theta, thf,                 // start and arrive angles
-                           returnedLength,
-                           boundaries);
-    bool path_planned = multipointResult.first;
-    vector<dubins::Curve> multipointPath = multipointResult.second;
 
-    if (path_planned) {
-    #ifdef DEBUG_PLANPATH
-        cout << "> Planning Step 3: Multipoint dubins curve planned successfully" << endl;
-        cout << "------------------------------------------------------------" << endl;
-    #endif
-    } else {
+    unsigned short numberOfMpAngles = NUMBER_OF_MP_ANGLES;
+    bool path_planned = false;
+    vector<dubins::Curve> multipointPath;
+    do {
+        double returnedLength = 0;  // unused here, just for recursion
+        std::pair<bool,vector<dubins::Curve>> multipointResult;
+        multipointResult = MDP(short_path,
+                               0, short_path.size()-1,   // start and arrival indexes
+                               theta, thf,                 // start and arrive angles
+                               returnedLength,
+                               boundaries,
+                               numberOfMpAngles);
+        path_planned = multipointResult.first;
+        multipointPath = multipointResult.second;
+
+        if (path_planned) {
         #ifdef DEBUG_PLANPATH
-            cout << "> Planning Step 3: Multipoint dubins curve planning" << endl;
+            cout << "> Planning Step 3: Multipoint dubins curve planned successfully" << endl;
             cout << "------------------------------------------------------------" << endl;
         #endif
-        throw runtime_error("Could NOT plan path!");
-    }
+        } else {
+            unsigned short newAngles = numberOfMpAngles+1;
+
+            #ifdef DEBUG_PLANPATH
+                cout << "> Planning Step 3: Could not plan path, increase angles (" << numberOfMpAngles << " > " << newAngles << ") " << endl;
+            #endif
+            numberOfMpAngles = newAngles;
+        }
+
+    } while (!path_planned);
 
     #ifdef DEBUG_DRAWCURVE
 
-        for (int i = 0; i < multipointPath.size(); i++)
+        for (size_t i = 0; i < multipointPath.size(); i++)
         {
             drawDubinsArc(multipointPath[i].a1);
             drawDubinsArc(multipointPath[i].a2);
@@ -1840,7 +1977,7 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& borders,
 float getPointPathLength(const vector<Point>& path){
     float length = 0;
 
-    for (int i = 0; i < path.size()-1; i++)
+    for (size_t i = 0; i < path.size()-1; i++)
     {
         const Point pos1 = path[i];
         const Point pos2 = path[i+1];
@@ -1857,7 +1994,7 @@ float getPointPathLength(const vector<Point>& path){
 float getPosePathLength(const vector<Pose>& path){
     float length = 0;
 
-    for (int i = 0; i < path.size()-1; i++)
+    for (size_t i = 0; i < path.size()-1; i++)
     {
         const Pose pos1 = path[i];
         const Pose pos2 = path[i+1];
@@ -1888,10 +2025,11 @@ bool sorByDistance(const pair<int,float>& p1, const pair<int,float>& p2){
 }
 
 /** Plans a path that maximizes the time-score of the mission.
- * For each victim collected a time-bonus is granted. At each step, the greedy function picks the victim  
- * that better improves the final score. To avoid loops and improve the search, the victims to test are ordered by 
+ * For each victim collected a time-bonus is granted. At each step, the greedy function picks the victim
+ * that better improves the final score. To avoid loops and improve the search, the victims to test are ordered by
  * distance from the starting point.
- * @param borders Borders of the arena
+ * @param safeBorders safe borders without gate slot (used to prevent RRT bug)
+ * @param slotBorders borders with gate slot (used for collision detection)
  * @param obstacle_list List of obstacle polygons.
  * @param victim_list List of victim polygons.
  * @param x Starting point x coordinate.
@@ -1903,23 +2041,23 @@ bool sorByDistance(const pair<int,float>& p1, const pair<int,float>& p2){
  * @param config_folder Configuration folder path.
  * @return The multi-point dubins curve solution.
 */
-vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
-                const vector<Polygon>& obstacle_list,
-                const vector<pair<int,Polygon>>& victim_list,
-                float x, float y, float theta,
-                float xf, float yf, float thf,
-                const string& config_folder){
+vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
+                                      const Polygon& slotBorders,
+                                      const vector<Polygon>& obstacle_list,
+                                      const vector<pair<int,Polygon>>& victim_list,
+                                      float x, float y, float theta,
+                                      float xf, float yf, float thf, float bonus,
+                                      const string& config_folder) {
 
     vector<dubins::Curve> multipointPath;
-    float max_time = 1000.0f;
     float best_partial_time;    // current best time score
 
     // compute victim distance from start
     vector<float> distances;
 
-    for (int i = 0; i < victim_list.size(); i++)
+    for (size_t i = 0; i < victim_list.size(); i++)
     {
-        vector<Point> path = RRTplanner(borders,obstacle_list,x,y,baricenter(victim_list[i].second).x,baricenter(victim_list[i].second).y,config_folder);
+        vector<Point> path = RRTplanner(safeBorders,obstacle_list,x,y,PUtils::baricenter(victim_list[i].second).x,PUtils::baricenter(victim_list[i].second).y,config_folder);
         assert(!isPathColliding(path, obstacle_list));  // If the rrt path collides there is an error in the python script or conversion
 
         float length = getPointPathLength(path);
@@ -1930,12 +2068,12 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
     // no victim path
     vector<bool> collected;
 
-    for (int i = 0; i < victim_list.size(); i++)
+    for (size_t i = 0; i < victim_list.size(); i++)
         collected.push_back(false);
 
     vector<pair<int,Polygon>> empty_victims_vector;
 
-    multipointPath = collectVictimsPath(borders, obstacle_list, empty_victims_vector, x, y, theta, xf, yf, thf, config_folder);
+    multipointPath = collectVictimsPath(safeBorders, slotBorders, obstacle_list, empty_victims_vector, x, y, theta, xf, yf, thf, config_folder);
 
     float length = getPathLength(multipointPath);
 
@@ -1954,9 +2092,9 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
     do{
         victim_idx = -1;
 
-        for (int j = 0; j < victim_list.size(); j++)
+        for (size_t j = 0; j < victim_list.size(); j++)
         {
-            if (!collected[j]){
+            if (!collected[j]) {
                 vector<dubins::Curve> current_path;
 
                 vector<pair<int,Polygon>> temp_victim_list;
@@ -1966,12 +2104,12 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
 
                 sort(temp_ordered_distances.begin(), temp_ordered_distances.end(), sorByDistance);
 
-                for (int i = 0; i < temp_ordered_distances.size(); i++)
+                for (size_t i = 0; i < temp_ordered_distances.size(); i++)
                 {
                     temp_victim_list.push_back(victim_list[temp_ordered_distances[i].first]);
                 }
 
-                current_path = collectVictimsPath(borders, obstacle_list, temp_victim_list, x, y, theta, xf, yf, thf, config_folder);
+                current_path = collectVictimsPath(safeBorders, slotBorders, obstacle_list, temp_victim_list, x, y, theta, xf, yf, thf, config_folder);
 
                 length = getPathLength(current_path);
 
@@ -1986,7 +2124,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
                 #endif
 
                 // update score and path
-                if (current_partial_time < best_partial_time){
+                if (current_partial_time < best_partial_time) {
                     best_partial_time = current_partial_time;
                     multipointPath = current_path;
                     victim_idx = j;
@@ -1994,7 +2132,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
             }
         }
 
-        if (victim_idx > -1){
+        if (victim_idx > -1) {
             victims_to_collect.push_back(victim_list[victim_idx]);
             ordered_distances.push_back(make_pair(victim_idx, distances[victim_idx]));
             collected[victim_idx] = true;
@@ -2008,7 +2146,9 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& borders,
     return multipointPath;
 }
 
-/** Plans a path according to the mission selected. 
+Path savedPath;
+
+/** Plans a path according to the mission selected.
  * @param borders Borders of the arena
  * @param obstacle_list List of obstacle polygons.
  * @param victim_list List of victim polygons.
@@ -2030,57 +2170,85 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         fflush(stdout);
     #endif
 
-    double xf, yf, thf;                   // Endpoint
-    centerGate(gate,borders,xf,yf,thf);  // Endpoint computation
+    if (!savedPath.empty()) {
+        cout << "Recovering saved path" << endl;
+        path = savedPath;
+    } else {
 
-    #ifdef DEBUG_DRAWCURVE
-        drawDebugImage(borders, obstacle_list, victim_list);
-    #endif
+        // Correct borders to account for robot size
+        Polygon safeBorders = ClipperHelper::offsetBorders(borders,-1.0 * ROBOT_RADIUS);
+        Polygon slottedBorders;
 
-    vector<dubins::Curve> multipointPath;
-    if (mission == Mission::mission1){
+        double xf, yf, thf;    // Endpoint
+        double xProj, yProj;   // Projection of the gate center into the borders
 
-        //
-        // Sort Victims by ID
-        //
-        vector<pair<int,Polygon>> orderedVictimList = victim_list;
-        sort(orderedVictimList.begin(), orderedVictimList.end(), [](const pair<int,Polygon>& lhs, const pair<int,Polygon>& rhs) {
-            return lhs.first < rhs.first;
-        });
+        // Compute the gate center and arrival angle, along with the projection
+        // of this arrival point into the gate borders
+        computeArrival(gate,borders,safeBorders,xf,yf,thf,xProj, yProj);
 
-        //
-        // Plan MISSION 1 path
-        //
-        multipointPath = collectVictimsPath(borders, obstacle_list, orderedVictimList, x, y, theta, xf, yf, thf, config_folder);
-    }
-    else if (mission == Mission::mission2){
-        multipointPath = bestScoreGreedy(borders, obstacle_list, victim_list, x, y, theta, xf, yf, thf, config_folder);
-        #ifdef DEBUG_SCORES
-            cout << "Highest scoring path found\n";
-        #endif
-    }
-
-    //
-    // Path discretization
-    //
-    vector<Pose> final_path_points;
-    double remainingDelta = 0.0;    // value used to carry the remaining "sampling step" between curves
-    double last_s = 0.0;            // value used to carry the last value of the curvilinear abscissa
-    for (int i = 0; i < multipointPath.size(); i++) {
-        // the last point of the curve is added only if it's the final curve of the path (otherwise it carries the remaining delta)
-        bool addLastPoint = i == (multipointPath.size()-1) ? true : false;
-        // the current curve is sampled with resolution PATH_RESOLUTION
-        vector<dubins::Position> res = multipointPath[i].discretizeCurve(PATH_RESOLUTION,remainingDelta,last_s,addLastPoint);
-
-        // Path conversion into compatible output representation
-        for (dubins::Position p : res) {
-            Pose pose(p.s,p.x,p.y,p.th,p.k);
-            final_path_points.push_back(pose);
+        if (DO_CUT_GATE_SLOT) {
+            slottedBorders = cutGateSlot(gate,safeBorders,xProj, yProj);
+        } else {
+            // If the gate slot is not cut, the robot can only arrive on the
+            // edge of its safe arena to avoid detecting a virtual collision
+            // when going for the center of the actual gate
+            xf = xProj;
+            yf = yProj;
+            slottedBorders = safeBorders;
         }
-    }
 
-    //Set output
-    path.setPoints(final_path_points);
+        #ifdef DEBUG_DRAWCURVE
+            drawDebugImage(slottedBorders, obstacle_list, victim_list);
+        #endif
+
+        vector<dubins::Curve> multipointPath;
+        if (mission == Mission::mission1) {
+
+            //
+            // Sort Victims by ID
+            //
+            vector<pair<int,Polygon>> orderedVictimList = victim_list;
+            sort(orderedVictimList.begin(), orderedVictimList.end(), [](const pair<int,Polygon>& lhs, const pair<int,Polygon>& rhs) {
+                return lhs.first < rhs.first;
+            });
+
+            //
+            // Plan MISSION 1 path
+            //
+            multipointPath = collectVictimsPath(safeBorders, slottedBorders, obstacle_list, orderedVictimList, x, y, theta, xf, yf, thf, config_folder);
+        }
+        else if (mission == Mission::mission2) {
+            float bonus = 0.08f;
+            multipointPath = bestScoreGreedy(safeBorders, slottedBorders, obstacle_list, victim_list, x, y, theta, xf, yf, thf, bonus, config_folder);
+            #ifdef DEBUG_SCORES
+                cout << "Highest scoring path found\n";
+            #endif
+        }
+
+        //
+        // Path discretization
+        //
+        vector<Pose> final_path_points;
+        double remainingDelta = 0.0;    // value used to carry the remaining "sampling step" between curves
+        double last_s = 0.0;            // value used to carry the last value of the curvilinear abscissa
+        for (size_t i = 0; i < multipointPath.size(); i++) {
+            // the last point of the curve is added only if it's the final curve of the path (otherwise it carries the remaining delta)
+            bool addLastPoint = (i == (multipointPath.size()-1) ? true : false);
+            // the current curve is sampled with resolution PATH_RESOLUTION
+            vector<dubins::Position> res = multipointPath[i].discretizeCurve(PATH_RESOLUTION,remainingDelta,last_s,addLastPoint);
+
+            // Path conversion into compatible output representation
+            for (dubins::Position p : res) {
+                Pose pose(p.s,p.x,p.y,p.th,p.k);
+                final_path_points.push_back(pose);
+            }
+        }
+
+        //Set output
+        path.setPoints(final_path_points);
+        savedPath = path;
+    }
     return true;
-  }
+}
+
 }
