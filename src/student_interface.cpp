@@ -20,7 +20,7 @@
 #include "polygon_utils.hpp"
 
 #define AUTO_CORNER_DETECTION true  ///< Use Automatic corner detection
-#define COLOR_TUNING_WIZARD true    ///< Use color tuning panel
+#define COLOR_TUNING_WIZARD false    ///< Use color tuning panel
 
 // -------------------------------- DEBUG FLAGS --------------------------------
 // - Configuration Debug flags - //
@@ -55,7 +55,7 @@ using matrix = std::vector<std::vector<float>>;
 // --------------------------------- CONSTANTS ---------------------------------
 enum class Mission { mission1, mission2}; ///< Planning tasks available.
 
-const Mission mission = Mission::mission1;   ///< Planning task chosen.
+Mission mission = Mission::mission2;   ///< Planning task chosen.
 
 const string COLOR_CONFIG_FILE = "/color_parameters.config";
 
@@ -91,9 +91,13 @@ const float ROBOT_RADIUS = 0.1491;  ///< Robot radius for obstacles and
 const unsigned short NUMBER_OF_MP_ANGLES = 10;  ///< Number of possible planning
                                                 ///< angles.
                                                 ///< Number of angles used
-                                                ///> normally to plan the
+                                                ///< normally to plan the
                                                 ///< multipoint curve.
 
+const unsigned short MP_IT_LIMIT = 10;  ///< Iteration limit for
+                                        ///< multipoint Dubins curve
+                                        ///< path planning attempts.
+                                                
 constexpr bool USE_ANGLE_HEURISTIC = false;///< Enable heuristic on angle
                                            ///< computation.
                                            ///< Setting this to true improves the
@@ -851,7 +855,7 @@ bool findRobot(const cv::Mat& img_in, const double scale, Polygon& triangle,
 
 /** Find the arrival point.
  * Returns the baricenter of the gate polygon with the correct arrival angle,
- * along with the projection of the gate center into the neares arena border line
+ * along with the projection of the gate center into the nearest arena border line
  *
  * @param gate Gate polygon.
  * @param borders Arena borders polygon.
@@ -1924,6 +1928,7 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& safeBorders,
     unsigned short numberOfMpAngles = NUMBER_OF_MP_ANGLES;
     bool path_planned = false;
     vector<dubins::Curve> multipointPath;
+    unsigned short it_count = 0;
     do {
         double returnedLength = 0;  // unused here, just for recursion
         std::pair<bool,vector<dubins::Curve>> multipointResult;
@@ -1942,7 +1947,7 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& safeBorders,
             cout << "------------------------------------------------------------" << endl;
         #endif
         } else {
-            unsigned short newAngles = numberOfMpAngles+1;
+            unsigned short newAngles = numberOfMpAngles+2;
 
             #ifdef DEBUG_PLANPATH
                 cout << "> Planning Step 3: Could not plan path, increase angles (" << numberOfMpAngles << " > " << newAngles << ") " << endl;
@@ -1950,7 +1955,13 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& safeBorders,
             numberOfMpAngles = newAngles;
         }
 
-    } while (!path_planned);
+        it_count++;
+
+    } while (!path_planned && (it_count < MP_IT_LIMIT));
+
+    if (!path_planned){
+        throw runtime_error("Could not plan path, iteration limit reached.");
+    }
 
     #ifdef DEBUG_DRAWCURVE
 
@@ -2169,6 +2180,20 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         printf("--------PLANNING WAS CALLED--------\n");
         fflush(stdout);
     #endif
+    
+    int mission_selected;
+
+    cout << "Select mission type.\n 1: collect all victims in numbered order\n 2: collect victims with highest scoring path\n";
+
+    cin >> mission_selected;
+
+    cout << "Selected mission " << mission_selected << endl;
+
+    if(mission_selected == 1){
+        mission = Mission::mission1;
+    } else if(mission_selected == 2){
+        mission = Mission::mission2;
+    }
 
     if (!savedPath.empty()) {
         cout << "Recovering saved path" << endl;

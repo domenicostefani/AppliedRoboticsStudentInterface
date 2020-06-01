@@ -115,7 +115,7 @@ found = False;
 while(found is False):
 
 	if( len(graph_vertices)>=3000 ):
-		print "Iteration limit Reached";
+		print "RRT: iteration limit reached";
 		break;
 	graph.append([]);
 
