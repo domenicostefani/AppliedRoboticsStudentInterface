@@ -1712,8 +1712,8 @@ vector<Point> RRTplanner(const Polygon& borders, const vector<Polygon>& obstacle
 
 /** Tries to reduce the number of points in a path by combinaning different techniques.
  * The function performs recursive smoothing iteratively until
- * no change is observed. An additional step is performed on the points of the path
- * in reversed order to achieve further smoothing.
+ * no change is observed. An additional pass is performed to remove points that
+ * are close together.
  * @param path Input path to smooth.
  * @param obstacle_list List of obstacle polygons.
  * @return The smoothed path.
@@ -1742,21 +1742,57 @@ vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>
             }
         }
 
-        assert(PUtils::pointsEquals(smoothedPath.front(),path.front()));
-        assert(PUtils::pointsEquals(smoothedPath.back(),path.back()));
-
-        // additional iteration on reversed path
+        int steps = smoothedPath.size();
+        int i = 0;
         vector<Point> shorter_path;
-        std::reverse(smoothedPath.begin(), smoothedPath.end());
-        shorter_path.push_back(path[path.size()-1]);
-        bool reverse_smoothing = pathSmoothing(0, smoothedPath.size()-1, smoothedPath, obstacle_list, shorter_path);
-        if (reverse_smoothing && (shorter_path.size() < smoothedPath.size())) {
-            #ifdef DEBUG_PATH_SMOOTHING
-                cout << "\t>Path shortened AGAIN (size: " << smoothedPath.size() << "->" << shorter_path.size() << ")" << endl;
-            #endif
-            smoothedPath = shorter_path;
+        shorter_path.push_back(path[0]);
+
+        while (i < steps-2){
+            bool collision = false;
+            double x0, y0, xf, yf;
+
+            x0 = smoothedPath[i].x;
+            y0 = smoothedPath[i].y;
+
+            xf = smoothedPath[i+2].x;
+            yf = smoothedPath[i+2].y;
+
+            for (Polygon p : obstacle_list) {
+                for (size_t k = 0; k < p.size(); k++) {
+                    if (k == p.size()-1) {
+                        collision = isSegmentColliding(Point(x0,y0), Point(xf,yf), p[k], p[0]);
+                    } else {
+                        collision = isSegmentColliding(Point(x0,y0), Point(xf,yf), p[k], p[k+1]);
+                    }
+
+                    if (collision) {
+                    break;
+                    }
+                }
+                if (collision) {
+                    break;
+                }
+            }
+
+            if (!collision) {
+                shorter_path.push_back(smoothedPath[i+2]);
+                i = i+2;
+            } else {
+                shorter_path.push_back(smoothedPath[i+1]);
+                i++;
+            }
+
         }
-        std::reverse(smoothedPath.begin(), smoothedPath.end());
+
+        if(PUtils::pointsEquals(smoothedPath.back(),path.back())){
+            shorter_path.push_back(path[path.size()-1]);
+        }        
+
+        #ifdef DEBUG_PATH_SMOOTHING
+            cout << "\t>Final smoothing size (size: " << smoothedPath.size() << "->" << shorter_path.size() << ")" << endl;
+        #endif
+
+        smoothedPath = shorter_path;
 
         assert(PUtils::pointsEquals(smoothedPath.front(),path.front()));
         assert(PUtils::pointsEquals(smoothedPath.back(),path.back()));
@@ -2067,6 +2103,10 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
                                       float xf, float yf, float thf,
                                       const string& config_folder) {
 
+    #ifdef DEBUG_SCORES
+        cout << "Choosing victims for best scoring path." << endl;
+    #endif
+    
     vector<dubins::Curve> multipointPath;
     float best_partial_time;    // current best time score
 
@@ -2090,10 +2130,6 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
         collected.push_back(false);
 
     vector<pair<int,Polygon>> empty_victims_vector;
-
-    #ifdef DEBUG_SCORES
-        cout << "Choosing victims for best scoring path." << endl;
-    #endif
 
     multipointPath = collectVictimsPath(safeBorders, slotBorders, obstacle_list, empty_victims_vector, x, y, theta, xf, yf, thf, config_folder);
 
