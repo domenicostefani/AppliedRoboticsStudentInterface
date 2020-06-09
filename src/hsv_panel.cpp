@@ -89,7 +89,7 @@ WindowData displayControl(const cv::Mat& frame, string windowName,
  * @param[in] image         bgr image
  * @param[in] out_filename  name of the config file to write
 */
-void hsvpanel::show_panel(cv::Mat image, std::string out_filename) {
+void hsvpanel::show_panel(const cv::Mat& image, std::string out_filename) {
     /*------------------------------------------------------------------------*/
     /*- Show instructions                                                     */
     /*------------------------------------------------------------------------*/

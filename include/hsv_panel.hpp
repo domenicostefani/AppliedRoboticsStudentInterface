@@ -20,5 +20,5 @@ namespace hsvpanel{
      * @param[in] image         bgr image
      * @param[in] out_filename  name of the config file to write to
     */
-    void show_panel(cv::Mat image, std::string out_filename);
+    void show_panel(const cv::Mat& image, std::string out_filename);
 }

@@ -44,7 +44,7 @@
 // #define DEBUG_PLANPATH_SEGMENTS   ///< show images with the goals of every planned segment
 // #define DEBUG_RRT                 ///< inner planning algorithm
 // #define DEBUG_PATH_SMOOTHING      ///< path smoothing pipeline
- #define DEBUG_DRAWCURVE             ///< dubins path plotting
+// #define DEBUG_DRAWCURVE           ///< dubins path plotting
 #define DEBUG_SCORES              ///< track times and scores of victims to collect
 // #define DEBUG_COLLISION           ///< plot for collision detection
 
@@ -102,7 +102,7 @@ const unsigned short NUMBER_OF_MP_ANGLES = 4;   ///< Number of possible planning
 const unsigned short MP_IT_LIMIT = 10;  ///< Iteration limit for
                                         ///< multipoint Dubins curve
                                         ///< path planning attempts.
-                                                
+
 constexpr bool USE_ANGLE_HEURISTIC = false;///< Enable heuristic on angle
                                            ///< computation.
                                            ///< Setting this to true improves the
@@ -307,23 +307,24 @@ bool extrinsicCalib(const cv::Mat& img_in, vector<cv::Point3f> object_points,
     }
 
     #ifdef DEBUG_EXTRINSIC_CALIB
-        cv::line(img_in, corners[0], corners[1], cv::Scalar(0,0,255));
-        cv::line(img_in, corners[1], corners[2], cv::Scalar(0,0,255));
-        cv::line(img_in, corners[2], corners[3], cv::Scalar(0,0,255));
-        cv::line(img_in, corners[3], corners[0], cv::Scalar(0,0,255));
+        cv::Mat calibDebugImg = img_in.clone();
+        cv::line(calibDebugImg, corners[0], corners[1], cv::Scalar(0,0,255));
+        cv::line(calibDebugImg, corners[1], corners[2], cv::Scalar(0,0,255));
+        cv::line(calibDebugImg, corners[2], corners[3], cv::Scalar(0,0,255));
+        cv::line(calibDebugImg, corners[3], corners[0], cv::Scalar(0,0,255));
 
-        cv::circle(img_in, corners[0], 20, cv::Scalar(0,0,255),4);
-        cv::circle(img_in, corners[1], 20, cv::Scalar(0,255,0),4);
-        cv::circle(img_in, corners[2], 20, cv::Scalar(255,0,0),4);
-        cv::circle(img_in, corners[3], 20, cv::Scalar(0,0,0),4);
+        cv::circle(calibDebugImg, corners[0], 20, cv::Scalar(0,0,255),4);
+        cv::circle(calibDebugImg, corners[1], 20, cv::Scalar(0,255,0),4);
+        cv::circle(calibDebugImg, corners[2], 20, cv::Scalar(255,0,0),4);
+        cv::circle(calibDebugImg, corners[3], 20, cv::Scalar(0,0,0),4);
 
-        cv::putText(img_in, "0", corners[0], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
-        cv::putText(img_in, "1", corners[1], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
-        cv::putText(img_in, "2", corners[2], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
-        cv::putText(img_in, "3", corners[3], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+        cv::putText(calibDebugImg, "0", corners[0], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+        cv::putText(calibDebugImg, "1", corners[1], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+        cv::putText(calibDebugImg, "2", corners[2], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
+        cv::putText(calibDebugImg, "3", corners[3], cv::FONT_HERSHEY_DUPLEX, 1.0, cv::Scalar(0,0,255), 2);
 
         // display
-        cv::imshow("Selected border points", img_in);
+        cv::imshow("Selected border points", calibDebugImg);
         cv::waitKey(0);
     #endif
 
@@ -1786,7 +1787,7 @@ vector<Point> completeSmoothing(const vector<Point>& path, const vector<Polygon>
 
         if(PUtils::pointsEquals(smoothedPath.back(),path.back())){
             shorter_path.push_back(path[path.size()-1]);
-        }        
+        }
 
         #ifdef DEBUG_PATH_SMOOTHING
             cout << "\t>Final smoothing size (size: " << smoothedPath.size() << "->" << shorter_path.size() << ")" << endl;
@@ -2106,7 +2107,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
     #ifdef DEBUG_SCORES
         cout << "Choosing victims for best scoring path." << endl;
     #endif
-    
+
     vector<dubins::Curve> multipointPath;
     float best_partial_time;    // current best time score
 
@@ -2236,7 +2237,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         printf("--------PLANNING WAS CALLED--------\n");
         fflush(stdout);
     #endif
-    
+
     int mission_selected;
     float bonus_selected;
 
@@ -2318,7 +2319,7 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         else if (mission == Mission::mission2) {
             angle_increment = 10;
             multipointPath = bestScoreGreedy(safeBorders, slottedBorders, obstacle_list, victim_list, x, y, theta, xf, yf, thf, config_folder);
-            
+
             if (getPathLength(multipointPath) > 0){
             #ifdef DEBUG_SCORES
                 cout << "Mission 2 planning completed successfully.\n";
