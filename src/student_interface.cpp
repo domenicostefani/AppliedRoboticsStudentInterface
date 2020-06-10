@@ -93,7 +93,7 @@ const float ROBOT_RADIUS = 0.1491;  ///< Robot radius for obstacles and
                                     ///< center and the robot footprint
                                     ///< borders.
 
-const unsigned short NUMBER_OF_MP_ANGLES = 4;   ///< Number of possible planning
+const unsigned short NUMBER_OF_MP_ANGLES = 8;   ///< Number of possible planning
                                                 ///< angles.
                                                 ///< Number of angles used
                                                 ///< normally to plan the
@@ -103,7 +103,7 @@ const unsigned short MP_IT_LIMIT = 10;  ///< Iteration limit for
                                         ///< multipoint Dubins curve
                                         ///< path planning attempts.
 
-constexpr bool USE_ANGLE_HEURISTIC = false;///< Enable heuristic on angle
+constexpr bool USE_ANGLE_HEURISTIC = true;///< Enable heuristic on angle
                                            ///< computation.
                                            ///< Setting this to true improves the
                                            ///< way that free angles are chosen
@@ -2238,32 +2238,36 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         fflush(stdout);
     #endif
 
-    int mission_selected;
-    float bonus_selected;
-
-    cout << "Select mission type.\n 1: collect all victims in numbered order\n 2: collect victims with highest scoring path\n";
-
-    cin >> mission_selected;
-
-    cout << "Selected mission " << mission_selected << endl;
-
-    if(mission_selected == 1){
-        mission = Mission::mission1;
-    } else if(mission_selected == 2){
-        mission = Mission::mission2;
-        cout << "Choose time bonus amount.\n";
-
-        cin >> bonus_selected;
-
-        bonus = bonus_selected;
-
-        cout << "Bonus set to " << bonus << " seconds" << endl;
-    }
-
     if (!savedPath.empty()) {
         cout << "Recovering saved path" << endl;
         path = savedPath;
     } else {
+
+        //
+        // Mission selection dialog
+        //
+
+        int mission_selected;
+        float bonus_selected;
+
+        cout << "Select mission type.\n 1: collect all victims in numbered order\n 2: collect victims with highest scoring path\n";
+
+        cin >> mission_selected;
+
+        cout << "Selected mission " << mission_selected << endl;
+
+        if(mission_selected == 1){
+            mission = Mission::mission1;
+        } else if(mission_selected == 2){
+            mission = Mission::mission2;
+            cout << "Choose time bonus amount.\n";
+
+            cin >> bonus_selected;
+
+            bonus = bonus_selected;
+
+            cout << "Bonus set to " << bonus << " seconds" << endl;
+        }
 
         // Correct borders to account for robot size
         Polygon safeBorders = ClipperHelper::offsetBorders(borders,-1.0 * ROBOT_RADIUS);
