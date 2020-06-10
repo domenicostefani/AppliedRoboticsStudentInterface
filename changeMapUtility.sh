@@ -103,6 +103,7 @@ echo "1 - default plus obstacle between v1 and v3"
 echo "2 - ZigZag Map 1"
 echo "3 - ZigZag Map 2 (like 1 with gate moved)"
 echo "4 - Ring Map 2 (should require u turn)"
+echo "5 - Last year (Narrow passage)"
 read -p "Choose the map: " CHOICE
 
 if [ $CHOICE = "0" ]
@@ -633,6 +634,90 @@ then
     write_robot_pos 0.8 0.8 3
 
     echo "Robot position written to " $robotFile
+elif [ $CHOICE = "5" ]
+then
+    rm -f $outputFile
+    echo "<?xml version='1.0' encoding='UTF-8'?>" >> $outputFile
+    echo '<sdf version="1.4">' >> $outputFile
+    echo '  <model name="mindstorm_map">' >> $outputFile
+    echo "" >> $outputFile
+    echo "    <!-- Gate and camera section -->" >> $outputFile
+    echo "    <include>" >> $outputFile
+    echo "      <uri>model://gate</uri>" >> $outputFile
+    echo "      <pose>1.3 0.06 0 0 0 -1.57</pose>" >> $outputFile
+    echo "      <name>gate</name>" >> $outputFile
+    echo "    </include>" >> $outputFile
+    echo "" >> $outputFile
+    echo "    <!-- Victim section -->" >> $outputFile
+    echo "    <!--include>" >> $outputFile
+    echo "      <uri>model://victim_1</uri>" >> $outputFile
+    echo "      <pose>0.24 0.26 0 0 0 1.5</pose>" >> $outputFile
+    echo "      <name>victim1</name>" >> $outputFile
+    echo "    </include-->" >> $outputFile
+    echo "" >> $outputFile
+    echo "    <include>" >> $outputFile
+    echo "      <uri>model://victim_2</uri>" >> $outputFile
+    echo "      <pose>0.4 0.73 0 0 0 0</pose>" >> $outputFile
+    echo "      <name>victim2</name>" >> $outputFile
+    echo "    </include>" >> $outputFile
+    echo "" >> $outputFile
+    echo "    <include>" >> $outputFile
+    echo "      <uri>model://victim_3</uri>" >> $outputFile
+    echo "      <pose>1.05 0.55 0 0 0 0</pose>" >> $outputFile
+    echo "      <name>victim3</name>" >> $outputFile
+    echo "    </include>" >> $outputFile
+    echo "" >> $outputFile
+    echo "    <include>">> $outputFile
+    echo "      <uri>model://victim_4</uri>" >> $outputFile
+    echo "      <pose>1.25 0.3 0 0 0 0</pose>" >> $outputFile
+    echo "      <name>victim4</name>" >> $outputFile
+    echo "    </include>" >> $outputFile
+    echo "" >> $outputFile
+    echo "    <!--include>" >> $outputFile
+    echo "      <uri>model://victim_5</uri>" >> $outputFile
+    echo "      <pose>1.3 0.75 0 0 0 0</pose>" >> $outputFile
+    echo "      <name>victim5</name>" >> $outputFile
+    echo "    </include-->" >> $outputFile
+    echo "" >> $outputFile
+    echo "" >> $outputFile
+    echo "    <!-- Obstacle section -->    " >> $outputFile
+    echo "    <include>" >> $outputFile
+    echo "      <uri>model://hexagon_95</uri>" >> $outputFile
+    echo "      <pose>0.6 0.25 0 0 0 0</pose>" >> $outputFile
+    echo "      <name>obstacle_1</name>" >> $outputFile
+    echo "    </include>" >> $outputFile
+    echo "" >> $outputFile
+    echo "    <include>" >> $outputFile
+    echo "      <uri>model://hexagon_142</uri>" >> $outputFile
+    echo "      <pose>0.05 0.4 0 0 0 0</pose>" >> $outputFile
+    echo "      <name>obstacle_2</name>" >> $outputFile
+    echo "    </include>" >> $outputFile
+    echo "" >> $outputFile
+    echo "    <include>" >> $outputFile
+    echo "      <uri>model://rectangle_95</uri>" >> $outputFile
+    echo "      <pose>0.6 0.9 0 0 0 0</pose>" >> $outputFile
+    echo "      <name>obstacle_3</name>" >> $outputFile
+    echo "    </include>" >> $outputFile
+    echo "" >> $outputFile
+    echo "    <include>" >> $outputFile
+    echo "      <uri>model://triangle_95</uri>" >> $outputFile
+    echo "      <pose>0.6 0.7 0 0 0 0</pose>" >> $outputFile
+    echo "      <name>obstacle_4</name>" >> $outputFile
+    echo "    </include>" >> $outputFile
+    echo "" >> $outputFile
+    echo "    <include>" >> $outputFile
+    echo "      <uri>model://pentagon_95</uri>" >> $outputFile
+    echo "      <pose>0.6 0.1 0 0 0 0</pose>" >> $outputFile
+    echo "      <name>obstacle_5</name>" >> $outputFile
+    echo "    </include>" >> $outputFile
+    write_fixed_arena_part
+
+    echo "MAP written to " $outputFile
+
+    write_robot_pos 1 0.85 0
+
+    echo "Robot position written to " $robotFile
+
 else
     echo "Not an available map"
 fi
