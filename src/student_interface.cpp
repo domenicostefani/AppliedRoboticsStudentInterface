@@ -77,13 +77,15 @@ const float SAFETY_INFLATE_AMOUNT = 0.04;    ///< Obstacles inflation amount.
                                              ///< computation of collisions
                                              ///< (in the RRT script)
                                              ///< (Note: value in meters)
-const bool DO_CUT_GATE_SLOT = true;   ///< Cut a slot for the gate in the
-                                      ///< safe arena border polygon.
-                                      ///< if False, the robot only
-                                      ///< arrives near the gate (not
-                                      ///< inside) to avoid the possible
-                                      ///< virtual collision with the arena
-                                      ///< border behind the gate
+const bool DO_CUT_GATE_SLOT = false;   ///< Cut a slot for the gate in the safe arena border polygon.
+                                      ///< if False, the regular planned path
+                                      ///< arrives first near the border, then
+                                      ///< a last segment is added to the path
+                                      ///< to make the robot enter the gate.
+                                      // Note: currently false is the best
+                                      // choice because of a bug in the RRT
+                                      // planner script that we found. It makes
+                                      // no difference in most cases anyway
 const float SAFETY_GATE_INFLATE_AMOUNT = 0.01; ///<< Gate polygon inflate amount
 
 const float ROBOT_RADIUS = 0.1491;  ///< Robot radius for obstacles and
@@ -2280,6 +2282,9 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
         // of this arrival point into the gate borders
         computeArrival(gate,borders,safeBorders,xf,yf,thf,xProj, yProj);
 
+        // Prepare an arrival point used if the gate slot is not cut
+        Point extendedArrival(xf,yf);
+
         if (DO_CUT_GATE_SLOT) {
             slottedBorders = cutGateSlot(gate,safeBorders,xProj, yProj);
         } else {
@@ -2331,6 +2336,36 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
             } else {
                 throw runtime_error("Mission 2 planning failed!");
             }
+        }
+
+        //
+        // Path termination
+        //
+
+        if (! DO_CUT_GATE_SLOT) {
+            // If the gate slot was NOT cut, the current path only arrives to
+            // the end of the safe borders, thus not entering in the gate itself
+            // In this case we ADD A SEGMENT to the end of the path
+
+            // To plan:    o-----------------o
+            //             ^                 ^
+            //            (xy,yf)           extendedArrival(x,y)
+
+            int pidx = 0;
+            double x1 = xf;
+            double y1 = yf;
+            double theta1 = thf;
+            double x2 = extendedArrival.x;
+            double y2 = extendedArrival.y;
+            double theta2 = thf;
+            dubins::Curve lastCurve = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, K_MAX, pidx);
+
+            // No collision check because we know that it would record a virtual
+            // collisions caused by the border behind the gate.
+            // We also know that it is not a real collision because the robot is
+            // meant to use the gate to exit from the arena
+
+            multipointPath.push_back(lastCurve);
         }
 
         //

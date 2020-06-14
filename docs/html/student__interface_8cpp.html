@@ -113,7 +113,7 @@ Macros</h2></td></tr>
 <tr class="memitem:a817f5e0bdbca0ae7a4e786351bac68cf"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a817f5e0bdbca0ae7a4e786351bac68cf">AUTO_CORNER_DETECTION</a>&#160;&#160;&#160;true</td></tr>
 <tr class="memdesc:a817f5e0bdbca0ae7a4e786351bac68cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use Automatic corner detection.  <a href="student__interface_8cpp.html#a817f5e0bdbca0ae7a4e786351bac68cf">More...</a><br /></td></tr>
 <tr class="separator:a817f5e0bdbca0ae7a4e786351bac68cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad364c7672da502a316360cb13c215bd1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#ad364c7672da502a316360cb13c215bd1">COLOR_TUNING_WIZARD</a>&#160;&#160;&#160;true</td></tr>
+<tr class="memitem:ad364c7672da502a316360cb13c215bd1"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#ad364c7672da502a316360cb13c215bd1">COLOR_TUNING_WIZARD</a>&#160;&#160;&#160;false</td></tr>
 <tr class="memdesc:ad364c7672da502a316360cb13c215bd1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use color tuning panel.  <a href="student__interface_8cpp.html#ad364c7672da502a316360cb13c215bd1">More...</a><br /></td></tr>
 <tr class="separator:ad364c7672da502a316360cb13c215bd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2415ae70e07e7c351bcf674e8797c9b0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a2415ae70e07e7c351bcf674e8797c9b0">DEBUG_PLANPATH</a></td></tr>
@@ -200,9 +200,9 @@ Functions</h2></td></tr>
 <tr class="memitem:afce03b7c8e81fc3758e472f38aa084ec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#afce03b7c8e81fc3758e472f38aa084ec">student::drawDubinsArc</a> (<a class="el" href="classdubins_1_1Arc.html">dubins::Arc</a> &amp;da)</td></tr>
 <tr class="memdesc:afce03b7c8e81fc3758e472f38aa084ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draws a <a class="el" href="classdubins_1_1Arc.html" title="Class representing one of the three arcs of every path of Dubin&#39;s maneuvers.">dubins::Arc</a> on a debug image.  <a href="namespacestudent.html#afce03b7c8e81fc3758e472f38aa084ec">More...</a><br /></td></tr>
 <tr class="separator:afce03b7c8e81fc3758e472f38aa084ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4c4773679ebf7f797162a71bec86c0ca"><td class="memItemLeft" align="right" valign="top">std::pair&lt; bool, std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a4c4773679ebf7f797162a71bec86c0ca">student::MDP</a> (const std::vector&lt; Point &gt; &amp;path, unsigned int startIdx, unsigned int arriveIdx, double startAngle, double arriveAngle, double &amp;returnedLength, const vector&lt; Polygon &gt; &amp;obstacle_list, const unsigned short NUM_ANGLES)</td></tr>
-<tr class="memdesc:a4c4773679ebf7f797162a71bec86c0ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds the shortest multi-point dubins curve for the given path.  <a href="namespacestudent.html#a4c4773679ebf7f797162a71bec86c0ca">More...</a><br /></td></tr>
-<tr class="separator:a4c4773679ebf7f797162a71bec86c0ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5109e8b43390c5c0f6935e2631441b21"><td class="memItemLeft" align="right" valign="top">std::pair&lt; bool, std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a5109e8b43390c5c0f6935e2631441b21">student::MDP</a> (const std::vector&lt; Point &gt; &amp;path, unsigned int startIdx, unsigned int arriveIdx, double startAngle, double arriveAngle, double &amp;returnedLength, const vector&lt; Polygon &gt; &amp;obstacle_list, const unsigned short num_angles)</td></tr>
+<tr class="memdesc:a5109e8b43390c5c0f6935e2631441b21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds the shortest multi-point dubins curve for the given path.  <a href="namespacestudent.html#a5109e8b43390c5c0f6935e2631441b21">More...</a><br /></td></tr>
+<tr class="separator:a5109e8b43390c5c0f6935e2631441b21"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0d628521f7d445e696a62e1d7ae4fda"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#aa0d628521f7d445e696a62e1d7ae4fda">student::isPathColliding</a> (vector&lt; Point &gt; vertices, vector&lt; Polygon &gt; obstacle_list)</td></tr>
 <tr class="memdesc:aa0d628521f7d445e696a62e1d7ae4fda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a path is colliding with any obstacle.  <a href="namespacestudent.html#aa0d628521f7d445e696a62e1d7ae4fda">More...</a><br /></td></tr>
 <tr class="separator:aa0d628521f7d445e696a62e1d7ae4fda"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -236,18 +236,23 @@ Functions</h2></td></tr>
 <tr class="memitem:ab247edd9beb1bcd4071f35ba700a7d78"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#ab247edd9beb1bcd4071f35ba700a7d78">student::sorByDistance</a> (const pair&lt; int, float &gt; &amp;p1, const pair&lt; int, float &gt; &amp;p2)</td></tr>
 <tr class="memdesc:ab247edd9beb1bcd4071f35ba700a7d78"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom sorting function for pairs of indexed distances.  <a href="namespacestudent.html#ab247edd9beb1bcd4071f35ba700a7d78">More...</a><br /></td></tr>
 <tr class="separator:ab247edd9beb1bcd4071f35ba700a7d78"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ee3c353a030e8eca44538a4ef6e118e"><td class="memItemLeft" align="right" valign="top">vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a5ee3c353a030e8eca44538a4ef6e118e">student::bestScoreGreedy</a> (const Polygon &amp;safeBorders, const Polygon &amp;slotBorders, const vector&lt; Polygon &gt; &amp;obstacle_list, const vector&lt; pair&lt; int, Polygon &gt;&gt; &amp;victim_list, float x, float y, float theta, float xf, float yf, float thf, float bonus, const string &amp;config_folder)</td></tr>
-<tr class="memdesc:a5ee3c353a030e8eca44538a4ef6e118e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Plans a path that maximizes the time-score of the mission.  <a href="namespacestudent.html#a5ee3c353a030e8eca44538a4ef6e118e">More...</a><br /></td></tr>
-<tr class="separator:a5ee3c353a030e8eca44538a4ef6e118e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c7f19a3f75c020f81f73f807d3de213"><td class="memItemLeft" align="right" valign="top">vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a6c7f19a3f75c020f81f73f807d3de213">student::bestScoreGreedy</a> (const Polygon &amp;safeBorders, const Polygon &amp;slotBorders, const vector&lt; Polygon &gt; &amp;obstacle_list, const vector&lt; pair&lt; int, Polygon &gt;&gt; &amp;victim_list, float x, float y, float theta, float xf, float yf, float thf, const string &amp;config_folder)</td></tr>
+<tr class="memdesc:a6c7f19a3f75c020f81f73f807d3de213"><td class="mdescLeft">&#160;</td><td class="mdescRight">Plans a path that maximizes the time-score of the mission.  <a href="namespacestudent.html#a6c7f19a3f75c020f81f73f807d3de213">More...</a><br /></td></tr>
+<tr class="separator:a6c7f19a3f75c020f81f73f807d3de213"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7246f78ee75ada13dedc36bd4e354aa9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a7246f78ee75ada13dedc36bd4e354aa9">student::planPath</a> (const Polygon &amp;borders, const vector&lt; Polygon &gt; &amp;obstacle_list, const vector&lt; pair&lt; int, Polygon &gt;&gt; &amp;victim_list, const Polygon &amp;gate, const float x, const float y, const float theta, Path &amp;path, const string &amp;config_folder)</td></tr>
 <tr class="memdesc:a7246f78ee75ada13dedc36bd4e354aa9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Plans a path according to the mission selected.  <a href="namespacestudent.html#a7246f78ee75ada13dedc36bd4e354aa9">More...</a><br /></td></tr>
 <tr class="separator:a7246f78ee75ada13dedc36bd4e354aa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:afb284c42184d40a1c7fd2f93f5a370fd"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="student__interface_8cpp.html#af686af98019fe71e9f18190349618431">Mission</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#afb284c42184d40a1c7fd2f93f5a370fd">mission</a> = Mission::mission1</td></tr>
-<tr class="memdesc:afb284c42184d40a1c7fd2f93f5a370fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Planning task chosen.  <a href="student__interface_8cpp.html#afb284c42184d40a1c7fd2f93f5a370fd">More...</a><br /></td></tr>
-<tr class="separator:afb284c42184d40a1c7fd2f93f5a370fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3a3bb8e635420fd40ef3c99f863c5c8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="student__interface_8cpp.html#af686af98019fe71e9f18190349618431">Mission</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#ab3a3bb8e635420fd40ef3c99f863c5c8">mission</a> = <a class="el" href="student__interface_8cpp.html#af686af98019fe71e9f18190349618431a8fe6d55262be82721f5f5de442832766">Mission::mission2</a></td></tr>
+<tr class="memdesc:ab3a3bb8e635420fd40ef3c99f863c5c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Planning task chosen.  <a href="student__interface_8cpp.html#ab3a3bb8e635420fd40ef3c99f863c5c8">More...</a><br /></td></tr>
+<tr class="separator:ab3a3bb8e635420fd40ef3c99f863c5c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad506f70994c7ccd5f5a3eb308720bdf8"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#ad506f70994c7ccd5f5a3eb308720bdf8">bonus</a> = 0.08f</td></tr>
+<tr class="memdesc:ad506f70994c7ccd5f5a3eb308720bdf8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time bonus for each victim collected.  <a href="student__interface_8cpp.html#ad506f70994c7ccd5f5a3eb308720bdf8">More...</a><br /></td></tr>
+<tr class="separator:ad506f70994c7ccd5f5a3eb308720bdf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81b1515153f8025bf124651ffe163955"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a81b1515153f8025bf124651ffe163955">angle_increment</a> = 1</td></tr>
+<tr class="separator:a81b1515153f8025bf124651ffe163955"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea539235f88c280e2dc399dbaa47741d"><td class="memItemLeft" align="right" valign="top">const string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#aea539235f88c280e2dc399dbaa47741d">COLOR_CONFIG_FILE</a> = &quot;/color_parameters.config&quot;</td></tr>
 <tr class="separator:aea539235f88c280e2dc399dbaa47741d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af79310bec10413e4914b7fce280dd889"><td class="memItemLeft" align="right" valign="top">const int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#af79310bec10413e4914b7fce280dd889">pythonUpscale</a> = 1000</td></tr>
@@ -259,7 +264,7 @@ Variables</h2></td></tr>
 <tr class="memitem:a2cf9c0a3520bb0597a2af6fea1e10478"><td class="memItemLeft" align="right" valign="top">const float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a2cf9c0a3520bb0597a2af6fea1e10478">SAFETY_INFLATE_AMOUNT</a> = 0.04</td></tr>
 <tr class="memdesc:a2cf9c0a3520bb0597a2af6fea1e10478"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obstacles inflation amount.  <a href="student__interface_8cpp.html#a2cf9c0a3520bb0597a2af6fea1e10478">More...</a><br /></td></tr>
 <tr class="separator:a2cf9c0a3520bb0597a2af6fea1e10478"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5a8d932d2e09b7fe7c646840eb88df12"><td class="memItemLeft" align="right" valign="top">const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a5a8d932d2e09b7fe7c646840eb88df12">DO_CUT_GATE_SLOT</a> = true</td></tr>
+<tr class="memitem:a5a8d932d2e09b7fe7c646840eb88df12"><td class="memItemLeft" align="right" valign="top">const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a5a8d932d2e09b7fe7c646840eb88df12">DO_CUT_GATE_SLOT</a> = false</td></tr>
 <tr class="memdesc:a5a8d932d2e09b7fe7c646840eb88df12"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cut a slot for the gate in the safe arena border polygon.  <a href="student__interface_8cpp.html#a5a8d932d2e09b7fe7c646840eb88df12">More...</a><br /></td></tr>
 <tr class="separator:a5a8d932d2e09b7fe7c646840eb88df12"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca15e65cd76a8ddacbab33ba00603b22"><td class="memItemLeft" align="right" valign="top">const float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#aca15e65cd76a8ddacbab33ba00603b22">SAFETY_GATE_INFLATE_AMOUNT</a> = 0.01</td></tr>
@@ -268,11 +273,14 @@ Variables</h2></td></tr>
 <tr class="memitem:a6b20b4991e96425842dfd0dd6bba41eb"><td class="memItemLeft" align="right" valign="top">const float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a6b20b4991e96425842dfd0dd6bba41eb">ROBOT_RADIUS</a> = 0.1491</td></tr>
 <tr class="memdesc:a6b20b4991e96425842dfd0dd6bba41eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Robot radius for obstacles and borders inflation.  <a href="student__interface_8cpp.html#a6b20b4991e96425842dfd0dd6bba41eb">More...</a><br /></td></tr>
 <tr class="separator:a6b20b4991e96425842dfd0dd6bba41eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2212e079bf80784544e26ecc621a896d"><td class="memItemLeft" align="right" valign="top">const unsigned short&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a2212e079bf80784544e26ecc621a896d">NUMBER_OF_MP_ANGLES</a> = 10</td></tr>
+<tr class="memitem:a2212e079bf80784544e26ecc621a896d"><td class="memItemLeft" align="right" valign="top">const unsigned short&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a2212e079bf80784544e26ecc621a896d">NUMBER_OF_MP_ANGLES</a> = 8</td></tr>
 <tr class="memdesc:a2212e079bf80784544e26ecc621a896d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of possible planning angles.  <a href="student__interface_8cpp.html#a2212e079bf80784544e26ecc621a896d">More...</a><br /></td></tr>
 <tr class="separator:a2212e079bf80784544e26ecc621a896d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e4e006109051541247cf5a49584bd21"><td class="memItemLeft" align="right" valign="top">constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a4e4e006109051541247cf5a49584bd21">USE_ANGLE_HEURISTIC</a> = false</td></tr>
-<tr class="memdesc:a4e4e006109051541247cf5a49584bd21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable heuristic on angle computation.  <a href="student__interface_8cpp.html#a4e4e006109051541247cf5a49584bd21">More...</a><br /></td></tr>
+<tr class="memitem:a0e1bb3537f28ceb666c7e7fc09ce2f5f"><td class="memItemLeft" align="right" valign="top">const unsigned short&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a0e1bb3537f28ceb666c7e7fc09ce2f5f">MP_IT_LIMIT</a> = 10</td></tr>
+<tr class="memdesc:a0e1bb3537f28ceb666c7e7fc09ce2f5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iteration limit for multipoint Dubins curve path planning attempts.  <a href="student__interface_8cpp.html#a0e1bb3537f28ceb666c7e7fc09ce2f5f">More...</a><br /></td></tr>
+<tr class="separator:a0e1bb3537f28ceb666c7e7fc09ce2f5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e4e006109051541247cf5a49584bd21"><td class="memItemLeft" align="right" valign="top">constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a4e4e006109051541247cf5a49584bd21">USE_ANGLE_HEURISTIC</a> = true</td></tr>
+<tr class="memdesc:a4e4e006109051541247cf5a49584bd21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable heuristic on angle.  <a href="student__interface_8cpp.html#a4e4e006109051541247cf5a49584bd21">More...</a><br /></td></tr>
 <tr class="separator:a4e4e006109051541247cf5a49584bd21"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec288fbcb048cb507a7616c6a783bf38"><td class="memItemLeft" align="right" valign="top">const double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#aec288fbcb048cb507a7616c6a783bf38">K_MAX</a> = 10.0</td></tr>
 <tr class="memdesc:aec288fbcb048cb507a7616c6a783bf38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum robot curvature.  <a href="student__interface_8cpp.html#aec288fbcb048cb507a7616c6a783bf38">More...</a><br /></td></tr>
@@ -283,9 +291,6 @@ Variables</h2></td></tr>
 <tr class="memitem:a929b2472a9c73bb221e32c8c7416b5cf"><td class="memItemLeft" align="right" valign="top">const float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a929b2472a9c73bb221e32c8c7416b5cf">ROBOT_SPEED</a> = 0.1f</td></tr>
 <tr class="memdesc:a929b2472a9c73bb221e32c8c7416b5cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Robot speed: 0.1 m/s.  <a href="student__interface_8cpp.html#a929b2472a9c73bb221e32c8c7416b5cf">More...</a><br /></td></tr>
 <tr class="separator:a929b2472a9c73bb221e32c8c7416b5cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1a9b6f451a2bf415cbd51a48cae75da"><td class="memItemLeft" align="right" valign="top">const float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#af1a9b6f451a2bf415cbd51a48cae75da">BONUS</a> = 0.08f</td></tr>
-<tr class="memdesc:af1a9b6f451a2bf415cbd51a48cae75da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time bonus for each victim collected.  <a href="student__interface_8cpp.html#af1a9b6f451a2bf415cbd51a48cae75da">More...</a><br /></td></tr>
-<tr class="separator:af1a9b6f451a2bf415cbd51a48cae75da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac79fbde433a9fb6df9d0b05c3deaac0e"><td class="memItemLeft" align="right" valign="top">cv::Mat&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#ac79fbde433a9fb6df9d0b05c3deaac0e">student::dcImg</a> = cv::Mat(600, 800, CV_8UC3, cv::Scalar(255,255,255))</td></tr>
 <tr class="memdesc:ac79fbde433a9fb6df9d0b05c3deaac0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Image used for debug drawing.  <a href="namespacestudent.html#ac79fbde433a9fb6df9d0b05c3deaac0e">More...</a><br /></td></tr>
 <tr class="separator:ac79fbde433a9fb6df9d0b05c3deaac0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -318,7 +323,7 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define COLOR_TUNING_WIZARD&#160;&#160;&#160;true</td>
+          <td class="memname">#define COLOR_TUNING_WIZARD&#160;&#160;&#160;false</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -402,14 +407,28 @@ Variables</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Variable Documentation</h2>
-<a id="af1a9b6f451a2bf415cbd51a48cae75da"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af1a9b6f451a2bf415cbd51a48cae75da">&#9670;&nbsp;</a></span>BONUS</h2>
+<a id="a81b1515153f8025bf124651ffe163955"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81b1515153f8025bf124651ffe163955">&#9670;&nbsp;</a></span>angle_increment</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const float BONUS = 0.08f</td>
+          <td class="memname">int angle_increment = 1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad506f70994c7ccd5f5a3eb308720bdf8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad506f70994c7ccd5f5a3eb308720bdf8">&#9670;&nbsp;</a></span>bonus</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float bonus = 0.08f</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -455,13 +474,13 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const bool DO_CUT_GATE_SLOT = true</td>
+          <td class="memname">const bool DO_CUT_GATE_SLOT = false</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Cut a slot for the gate in the safe arena border polygon. </p>
-<p>if False, the robot only arrives near the gate (not inside) to avoid the possible virtual collision with the arena border behind the gate </p>
+<p>if False, the regular planned path arrives first near the border, then a last segment is added to the path to make the robot enter the gate. </p>
 
 </div>
 </div>
@@ -481,19 +500,35 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="afb284c42184d40a1c7fd2f93f5a370fd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afb284c42184d40a1c7fd2f93f5a370fd">&#9670;&nbsp;</a></span>mission</h2>
+<a id="ab3a3bb8e635420fd40ef3c99f863c5c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab3a3bb8e635420fd40ef3c99f863c5c8">&#9670;&nbsp;</a></span>mission</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="student__interface_8cpp.html#af686af98019fe71e9f18190349618431">Mission</a> mission = Mission::mission1</td>
+          <td class="memname"><a class="el" href="student__interface_8cpp.html#af686af98019fe71e9f18190349618431">Mission</a> mission = <a class="el" href="student__interface_8cpp.html#af686af98019fe71e9f18190349618431a8fe6d55262be82721f5f5de442832766">Mission::mission2</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Planning task chosen. </p>
+
+</div>
+</div>
+<a id="a0e1bb3537f28ceb666c7e7fc09ce2f5f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e1bb3537f28ceb666c7e7fc09ce2f5f">&#9670;&nbsp;</a></span>MP_IT_LIMIT</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const unsigned short MP_IT_LIMIT = 10</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Iteration limit for multipoint Dubins curve path planning attempts. </p>
 
 </div>
 </div>
@@ -504,16 +539,13 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const unsigned short NUMBER_OF_MP_ANGLES = 10</td>
+          <td class="memname">const unsigned short NUMBER_OF_MP_ANGLES = 8</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Number of possible planning angles. </p>
-<p>Number of angles used </p><blockquote class="doxtable">
-<p>normally to plan the </p>
-</blockquote>
-<p>multipoint curve. </p>
+<p>Number of angles used normally to plan the multipoint curve. </p>
 
 </div>
 </div>
@@ -626,7 +658,7 @@ Variables</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr bool USE_ANGLE_HEURISTIC = false</td>
+          <td class="memname">constexpr bool USE_ANGLE_HEURISTIC = true</td>
         </tr>
       </table>
   </td>
@@ -636,8 +668,8 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Enable heuristic on angle computation. </p>
-<p>Setting this to true improves the way that free angles are chosen when planning </p>
+<p>Enable heuristic on angle. </p>
+<p>computation. Setting this to true improves the way that free angles are chosen when planning </p>
 
 </div>
 </div>

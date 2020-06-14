@@ -10,8 +10,6 @@
 #include <vector>
 #include <assert.h>
 
-#include <iostream>
-
 namespace dubins{
 
 /**
@@ -424,6 +422,20 @@ dubins_shortest_path(double x0, double y0, double th0, double xf, double yf,
                sc_th0,
                sc_thf)
         );
+
+        // Remove eventual bad loops (same start end point with positive length)
+        const double corrThres = 0.0001; //Correction threshold
+        std::vector<dubins::Arc*> arcs = {&res.a1,&res.a2,&res.a3};
+        for(dubins::Arc* arc : arcs) {
+            if ( (fabs(arc->x0 - arc->xf) < corrThres) && \
+                 (fabs(arc->y0 - arc->yf) < corrThres) && \
+                 (fabs(arc->th0 - arc->thf) < corrThres) && \
+                 (arc->L > corrThres)) {
+                res.L -= arc->L;
+                arc->L = 0.0f;
+            }
+        }
+
         return res;
     }
     return Curve(); // in case no curve was found return empty curve

@@ -145,9 +145,9 @@ Functions</h2></td></tr>
 <tr class="memitem:afce03b7c8e81fc3758e472f38aa084ec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#afce03b7c8e81fc3758e472f38aa084ec">drawDubinsArc</a> (<a class="el" href="classdubins_1_1Arc.html">dubins::Arc</a> &amp;da)</td></tr>
 <tr class="memdesc:afce03b7c8e81fc3758e472f38aa084ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draws a <a class="el" href="classdubins_1_1Arc.html" title="Class representing one of the three arcs of every path of Dubin&#39;s maneuvers.">dubins::Arc</a> on a debug image.  <a href="namespacestudent.html#afce03b7c8e81fc3758e472f38aa084ec">More...</a><br /></td></tr>
 <tr class="separator:afce03b7c8e81fc3758e472f38aa084ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4c4773679ebf7f797162a71bec86c0ca"><td class="memItemLeft" align="right" valign="top">std::pair&lt; bool, std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a4c4773679ebf7f797162a71bec86c0ca">MDP</a> (const std::vector&lt; Point &gt; &amp;path, unsigned int startIdx, unsigned int arriveIdx, double startAngle, double arriveAngle, double &amp;returnedLength, const vector&lt; Polygon &gt; &amp;obstacle_list, const unsigned short NUM_ANGLES)</td></tr>
-<tr class="memdesc:a4c4773679ebf7f797162a71bec86c0ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds the shortest multi-point dubins curve for the given path.  <a href="namespacestudent.html#a4c4773679ebf7f797162a71bec86c0ca">More...</a><br /></td></tr>
-<tr class="separator:a4c4773679ebf7f797162a71bec86c0ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5109e8b43390c5c0f6935e2631441b21"><td class="memItemLeft" align="right" valign="top">std::pair&lt; bool, std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a5109e8b43390c5c0f6935e2631441b21">MDP</a> (const std::vector&lt; Point &gt; &amp;path, unsigned int startIdx, unsigned int arriveIdx, double startAngle, double arriveAngle, double &amp;returnedLength, const vector&lt; Polygon &gt; &amp;obstacle_list, const unsigned short num_angles)</td></tr>
+<tr class="memdesc:a5109e8b43390c5c0f6935e2631441b21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds the shortest multi-point dubins curve for the given path.  <a href="namespacestudent.html#a5109e8b43390c5c0f6935e2631441b21">More...</a><br /></td></tr>
+<tr class="separator:a5109e8b43390c5c0f6935e2631441b21"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0d628521f7d445e696a62e1d7ae4fda"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#aa0d628521f7d445e696a62e1d7ae4fda">isPathColliding</a> (vector&lt; Point &gt; vertices, vector&lt; Polygon &gt; obstacle_list)</td></tr>
 <tr class="memdesc:aa0d628521f7d445e696a62e1d7ae4fda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a path is colliding with any obstacle.  <a href="namespacestudent.html#aa0d628521f7d445e696a62e1d7ae4fda">More...</a><br /></td></tr>
 <tr class="separator:aa0d628521f7d445e696a62e1d7ae4fda"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -181,9 +181,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ab247edd9beb1bcd4071f35ba700a7d78"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#ab247edd9beb1bcd4071f35ba700a7d78">sorByDistance</a> (const pair&lt; int, float &gt; &amp;p1, const pair&lt; int, float &gt; &amp;p2)</td></tr>
 <tr class="memdesc:ab247edd9beb1bcd4071f35ba700a7d78"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom sorting function for pairs of indexed distances.  <a href="namespacestudent.html#ab247edd9beb1bcd4071f35ba700a7d78">More...</a><br /></td></tr>
 <tr class="separator:ab247edd9beb1bcd4071f35ba700a7d78"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ee3c353a030e8eca44538a4ef6e118e"><td class="memItemLeft" align="right" valign="top">vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a5ee3c353a030e8eca44538a4ef6e118e">bestScoreGreedy</a> (const Polygon &amp;safeBorders, const Polygon &amp;slotBorders, const vector&lt; Polygon &gt; &amp;obstacle_list, const vector&lt; pair&lt; int, Polygon &gt;&gt; &amp;victim_list, float x, float y, float theta, float xf, float yf, float thf, float bonus, const string &amp;config_folder)</td></tr>
-<tr class="memdesc:a5ee3c353a030e8eca44538a4ef6e118e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Plans a path that maximizes the time-score of the mission.  <a href="namespacestudent.html#a5ee3c353a030e8eca44538a4ef6e118e">More...</a><br /></td></tr>
-<tr class="separator:a5ee3c353a030e8eca44538a4ef6e118e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c7f19a3f75c020f81f73f807d3de213"><td class="memItemLeft" align="right" valign="top">vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a6c7f19a3f75c020f81f73f807d3de213">bestScoreGreedy</a> (const Polygon &amp;safeBorders, const Polygon &amp;slotBorders, const vector&lt; Polygon &gt; &amp;obstacle_list, const vector&lt; pair&lt; int, Polygon &gt;&gt; &amp;victim_list, float x, float y, float theta, float xf, float yf, float thf, const string &amp;config_folder)</td></tr>
+<tr class="memdesc:a6c7f19a3f75c020f81f73f807d3de213"><td class="mdescLeft">&#160;</td><td class="mdescRight">Plans a path that maximizes the time-score of the mission.  <a href="namespacestudent.html#a6c7f19a3f75c020f81f73f807d3de213">More...</a><br /></td></tr>
+<tr class="separator:a6c7f19a3f75c020f81f73f807d3de213"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7246f78ee75ada13dedc36bd4e354aa9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a7246f78ee75ada13dedc36bd4e354aa9">planPath</a> (const Polygon &amp;borders, const vector&lt; Polygon &gt; &amp;obstacle_list, const vector&lt; pair&lt; int, Polygon &gt;&gt; &amp;victim_list, const Polygon &amp;gate, const float x, const float y, const float theta, Path &amp;path, const string &amp;config_folder)</td></tr>
 <tr class="memdesc:a7246f78ee75ada13dedc36bd4e354aa9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Plans a path according to the mission selected.  <a href="namespacestudent.html#a7246f78ee75ada13dedc36bd4e354aa9">More...</a><br /></td></tr>
 <tr class="separator:a7246f78ee75ada13dedc36bd4e354aa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -199,8 +199,8 @@ Variables</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Main namespace containing student interface methods. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="a5ee3c353a030e8eca44538a4ef6e118e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5ee3c353a030e8eca44538a4ef6e118e">&#9670;&nbsp;</a></span>bestScoreGreedy()</h2>
+<a id="a6c7f19a3f75c020f81f73f807d3de213"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c7f19a3f75c020f81f73f807d3de213">&#9670;&nbsp;</a></span>bestScoreGreedy()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -268,12 +268,6 @@ Variables</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">float&#160;</td>
-          <td class="paramname"><em>bonus</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
           <td class="paramtype">const string &amp;&#160;</td>
           <td class="paramname"><em>config_folder</em>&#160;</td>
         </tr>
@@ -286,7 +280,7 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Plans a path that maximizes the time-score of the mission. </p>
-<p>For each victim collected a time-bonus is granted. At each step, the greedy function picks the victim that better improves the final score. To avoid loops and improve the search, the victims to test are ordered by distance from the starting point. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>For each victim collected a time-bonus is granted. At each step, the greedy function picks the victim that better improves the final score. To avoid robot loops and improve the search, the victims to test are ordered by distance from the starting point. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">safeBorders</td><td>safe borders without gate slot (used to prevent RRT bug) </td></tr>
     <tr><td class="paramname">slotBorders</td><td>borders with gate slot (used for collision detection) </td></tr>
@@ -434,7 +428,7 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Tries to reduce the number of points in a path by combinaning different techniques. </p>
-<p>The function performs recursive smoothing iteratively until no change is observed. An additional step is performed on the points of the path in reversed order to achieve further smoothing. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>The function performs recursive smoothing iteratively until no change is observed. An additional pass is performed to remove points that are close together. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">path</td><td>Input path to smooth. </td></tr>
     <tr><td class="paramname">obstacle_list</td><td>List of obstacle polygons. </td></tr>
@@ -508,7 +502,7 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Find the arrival point. </p>
-<p>Returns the baricenter of the gate polygon with the correct arrival angle, along with the projection of the gate center into the neares arena border line</p>
+<p>Returns the baricenter of the gate polygon with the correct arrival angle, along with the projection of the gate center into the nearest arena border line</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">gate</td><td>Gate polygon. </td></tr>
@@ -1525,8 +1519,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="a4c4773679ebf7f797162a71bec86c0ca"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4c4773679ebf7f797162a71bec86c0ca">&#9670;&nbsp;</a></span>MDP()</h2>
+<a id="a5109e8b43390c5c0f6935e2631441b21"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5109e8b43390c5c0f6935e2631441b21">&#9670;&nbsp;</a></span>MDP()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1577,7 +1571,7 @@ Variables</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const unsigned short&#160;</td>
-          <td class="paramname"><em>NUM_ANGLES</em>&#160;</td>
+          <td class="paramname"><em>num_angles</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1588,7 +1582,7 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Finds the shortest multi-point dubins curve for the given path. </p>
-<p>The recursive function has two base cases: two-points <a class="el" href="classdubins_1_1Curve.html" title="Class representing a Dubin&#39;s curve or maneuver, composed by three arcs.">dubins::Curve</a> and three-points <a class="el" href="classdubins_1_1Curve.html" title="Class representing a Dubin&#39;s curve or maneuver, composed by three arcs.">dubins::Curve</a>. The recursion step is called on N-points <a class="el" href="classdubins_1_1Curve.html" title="Class representing a Dubin&#39;s curve or maneuver, composed by three arcs.">dubins::Curve</a>. Free angles are chosen among a number of test angles. The choice is optimized by adding the average between the fixed angles. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>The recursive function has two base cases: two-points <a class="el" href="classdubins_1_1Curve.html" title="Class representing a Dubin&#39;s curve or maneuver, composed by three arcs.">dubins::Curve</a> and three-points <a class="el" href="classdubins_1_1Curve.html" title="Class representing a Dubin&#39;s curve or maneuver, composed by three arcs.">dubins::Curve</a>. The recursion step is called on N-points <a class="el" href="classdubins_1_1Curve.html" title="Class representing a Dubin&#39;s curve or maneuver, composed by three arcs.">dubins::Curve</a>. Free angles are chosen among a number of test angles. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">path</td><td>List of points in the path. </td></tr>
     <tr><td class="paramname">startIdx</td><td>Recursion start index. </td></tr>
@@ -1597,6 +1591,7 @@ Variables</h2></td></tr>
     <tr><td class="paramname">arriveAngle</td><td>Arrival angle. </td></tr>
     <tr><td class="paramname">returnedLength</td><td>Output length of the shortest path. </td></tr>
     <tr><td class="paramname">obstacle_list</td><td>List of obstacle polygons. </td></tr>
+    <tr><td class="paramname">num_angles</td><td>Number of angles to test. </td></tr>
   </table>
   </dd>
 </dl>
