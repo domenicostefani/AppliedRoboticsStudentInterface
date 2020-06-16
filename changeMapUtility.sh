@@ -773,13 +773,13 @@ then
     echo "" >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://rectangle_95</uri>" >> $outputFile
-    echo "      <pose>0.7 0.9 0 0 0 0</pose>" >> $outputFile
+    echo "      <pose>0.8 0.9 0 0 0 0</pose>" >> $outputFile
     echo "      <name>obstacle_3</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://triangle_95</uri>" >> $outputFile
-    echo "      <pose>0.75 0.7 0 0 0 0</pose>" >> $outputFile
+    echo "      <pose>0.85 0.7 0 0 0 0</pose>" >> $outputFile
     echo "      <name>obstacle_4</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
