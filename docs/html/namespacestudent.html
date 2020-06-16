@@ -148,6 +148,18 @@ Functions</h2></td></tr>
 <tr class="memitem:a5109e8b43390c5c0f6935e2631441b21"><td class="memItemLeft" align="right" valign="top">std::pair&lt; bool, std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a5109e8b43390c5c0f6935e2631441b21">MDP</a> (const std::vector&lt; Point &gt; &amp;path, unsigned int startIdx, unsigned int arriveIdx, double startAngle, double arriveAngle, double &amp;returnedLength, const vector&lt; Polygon &gt; &amp;obstacle_list, const unsigned short num_angles)</td></tr>
 <tr class="memdesc:a5109e8b43390c5c0f6935e2631441b21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds the shortest multi-point dubins curve for the given path.  <a href="namespacestudent.html#a5109e8b43390c5c0f6935e2631441b21">More...</a><br /></td></tr>
 <tr class="separator:a5109e8b43390c5c0f6935e2631441b21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a1ed9f8d3bd9ca7f77e060a0f927680ff">getPathLength</a> (const vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt; &amp;multipointPath)</td></tr>
+<tr class="memdesc:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the length of a multi-point dubins curve.  <a href="namespacestudent.html#a1ed9f8d3bd9ca7f77e060a0f927680ff">More...</a><br /></td></tr>
+<tr class="separator:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7fa47cd3cb9a5789c8a08be2ce82cb0"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#ae7fa47cd3cb9a5789c8a08be2ce82cb0">GETANGLE</a> (int index, int numAngles)</td></tr>
+<tr class="memdesc:ae7fa47cd3cb9a5789c8a08be2ce82cb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return an angle value Returns and angle sampled by dividing the circle in "numAngles" slices and taking the "index"th angle.  <a href="namespacestudent.html#ae7fa47cd3cb9a5789c8a08be2ce82cb0">More...</a><br /></td></tr>
+<tr class="separator:ae7fa47cd3cb9a5789c8a08be2ce82cb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9cb92371d02e236ba8c0c12778f8421b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a9cb92371d02e236ba8c0c12778f8421b">DUBINS</a> (Point p1, float th1, Point pf, float thf)</td></tr>
+<tr class="memdesc:a9cb92371d02e236ba8c0c12778f8421b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dubins path function wrapper Call the dubins path computation method.  <a href="namespacestudent.html#a9cb92371d02e236ba8c0c12778f8421b">More...</a><br /></td></tr>
+<tr class="separator:a9cb92371d02e236ba8c0c12778f8421b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac34d32c0fe843a08f92ae952d6b93050"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#ac34d32c0fe843a08f92ae952d6b93050">idpMDP</a> (const std::vector&lt; Point &gt; &amp;path, double startAngle, double arriveAngle, const vector&lt; Polygon &gt; &amp;obstacle_list, const unsigned short numAngles)</td></tr>
+<tr class="memdesc:ac34d32c0fe843a08f92ae952d6b93050"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterative Dynamic Programming version of the Multipoint Markov-Dubins Problem slides: <a href="https://didatticaonline.unitn.it/dol/pluginfile.php/816984/mod_resource/content/1/slides-Dubins-MP.pdf">https://didatticaonline.unitn.it/dol/pluginfile.php/816984/mod_resource/content/1/slides-Dubins-MP.pdf</a>.  <a href="namespacestudent.html#ac34d32c0fe843a08f92ae952d6b93050">More...</a><br /></td></tr>
+<tr class="separator:ac34d32c0fe843a08f92ae952d6b93050"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0d628521f7d445e696a62e1d7ae4fda"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#aa0d628521f7d445e696a62e1d7ae4fda">isPathColliding</a> (vector&lt; Point &gt; vertices, vector&lt; Polygon &gt; obstacle_list)</td></tr>
 <tr class="memdesc:aa0d628521f7d445e696a62e1d7ae4fda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a path is colliding with any obstacle.  <a href="namespacestudent.html#aa0d628521f7d445e696a62e1d7ae4fda">More...</a><br /></td></tr>
 <tr class="separator:aa0d628521f7d445e696a62e1d7ae4fda"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -175,9 +187,6 @@ Functions</h2></td></tr>
 <tr class="memitem:a79e57884d6d72c214eae050a1980d499"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a79e57884d6d72c214eae050a1980d499">getPosePathLength</a> (const vector&lt; Pose &gt; &amp;path)</td></tr>
 <tr class="memdesc:a79e57884d6d72c214eae050a1980d499"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the length of a path of poses.  <a href="namespacestudent.html#a79e57884d6d72c214eae050a1980d499">More...</a><br /></td></tr>
 <tr class="separator:a79e57884d6d72c214eae050a1980d499"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a1ed9f8d3bd9ca7f77e060a0f927680ff">getPathLength</a> (const vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt; &amp;multipointPath)</td></tr>
-<tr class="memdesc:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the length of a multi-point dubins curve.  <a href="namespacestudent.html#a1ed9f8d3bd9ca7f77e060a0f927680ff">More...</a><br /></td></tr>
-<tr class="separator:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab247edd9beb1bcd4071f35ba700a7d78"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#ab247edd9beb1bcd4071f35ba700a7d78">sorByDistance</a> (const pair&lt; int, float &gt; &amp;p1, const pair&lt; int, float &gt; &amp;p2)</td></tr>
 <tr class="memdesc:ab247edd9beb1bcd4071f35ba700a7d78"><td class="mdescLeft">&#160;</td><td class="mdescRight">Custom sorting function for pairs of indexed distances.  <a href="namespacestudent.html#ab247edd9beb1bcd4071f35ba700a7d78">More...</a><br /></td></tr>
 <tr class="separator:ab247edd9beb1bcd4071f35ba700a7d78"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -666,6 +675,48 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a9cb92371d02e236ba8c0c12778f8421b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9cb92371d02e236ba8c0c12778f8421b">&#9670;&nbsp;</a></span>DUBINS()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> student::DUBINS </td>
+          <td>(</td>
+          <td class="paramtype">Point&#160;</td>
+          <td class="paramname"><em>p1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>th1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Point&#160;</td>
+          <td class="paramname"><em>pf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>thf</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Dubins path function wrapper Call the dubins path computation method. </p>
+
+</div>
+</div>
 <a id="a0c862ea36dd735ed630bd4ade893d692"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0c862ea36dd735ed630bd4ade893d692">&#9670;&nbsp;</a></span>extrinsicCalib()</h2>
 
@@ -1082,6 +1133,36 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="ae7fa47cd3cb9a5789c8a08be2ce82cb0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae7fa47cd3cb9a5789c8a08be2ce82cb0">&#9670;&nbsp;</a></span>GETANGLE()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float student::GETANGLE </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>index</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>numAngles</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Return an angle value Returns and angle sampled by dividing the circle in "numAngles" slices and taking the "index"th angle. </p>
+
+</div>
+</div>
 <a id="a1ed9f8d3bd9ca7f77e060a0f927680ff"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1ed9f8d3bd9ca7f77e060a0f927680ff">&#9670;&nbsp;</a></span>getPathLength()</h2>
 
@@ -1160,6 +1241,54 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The legth of the path. </dd></dl>
+
+</div>
+</div>
+<a id="ac34d32c0fe843a08f92ae952d6b93050"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac34d32c0fe843a08f92ae952d6b93050">&#9670;&nbsp;</a></span>idpMDP()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a>&gt; student::idpMDP </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; Point &gt; &amp;&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>startAngle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>arriveAngle</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const vector&lt; Polygon &gt; &amp;&#160;</td>
+          <td class="paramname"><em>obstacle_list</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const unsigned short&#160;</td>
+          <td class="paramname"><em>numAngles</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Iterative Dynamic Programming version of the Multipoint Markov-Dubins Problem slides: <a href="https://didatticaonline.unitn.it/dol/pluginfile.php/816984/mod_resource/content/1/slides-Dubins-MP.pdf">https://didatticaonline.unitn.it/dol/pluginfile.php/816984/mod_resource/content/1/slides-Dubins-MP.pdf</a>. </p>
 
 </div>
 </div>

@@ -14,8 +14,9 @@ var searchData=
   ['drawdebugimage_52',['drawDebugImage',['../namespacestudent.html#a274add89a9a406df4a2c10e4f5a298f3',1,'student']]],
   ['drawdebugpath_53',['drawDebugPath',['../namespacestudent.html#a36ce5592b75c63c853f30c4eb8b6c883',1,'student']]],
   ['drawdubinsarc_54',['drawDubinsArc',['../namespacestudent.html#afce03b7c8e81fc3758e472f38aa084ec',1,'student']]],
-  ['dubins_55',['dubins',['../namespacedubins.html',1,'']]],
+  ['dubins_55',['dubins',['../namespacedubins.html',1,'dubins'],['../namespacestudent.html#a9cb92371d02e236ba8c0c12778f8421b',1,'student::DUBINS()']]],
   ['dubins_2ecpp_56',['dubins.cpp',['../dubins_8cpp.html',1,'']]],
   ['dubins_2ehpp_57',['dubins.hpp',['../dubins_8hpp.html',1,'']]],
-  ['dubins_5fshortest_5fpath_58',['dubins_shortest_path',['../namespacedubins.html#a42ee655422e26a9fc3c999959be8a396',1,'dubins']]]
+  ['dubins_5fshortest_5fpath_58',['dubins_shortest_path',['../namespacedubins.html#a42ee655422e26a9fc3c999959be8a396',1,'dubins']]],
+  ['dynamic_5fprogramming_59',['DYNAMIC_PROGRAMMING',['../student__interface_8cpp.html#a23c7008572709bda05b168f49ba6e35c',1,'student_interface.cpp']]]
 ];

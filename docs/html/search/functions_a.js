@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['nearestpoint_281',['nearestPoint',['../namespacePUtils.html#a3663a7994c1bf3ee1db373cb1c65befd',1,'PUtils']]],
-  ['nextimage_282',['nextImage',['../classSettings.html#a7701462e928f2425b342440fba9973e5',1,'Settings']]]
+  ['nearestpoint_287',['nearestPoint',['../namespacePUtils.html#a3663a7994c1bf3ee1db373cb1c65befd',1,'PUtils']]],
+  ['nextimage_288',['nextImage',['../classSettings.html#a7701462e928f2425b342440fba9973e5',1,'Settings']]]
 ];
