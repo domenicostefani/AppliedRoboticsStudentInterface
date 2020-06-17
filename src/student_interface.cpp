@@ -2222,7 +2222,7 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& safeBorders,
             for (unsigned int r = 0; (r < REFINEMENT_STEPS+1) && (! exit); ++r) {
                 #ifdef DEBUG_PLANPATH
                     if (r > 0)
-                        cout << "Angle Refinement Step " << r << endl;
+                        cout << "Angle Refinement Step " << r << ": ";
                 #endif
                 // Call Multipoint Markov-Dubins path planner
                 vector<dubins::Curve> tmpPath = idpMDP(short_path,  // point path
@@ -2394,7 +2394,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
                                       float xf, float yf, float thf,
                                       const string& config_folder) {
 
-    #ifdef DEBUG_SCORES
+    #ifdef DEBUG_PLANPATH
         cout << "Choosing victims for best scoring path." << endl;
     #endif
 
@@ -2430,7 +2430,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
         best_partial_time = length / ROBOT_SPEED;
 
         #ifdef DEBUG_SCORES
-            cout << "No victim. Time-score: " << (length / ROBOT_SPEED) << endl;
+            cout << "No victim. Time-score: " << best_partial_time << endl;
         #endif
     } else {
         best_partial_time = 100000;
@@ -2461,7 +2461,7 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
                     temp_victim_list.push_back(victim_list[temp_ordered_distances[i].first]);
                 }
 
-                #ifdef DEBUG_SCORES
+                #ifdef DEBUG_PLANPATH
                         cout << "Testing with victim " << victim_list[j].first << endl;
                 #endif
 
@@ -2470,22 +2470,23 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
                 length = getPathLength(current_path);
 
                 if (length > 0){
-                    #ifdef DEBUG_SCORES
-                        cout << "Score after collecting victim " << victim_list[j].first << ". Time: " << (length / ROBOT_SPEED);
-                    #endif
 
                     float current_partial_time = (length / ROBOT_SPEED) - (bonus * bonus_multiplier);
 
                     #ifdef DEBUG_SCORES
-                        cout << ", time-score: " << current_partial_time << endl;
+                        cout << "Score after collecting victim " << victim_list[j].first << ". Time-score: " << current_partial_time;
                     #endif
 
                     // update score and path
                     if (current_partial_time < best_partial_time) {
-                        best_partial_time = current_partial_time;
+                        best_partial_time = current_partial_time;                      
                         multipointPath = current_path;
                         victim_idx = j;
                     }
+
+                    #ifdef DEBUG_SCORES
+                        cout << ". Current best: " << best_partial_time << endl;
+                    #endif
                 }
             }
         }
@@ -2501,6 +2502,18 @@ vector<dubins::Curve> bestScoreGreedy(const Polygon& safeBorders,
             #endif
         }
     } while(victim_idx > -1);
+
+    #ifdef DEBUG_PLANPATH
+        cout << "Mission 2 will collect victims: ";
+
+        for (unsigned int i = 0; i < victims_to_collect.size(); i++)
+        {
+            cout << victims_to_collect[i].first << " ";
+        }
+        cout << endl;
+    #endif
+    
+
     return multipointPath;
 }
 
