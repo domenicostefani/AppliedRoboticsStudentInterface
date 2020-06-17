@@ -22,6 +22,7 @@
 #define AUTO_CORNER_DETECTION true  ///< Use Automatic corner detection
 #define COLOR_TUNING_WIZARD false   ///< Use color tuning panel
 #define DYNAMIC_PROGRAMMING         ///< Use quick Iterative Dynamic Programming solution for Multipoint Markov-Dubins problem
+#define MANUAL_LASTCURVE            ///< Plan manually last segment
 
 // -------------------------------- DEBUG FLAGS --------------------------------
 // - Configuration Debug flags - //
@@ -106,11 +107,19 @@ const unsigned short MP_IT_LIMIT = 10;  ///< Iteration limit for
                                         ///< multipoint Dubins curve
                                         ///< path planning attempts.
 
-constexpr bool USE_ANGLE_HEURISTIC = true;///< Enable heuristic on angle
+constexpr bool USE_ANGLE_HEURISTIC = true; ///< Enable heuristic on angle
                                            ///< computation.
                                            ///< Setting this to true improves the
                                            ///< way that free angles are chosen
-                                           ///< when planning
+                                           ///< when planning.
+                                           ///< Note: this only works for the
+                                           ///< slow recursive MPD version (
+                                           ///< comment DYNAMIC_PROGRAMMING)
+
+const unsigned int REFINEMENT_STEPS = 5; ///< Number of steps of angle refinement.
+                                         ///< Note that this works only with
+                                         ///< DYNAMIC_PROGRAMMING defined
+
 //Planning
 const double K_MAX = 10.0;            ///< Maximum robot curvature.
 const double PATH_RESOLUTION = 0.01;  ///< Path resolution (sampling).
@@ -441,9 +450,11 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     // compute robot dimension from barycenter for obstacle dilation
     // distance between robot triangle front vertex and barycenter is triangle height/3*2
     // from documentation, triangle height is 16 cm
-    float robot_dim = ceil(ROBOT_RADIUS * scale);
+    float robot_dim = ceil(1.2 * ROBOT_RADIUS * scale);
 
-    cout << "robot dim: " << robot_dim << endl;
+    #ifdef DEBUG_FINDOBSTACLES
+        cout << "robot dim: " << robot_dim << endl;
+    #endif
 
     // dilate obstacles
     cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(robot_dim, robot_dim));
@@ -1513,7 +1524,6 @@ std::pair<bool,std::vector<dubins::Curve>> MDP(const std::vector<Point> &path,
 }
 
 
-
 /** Computes the length of a multi-point dubins curve.
  * @param multipointPath Input dubins curve.
  * @return The legth of the multi-point dubins curve.
@@ -1525,31 +1535,55 @@ float getPathLength(const vector<dubins::Curve>& multipointPath){
     return length;
 }
 
-/** Return an angle value
- * Returns and angle sampled by dividing the circle in "numAngles" slices and
- * taking the "index"th angle.
+/** Returns an angle value.
+ * Returns an angle sampled by dividing the angle range in "numAngles" slices
+ * and taking the angleIdx one.
+ * @param angleIdx    Index of the angle to choose, ranges from 0 to numAngles-1
+ * @param range       Angle range (radians)
+ * @param numAngles   Number of angles sampled in the range
+ * @param centerAngle Central angle of the range
+ * @return sampled angle
 */
-float GETANGLE(int index, int numAngles) {
-    return (2 * M_PI)/numAngles * index;
+float sampleAngle(int angleIdx, float range, int numAngles, float centerAngle) {
+    float granularity = range / numAngles;
+    return granularity * angleIdx + (centerAngle - (range/2));
 }
 
-/** Dubins path function wrapper
- * Call the dubins path computation method
+/** Dubins path function wrapper.
+ * Calls the  shortest dubins path computation method.
+ * @param p1    First point
+ * @param th1   First angle
+ * @param pf    Last point
+ * @param thf   Last angle
 */
 dubins::Curve DUBINS(Point p1, float th1, Point pf, float thf) {
     int pidx = 0;
     return dubins::dubins_shortest_path(p1.x, p1.y, th1, pf.x, pf.y, thf, K_MAX, pidx);
 }
 
-/**
+/** Multipoint Markov-Dubins Path planner.
  * Iterative Dynamic Programming version of the Multipoint Markov-Dubins Problem
- * slides: https://didatticaonline.unitn.it/dol/pluginfile.php/816984/mod_resource/content/1/slides-Dubins-MP.pdf
+ * Inspired to the proposed idp solution proposed, it vary slightly in the fact
+ * that the first and last angles of the path are fixed and not free.
+ * The method is arranged for ANGLE REFINEMEN (it takes as argument both the
+ * solution to refine and the current angle range, which is
+ * granularity*numAngles)
+ * @param path          Point path
+ * @param startAngle    First angle
+ * @param arriveAngle   Last angle
+ * @param obstacle_list List of obstacles
+ * @param numAngles     Number of possible free angle choices (sampled)
+ * @param roughSolution Previous path (to refine)
+ * @param range         Angle range (default is 2*M_PI, smaller for refinement)
+ * @return Multipoint Dubins path (or empty vector if no collision-free path)
 */
 std::vector<dubins::Curve> idpMDP(const std::vector<Point> &path,
                                   double startAngle,
                                   double arriveAngle,
                                   const vector<Polygon>& obstacle_list,
-                                  const unsigned short numAngles) {
+                                  int numAngles,
+                                  const std::vector<dubins::Curve> roughSolution,
+                                  float range) {
 
     /*
      * Iterative Dynamic Programming solution:
@@ -1562,16 +1596,15 @@ std::vector<dubins::Curve> idpMDP(const std::vector<Point> &path,
      * - Computing iteratively from node n-2 down to 0 the best dubins solutions
      *   for the ongoing path:
      *   j = n-2,n-3,...,2,1,0  D(j-1,theta(j),theta(j+1)) + L(j+1,theta(j+1))
-    */
-
-    /*
+     *
      * The real solution differs because initial and final angle are decided and
      * collision detection is added
     */
 
-    // Step 0: Special cases
+    // Step 0.1: Special case 1
     if ((path.size() == 0) || (path.size() == 1))
         return {};
+    // Step 0.2: Special case 2
     if (path.size() == 2) {
         // Plan a single segment with bounded angles
         dubins::Curve curve = DUBINS(path[0], startAngle, path[1], arriveAngle);
@@ -1581,16 +1614,21 @@ std::vector<dubins::Curve> idpMDP(const std::vector<Point> &path,
         return {};
     }
 
-    int n = path.size()-1;  // same meaning of n in the slides
+    int n = path.size()-1;  // same meaning of n in the proposed solution
     std::vector<std::vector<dubins::Curve>> solutions(numAngles); // current saved solutions
     std::vector<float> partialLengths(numAngles, 0.0f); // vector holding the value in the slide called  L(j+1,theta(j+1))
-    std::vector<bool> collisions(numAngles,false);
+    std::vector<bool> collisions(numAngles,false); // vectory saving which paths in the solution are colliding
 
-    // Step1 compute end segment (Note that the final angle is bounded)
-    for (int vN_1 = 0; vN_1 < numAngles; ++vN_1) {
-        solutions[vN_1].resize(n);
-        dubins::Curve current = DUBINS(path[n-1], GETANGLE(vN_1,numAngles), path[n], arriveAngle);
-
+    // Step1: compute end segment (Note that the final angle is bounded)
+    for (int vN_1 = 0; vN_1 < numAngles; ++vN_1) {  // For each choice of penultimate node's angle (v(n-1))
+        solutions[vN_1].resize(n);                  // Initialize vector size
+        // Center angle is the angle of the previous solution when doing refinement
+        float centerAngle = roughSolution.empty() ? M_PI : roughSolution[n-1].a1.th0;
+        // Penultimate node's angle is sampled in [centerAngle-(range/2),centerAngle+(range/2)]
+        float angle = sampleAngle(vN_1, range, numAngles, centerAngle);
+        // Compute dubins solution
+        dubins::Curve current = DUBINS(path[n-1], angle, path[n], arriveAngle);
+        // Find whether the soltion collides
         collisions[vN_1] = isCurveColliding(current, obstacle_list);
 
         if (! collisions[vN_1]) {
@@ -1599,32 +1637,46 @@ std::vector<dubins::Curve> idpMDP(const std::vector<Point> &path,
         }
     }
 
-    // Step 2.1
+    // Step 2.1: Compute Dubins solution iteratively from the end to the start
     for(int j = n-2; j > 0; --j) {  // arrive only at 1 because the initial angle is bounded
+        // Create a new version for solutions, lengths and collisions mask
+        // because at each new step they are indexed according to the angles
+        // of a different node.
         std::vector<std::vector<dubins::Curve>> newSolutions(numAngles);
         std::vector<float> newPartialLengths(numAngles, 0.0f); //This is a vector holding the value in the slide called
         std::vector<bool> newCollisions(numAngles,false);
-        for (int vj = 0; vj < numAngles; ++vj) {
 
-            float currentStartAngle = GETANGLE(vj,numAngles);
+        for (int vj = 0; vj < numAngles; ++vj) { // For each sampled angle of node j
+            // Center angle is the angle of the previous solution when doing refinement
+            float centerAngle = roughSolution.empty() ? M_PI : roughSolution[j].a1.th0;
+            // Sample angle for node j
+            float currentStartAngle = sampleAngle(vj, range, numAngles, centerAngle);
 
-            dubins::Curve bestCurve;
-            float bestlength = std::numeric_limits<float>::max();
-            int bestCurveIndex = -1;
+            // Find the shortest path considering all the possible angles of
+            // node j+1
+            dubins::Curve bestCurve;    // best dubins curve
+            float bestlength = std::numeric_limits<float>::max(); // length to beat
+            int bestCurveIndex = -1;    // angle index of best angle (index for solutions vector)
 
-            for (int vjp1 = 0; vjp1 < numAngles; ++vjp1) {
-                // Make sure not to follow a colliding path
-                if (! collisions[vjp1]) {
+            for (int vjp1 = 0; vjp1 < numAngles; ++vjp1) {  // for each angle of node j+1
+
+                if (! collisions[vjp1]) {  // Make sure not to follow a colliding path
+
+                    // Take second angle (angle of v(j+1)) from the solutions
+                    // already computed: They are there because we are going backwards
                     float currentFinishAngle = solutions[vjp1].at(j+1).a1.th0;
-                    float successiveBestLength = partialLengths[vjp1]; //already computed(Dynamic programming step), value that in the slides is called  L(j+1,theta(j+1))
 
+                    // already computed(Dynamic programming step), value that in
+                    // the slides is called  L(j+1,theta(j+1))
+                    float successiveBestLength = partialLengths[vjp1];
+
+                    // Compute Dubins solution and check for collisions
                     dubins::Curve currentCurve = DUBINS(path[j],currentStartAngle,path[j+1],currentFinishAngle);
-
                     bool collision = isCurveColliding(currentCurve, obstacle_list);
 
                     if (! collision) {
                         float currentLength = currentCurve.L + successiveBestLength;
-                        if(currentLength < bestlength) {
+                        if(currentLength < bestlength) { // update best solution
                             bestlength = currentLength;
                             bestCurve = currentCurve;
                             bestCurveIndex = vjp1;
@@ -1633,38 +1685,50 @@ std::vector<dubins::Curve> idpMDP(const std::vector<Point> &path,
                 }
             }
 
-            if (bestCurveIndex == -1) // if this happens, all the paths collided
-                newCollisions[vj] = true;
+            // Check if all path collides or at least one was feasible
+            if (bestCurveIndex == -1)
+                newCollisions[vj] = true;   // If all collide, notify collision
             else {
+                // update new solutions by moving the previous solution vector
+                // to the new index and appending the curve found
                 newSolutions[vj] = solutions[bestCurveIndex];
                 newSolutions[vj].at(j) = bestCurve;
+                // update lengths in the same way
                 newPartialLengths[vj] = partialLengths[bestCurveIndex];
                 newPartialLengths[vj] += bestCurve.L;
             }
         }
+
+        // New solutions can be written to the containers of the old solutions,
+        // for the next loop iteration
         solutions = newSolutions;
         partialLengths = newPartialLengths;
         collisions = newCollisions;
     }
 
-    // Step 2.2 // Plan the first segment with bounded initial angle
+    // Step 2.2: Plan the first path curve with bounded initial angle
     std::vector<dubins::Curve> bestPath;
     {
         dubins::Curve bestFirstCurve;
         float bestlength = std::numeric_limits<float>::max();
         int bestCurveIndex = -1;
 
-        for (int vjp1 = 0; vjp1 < numAngles; ++vjp1) {
+        for (int vjp1 = 0; vjp1 < numAngles; ++vjp1) { // for each angle of node 1 (second node of the path)
             if (! collisions[vjp1]) {
+                // take current angle from already computed solutions for node 1 (we are going backwards)
                 float currentFinishAngle = solutions[vjp1].at(1).a1.th0;
-                float successiveBestLength = partialLengths[vjp1]; //already computed(Dynamic programming step), value that in the slides is called  L(j+1,theta(j+1))
 
+                // Length already computed(Dynamic programming step),
+                // value that in the slides is called  L(j+1,theta(j+1))
+                float successiveBestLength = partialLengths[vjp1];
+
+                // Compute Dubins solution and check for collisions
                 dubins::Curve currentCurve = DUBINS(path[0],startAngle,path[1],currentFinishAngle);
                 bool collision = isCurveColliding(currentCurve, obstacle_list);
 
                 if (! collision) {
                     float currentLength = currentCurve.L + successiveBestLength;
-                    if(currentLength < bestlength) {
+                    if(currentLength < bestlength) { // update best solution
                         bestlength = currentLength;
                         bestFirstCurve = currentCurve;
                         bestCurveIndex = vjp1;
@@ -1673,13 +1737,14 @@ std::vector<dubins::Curve> idpMDP(const std::vector<Point> &path,
             }
         }
 
+        // Check if all path collides or at least one was feasible
         if (bestCurveIndex != -1) {
             // This means that at least one path does not collide.
-            // If not, the bestPath vector remain empty and it means that no
-            // path was found
+            // save best solution, appending current curve
             bestPath = solutions[bestCurveIndex];
             bestPath[0] = bestFirstCurve;
         }
+        // If all paths collide, the bestPath vector remains empty
     }
     return bestPath;
 }
@@ -2149,13 +2214,64 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& safeBorders,
     unsigned short it_count = 0;
 
     do {
-        #ifdef DYNAMIC_PROGRAMMING
-            multipointPath = idpMDP(short_path,
-                                    theta, thf,
-                                    boundaries,
-                                    numberOfMpAngles);
-            path_planned = !multipointPath.empty();
-        #else
+        #ifdef DYNAMIC_PROGRAMMING  // If the efficient iDP solution is chosen
+            float range = 2 * M_PI; // range for angle selection , initally full circle
+            float previousLength = std::numeric_limits<float>::max(); // path length to beat
+            bool exit = false; // flag to exit whenever a collision free path cannot be found
+
+            for (unsigned int r = 0; (r < REFINEMENT_STEPS+1) && (! exit); ++r) {
+                #ifdef DEBUG_PLANPATH
+                    if (r > 0)
+                        cout << "Angle Refinement Step " << r << endl;
+                #endif
+                // Call Multipoint Markov-Dubins path planner
+                vector<dubins::Curve> tmpPath = idpMDP(short_path,  // point path
+                                                       theta, thf,  // first and last angles
+                                                       boundaries,  // list of obstacles and borders
+                                                       numberOfMpAngles, // number of angles used
+                                                       multipointPath,   // previous solution (for refinement)
+                                                       range); // angle range
+                bool tmpPathPlanned = !tmpPath.empty(); // success if the returned path is not empty
+                float tmpPathLength = getPathLength(tmpPath); // length of the new path
+                if(tmpPathPlanned && (tmpPathLength < previousLength)){
+                    // if the path was planned with no collisions and the length
+                    // is better than the previous solution
+                    #ifdef DEBUG_PLANPATH
+                        if (r > 0)
+                            cout << "Successful refinement, shortened path by " << (previousLength - tmpPathLength)<< " meters" << endl;
+                    #endif
+                    multipointPath = tmpPath;       // save new solution
+                    previousLength = tmpPathLength; // save new best length
+                    path_planned = true;            // save success flag
+                } else {
+                    // in this case either a path cannot be found (collisions)
+                    // or refinement does not end with a better length
+                    #ifdef DEBUG_PLANPATH
+                        if (r == 0)
+                            cout << "Exiting MDP planning because of no collision-free paths" << endl;
+                        else if (!tmpPathPlanned)
+                            cout << "No more refinement because of no new collision-free paths" << endl;
+                        else
+                            cout << "New refined paths cannot get shorter\nIt was: " << previousLength << " and the new one is " << tmpPathLength << endl;
+                    #endif
+                    exit = true; // in this case it can exit from the loop
+                }
+
+                //
+                // Update the angle range for the eventual next refinement step
+                //
+
+                // Current angle granularity is range divided by "angle slices"
+                float currentGranularity = range / numberOfMpAngles;
+                // Next angles will be selected in a range depending on the
+                // previous angle found (theta) and the previous granularity (h)
+                // sample window: [theta - (3/2 * h), theta - (3/2 * h) ]
+                // This means that the angle range covered is (3h/2 + 3h/2)
+                // or:  3 * h     (3 times the granularity)
+                range = 3 * currentGranularity;
+            }
+        #else // not defined DYNAMIC_PROGRAMMING
+            // This is the previous, inefficient, recursive mdp soluton
             std::pair<bool,vector<dubins::Curve>> multipointResult;
             double returnedLength = 0;  // unused here, just for recursion
             multipointResult = MDP(short_path,
@@ -2170,6 +2286,7 @@ vector<dubins::Curve> collectVictimsPath(const Polygon& safeBorders,
 
         if (path_planned) {
         #ifdef DEBUG_PLANPATH
+            cout << "------------------------------------------------------------" << endl;
             cout << "> Planning Step 3: Multipoint dubins curve planned successfully" << endl;
             cout << "------------------------------------------------------------" << endl;
         #endif
@@ -2522,21 +2639,38 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
             //             ^                 ^
             //            (xy,yf)           extendedArrival(x,y)
 
-            int pidx = 0;
             double x1 = xf;
             double y1 = yf;
-            double theta1 = thf;
             double x2 = extendedArrival.x;
             double y2 = extendedArrival.y;
-            double theta2 = thf;
-            dubins::Curve lastCurve = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, K_MAX, pidx);
+
+            #ifdef MANUAL_LASTCURVE
+                float newtheta;
+                if (abs(x1-x2) < 0.0001)
+                    newtheta = M_PI / 2 * (y2 > y1 ? 1 : -1);
+                else if (abs(y1-y2) < 0.0001)
+                    newtheta = (x2 > x1 ? 0 : M_PI);
+                else
+                    newtheta = atanf(abs(x1-x2) / abs(y1-y2));
+
+                dubins::Curve manual;
+                float length = sqrt(powf(x1-x2,2) + powf(y1-y2,2));
+                manual.a1.set(xf,yf,newtheta,0.0f,length);
+                manual.a2.set(manual.a1.xf, manual.a1.yf, manual.a1.thf, 0.0, 0.0);
+                manual.a3.set(manual.a2.xf, manual.a2.yf, manual.a2.thf, 0.0, 0.0);
+                multipointPath.push_back(manual);
+            #else
+                int pidx = 0;
+                double theta1 = thf;
+                double theta2 = thf;
+                dubins::Curve lastCurve = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, K_MAX, pidx);
+                multipointPath.push_back(lastCurve);
+            #endif
 
             // No collision check because we know that it would record a virtual
             // collisions caused by the border behind the gate.
             // We also know that it is not a real collision because the robot is
             // meant to use the gate to exit from the arena
-
-            multipointPath.push_back(lastCurve);
         }
 
         //

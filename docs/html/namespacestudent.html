@@ -151,15 +151,15 @@ Functions</h2></td></tr>
 <tr class="memitem:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a1ed9f8d3bd9ca7f77e060a0f927680ff">getPathLength</a> (const vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt; &amp;multipointPath)</td></tr>
 <tr class="memdesc:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the length of a multi-point dubins curve.  <a href="namespacestudent.html#a1ed9f8d3bd9ca7f77e060a0f927680ff">More...</a><br /></td></tr>
 <tr class="separator:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae7fa47cd3cb9a5789c8a08be2ce82cb0"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#ae7fa47cd3cb9a5789c8a08be2ce82cb0">GETANGLE</a> (int index, int numAngles)</td></tr>
-<tr class="memdesc:ae7fa47cd3cb9a5789c8a08be2ce82cb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return an angle value Returns and angle sampled by dividing the circle in "numAngles" slices and taking the "index"th angle.  <a href="namespacestudent.html#ae7fa47cd3cb9a5789c8a08be2ce82cb0">More...</a><br /></td></tr>
-<tr class="separator:ae7fa47cd3cb9a5789c8a08be2ce82cb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa27a31742f43ed3079b55b6aa709d06e"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#aa27a31742f43ed3079b55b6aa709d06e">sampleAngle</a> (int angleIdx, float range, int numAngles, float centerAngle)</td></tr>
+<tr class="memdesc:aa27a31742f43ed3079b55b6aa709d06e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns an angle value.  <a href="namespacestudent.html#aa27a31742f43ed3079b55b6aa709d06e">More...</a><br /></td></tr>
+<tr class="separator:aa27a31742f43ed3079b55b6aa709d06e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9cb92371d02e236ba8c0c12778f8421b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a9cb92371d02e236ba8c0c12778f8421b">DUBINS</a> (Point p1, float th1, Point pf, float thf)</td></tr>
-<tr class="memdesc:a9cb92371d02e236ba8c0c12778f8421b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dubins path function wrapper Call the dubins path computation method.  <a href="namespacestudent.html#a9cb92371d02e236ba8c0c12778f8421b">More...</a><br /></td></tr>
+<tr class="memdesc:a9cb92371d02e236ba8c0c12778f8421b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dubins path function wrapper.  <a href="namespacestudent.html#a9cb92371d02e236ba8c0c12778f8421b">More...</a><br /></td></tr>
 <tr class="separator:a9cb92371d02e236ba8c0c12778f8421b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac34d32c0fe843a08f92ae952d6b93050"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#ac34d32c0fe843a08f92ae952d6b93050">idpMDP</a> (const std::vector&lt; Point &gt; &amp;path, double startAngle, double arriveAngle, const vector&lt; Polygon &gt; &amp;obstacle_list, const unsigned short numAngles)</td></tr>
-<tr class="memdesc:ac34d32c0fe843a08f92ae952d6b93050"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterative Dynamic Programming version of the Multipoint Markov-Dubins Problem slides: <a href="https://didatticaonline.unitn.it/dol/pluginfile.php/816984/mod_resource/content/1/slides-Dubins-MP.pdf">https://didatticaonline.unitn.it/dol/pluginfile.php/816984/mod_resource/content/1/slides-Dubins-MP.pdf</a>.  <a href="namespacestudent.html#ac34d32c0fe843a08f92ae952d6b93050">More...</a><br /></td></tr>
-<tr class="separator:ac34d32c0fe843a08f92ae952d6b93050"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a625cd4665b4abaab82e0c36382221cb2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a625cd4665b4abaab82e0c36382221cb2">idpMDP</a> (const std::vector&lt; Point &gt; &amp;path, double startAngle, double arriveAngle, const vector&lt; Polygon &gt; &amp;obstacle_list, int numAngles, const std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt; roughSolution, float range)</td></tr>
+<tr class="memdesc:a625cd4665b4abaab82e0c36382221cb2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multipoint Markov-Dubins Path planner.  <a href="namespacestudent.html#a625cd4665b4abaab82e0c36382221cb2">More...</a><br /></td></tr>
+<tr class="separator:a625cd4665b4abaab82e0c36382221cb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0d628521f7d445e696a62e1d7ae4fda"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#aa0d628521f7d445e696a62e1d7ae4fda">isPathColliding</a> (vector&lt; Point &gt; vertices, vector&lt; Polygon &gt; obstacle_list)</td></tr>
 <tr class="memdesc:aa0d628521f7d445e696a62e1d7ae4fda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a path is colliding with any obstacle.  <a href="namespacestudent.html#aa0d628521f7d445e696a62e1d7ae4fda">More...</a><br /></td></tr>
 <tr class="separator:aa0d628521f7d445e696a62e1d7ae4fda"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -713,7 +713,16 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Dubins path function wrapper Call the dubins path computation method. </p>
+<p>Dubins path function wrapper. </p>
+<p>Calls the shortest dubins path computation method. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">p1</td><td>First point </td></tr>
+    <tr><td class="paramname">th1</td><td>First angle </td></tr>
+    <tr><td class="paramname">pf</td><td>Last point </td></tr>
+    <tr><td class="paramname">thf</td><td>Last angle </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -1133,36 +1142,6 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="ae7fa47cd3cb9a5789c8a08be2ce82cb0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae7fa47cd3cb9a5789c8a08be2ce82cb0">&#9670;&nbsp;</a></span>GETANGLE()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">float student::GETANGLE </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>index</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>numAngles</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Return an angle value Returns and angle sampled by dividing the circle in "numAngles" slices and taking the "index"th angle. </p>
-
-</div>
-</div>
 <a id="a1ed9f8d3bd9ca7f77e060a0f927680ff"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1ed9f8d3bd9ca7f77e060a0f927680ff">&#9670;&nbsp;</a></span>getPathLength()</h2>
 
@@ -1244,8 +1223,8 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="ac34d32c0fe843a08f92ae952d6b93050"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac34d32c0fe843a08f92ae952d6b93050">&#9670;&nbsp;</a></span>idpMDP()</h2>
+<a id="a625cd4665b4abaab82e0c36382221cb2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a625cd4665b4abaab82e0c36382221cb2">&#9670;&nbsp;</a></span>idpMDP()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1277,8 +1256,20 @@ Variables</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const unsigned short&#160;</td>
-          <td class="paramname"><em>numAngles</em>&#160;</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>numAngles</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt;&#160;</td>
+          <td class="paramname"><em>roughSolution</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>range</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1288,7 +1279,20 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Iterative Dynamic Programming version of the Multipoint Markov-Dubins Problem slides: <a href="https://didatticaonline.unitn.it/dol/pluginfile.php/816984/mod_resource/content/1/slides-Dubins-MP.pdf">https://didatticaonline.unitn.it/dol/pluginfile.php/816984/mod_resource/content/1/slides-Dubins-MP.pdf</a>. </p>
+<p>Multipoint Markov-Dubins Path planner. </p>
+<p>Iterative Dynamic Programming version of the Multipoint Markov-Dubins Problem Inspired to the proposed idp solution proposed, it vary slightly in the fact that the first and last angles of the path are fixed and not free. The method is arranged for ANGLE REFINEMEN (it takes as argument both the solution to refine and the current angle range, which is granularity*numAngles) </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">path</td><td>Point path </td></tr>
+    <tr><td class="paramname">startAngle</td><td>First angle </td></tr>
+    <tr><td class="paramname">arriveAngle</td><td>Last angle </td></tr>
+    <tr><td class="paramname">obstacle_list</td><td>List of obstacles </td></tr>
+    <tr><td class="paramname">numAngles</td><td>Number of possible free angle choices (sampled) </td></tr>
+    <tr><td class="paramname">roughSolution</td><td>Previous path (to refine) </td></tr>
+    <tr><td class="paramname">range</td><td>Angle range (default is 2*M_PI, smaller for refinement) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Multipoint Dubins path (or empty vector if no collision-free path) </dd></dl>
 
 </div>
 </div>
@@ -2036,6 +2040,58 @@ Variables</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The planned path. </dd></dl>
+
+</div>
+</div>
+<a id="aa27a31742f43ed3079b55b6aa709d06e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa27a31742f43ed3079b55b6aa709d06e">&#9670;&nbsp;</a></span>sampleAngle()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float student::sampleAngle </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>angleIdx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>range</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>numAngles</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float&#160;</td>
+          <td class="paramname"><em>centerAngle</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns an angle value. </p>
+<p>Returns an angle sampled by dividing the angle range in "numAngles" slices and taking the angleIdx one. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">angleIdx</td><td>Index of the angle to choose, ranges from 0 to numAngles-1 </td></tr>
+    <tr><td class="paramname">range</td><td>Angle range (radians) </td></tr>
+    <tr><td class="paramname">numAngles</td><td>Number of angles sampled in the range </td></tr>
+    <tr><td class="paramname">centerAngle</td><td>Central angle of the range </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>sampled angle </dd></dl>
 
 </div>
 </div>
