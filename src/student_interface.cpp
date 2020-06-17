@@ -22,6 +22,7 @@
 #define AUTO_CORNER_DETECTION true  ///< Use Automatic corner detection
 #define COLOR_TUNING_WIZARD false   ///< Use color tuning panel
 #define DYNAMIC_PROGRAMMING         ///< Use quick Iterative Dynamic Programming solution for Multipoint Markov-Dubins problem
+#define MANUAL_LASTCURVE            ///< Plan manually last segment
 
 // -------------------------------- DEBUG FLAGS --------------------------------
 // - Configuration Debug flags - //
@@ -2638,21 +2639,38 @@ bool planPath(const Polygon& borders, const vector<Polygon>& obstacle_list,
             //             ^                 ^
             //            (xy,yf)           extendedArrival(x,y)
 
-            int pidx = 0;
             double x1 = xf;
             double y1 = yf;
-            double theta1 = thf;
             double x2 = extendedArrival.x;
             double y2 = extendedArrival.y;
-            double theta2 = thf;
-            dubins::Curve lastCurve = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, K_MAX, pidx);
+
+            #ifdef MANUAL_LASTCURVE
+                float newtheta;
+                if (abs(x1-x2) < 0.0001)
+                    newtheta = M_PI / 2 * (y2 > y1 ? 1 : -1);
+                else if (abs(y1-y2) < 0.0001)
+                    newtheta = (x2 > x1 ? 0 : M_PI);
+                else
+                    newtheta = atanf(abs(x1-x2) / abs(y1-y2));
+
+                dubins::Curve manual;
+                float length = sqrt(powf(x1-x2,2) + powf(y1-y2,2));
+                manual.a1.set(xf,yf,newtheta,0.0f,length);
+                manual.a2.set(manual.a1.xf, manual.a1.yf, manual.a1.thf, 0.0, 0.0);
+                manual.a3.set(manual.a2.xf, manual.a2.yf, manual.a2.thf, 0.0, 0.0);
+                multipointPath.push_back(manual);
+            #else
+                int pidx = 0;
+                double theta1 = thf;
+                double theta2 = thf;
+                dubins::Curve lastCurve = dubins::dubins_shortest_path(x1, y1, theta1, x2, y2, theta2, K_MAX, pidx);
+                multipointPath.push_back(lastCurve);
+            #endif
 
             // No collision check because we know that it would record a virtual
             // collisions caused by the border behind the gate.
             // We also know that it is not a real collision because the robot is
             // meant to use the gate to exit from the arena
-
-            multipointPath.push_back(lastCurve);
         }
 
         //
