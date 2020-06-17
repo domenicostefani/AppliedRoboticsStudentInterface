@@ -285,7 +285,7 @@ then
     echo "    <!-- Obstacle section -->    " >> $outputFile
     echo "    <include>" >> $outputFile
     echo "      <uri>model://hexagon_95</uri>" >> $outputFile
-    echo "      <pose>0.4 0.1 0 0 0 0</pose>" >> $outputFile
+    echo "      <pose>0.5 0.07 0 0 0 0</pose>" >> $outputFile
     echo "      <name>obstacle_1</name>" >> $outputFile
     echo "    </include>" >> $outputFile
     echo "" >> $outputFile
