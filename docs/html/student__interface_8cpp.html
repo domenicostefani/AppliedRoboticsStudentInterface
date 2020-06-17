@@ -119,6 +119,9 @@ Macros</h2></td></tr>
 <tr class="memitem:a23c7008572709bda05b168f49ba6e35c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a23c7008572709bda05b168f49ba6e35c">DYNAMIC_PROGRAMMING</a></td></tr>
 <tr class="memdesc:a23c7008572709bda05b168f49ba6e35c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use quick Iterative Dynamic Programming solution for Multipoint Markov-Dubins problem.  <a href="student__interface_8cpp.html#a23c7008572709bda05b168f49ba6e35c">More...</a><br /></td></tr>
 <tr class="separator:a23c7008572709bda05b168f49ba6e35c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d4d676a659cb7f322b415c20a9a850f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a7d4d676a659cb7f322b415c20a9a850f">MANUAL_LASTCURVE</a></td></tr>
+<tr class="memdesc:a7d4d676a659cb7f322b415c20a9a850f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Plan manually last segment.  <a href="student__interface_8cpp.html#a7d4d676a659cb7f322b415c20a9a850f">More...</a><br /></td></tr>
+<tr class="separator:a7d4d676a659cb7f322b415c20a9a850f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2415ae70e07e7c351bcf674e8797c9b0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a2415ae70e07e7c351bcf674e8797c9b0">DEBUG_PLANPATH</a></td></tr>
 <tr class="memdesc:a2415ae70e07e7c351bcf674e8797c9b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">generic info about the whole planner  <a href="student__interface_8cpp.html#a2415ae70e07e7c351bcf674e8797c9b0">More...</a><br /></td></tr>
 <tr class="separator:a2415ae70e07e7c351bcf674e8797c9b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -209,15 +212,15 @@ Functions</h2></td></tr>
 <tr class="memitem:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a1ed9f8d3bd9ca7f77e060a0f927680ff">student::getPathLength</a> (const vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt; &amp;multipointPath)</td></tr>
 <tr class="memdesc:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the length of a multi-point dubins curve.  <a href="namespacestudent.html#a1ed9f8d3bd9ca7f77e060a0f927680ff">More...</a><br /></td></tr>
 <tr class="separator:a1ed9f8d3bd9ca7f77e060a0f927680ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae7fa47cd3cb9a5789c8a08be2ce82cb0"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#ae7fa47cd3cb9a5789c8a08be2ce82cb0">student::GETANGLE</a> (int index, int numAngles)</td></tr>
-<tr class="memdesc:ae7fa47cd3cb9a5789c8a08be2ce82cb0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return an angle value Returns and angle sampled by dividing the circle in "numAngles" slices and taking the "index"th angle.  <a href="namespacestudent.html#ae7fa47cd3cb9a5789c8a08be2ce82cb0">More...</a><br /></td></tr>
-<tr class="separator:ae7fa47cd3cb9a5789c8a08be2ce82cb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa27a31742f43ed3079b55b6aa709d06e"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#aa27a31742f43ed3079b55b6aa709d06e">student::sampleAngle</a> (int angleIdx, float range, int numAngles, float centerAngle)</td></tr>
+<tr class="memdesc:aa27a31742f43ed3079b55b6aa709d06e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns an angle value.  <a href="namespacestudent.html#aa27a31742f43ed3079b55b6aa709d06e">More...</a><br /></td></tr>
+<tr class="separator:aa27a31742f43ed3079b55b6aa709d06e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9cb92371d02e236ba8c0c12778f8421b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a9cb92371d02e236ba8c0c12778f8421b">student::DUBINS</a> (Point p1, float th1, Point pf, float thf)</td></tr>
-<tr class="memdesc:a9cb92371d02e236ba8c0c12778f8421b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dubins path function wrapper Call the dubins path computation method.  <a href="namespacestudent.html#a9cb92371d02e236ba8c0c12778f8421b">More...</a><br /></td></tr>
+<tr class="memdesc:a9cb92371d02e236ba8c0c12778f8421b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dubins path function wrapper.  <a href="namespacestudent.html#a9cb92371d02e236ba8c0c12778f8421b">More...</a><br /></td></tr>
 <tr class="separator:a9cb92371d02e236ba8c0c12778f8421b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac34d32c0fe843a08f92ae952d6b93050"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#ac34d32c0fe843a08f92ae952d6b93050">student::idpMDP</a> (const std::vector&lt; Point &gt; &amp;path, double startAngle, double arriveAngle, const vector&lt; Polygon &gt; &amp;obstacle_list, const unsigned short numAngles)</td></tr>
-<tr class="memdesc:ac34d32c0fe843a08f92ae952d6b93050"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterative Dynamic Programming version of the Multipoint Markov-Dubins Problem slides: <a href="https://didatticaonline.unitn.it/dol/pluginfile.php/816984/mod_resource/content/1/slides-Dubins-MP.pdf">https://didatticaonline.unitn.it/dol/pluginfile.php/816984/mod_resource/content/1/slides-Dubins-MP.pdf</a>.  <a href="namespacestudent.html#ac34d32c0fe843a08f92ae952d6b93050">More...</a><br /></td></tr>
-<tr class="separator:ac34d32c0fe843a08f92ae952d6b93050"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a625cd4665b4abaab82e0c36382221cb2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#a625cd4665b4abaab82e0c36382221cb2">student::idpMDP</a> (const std::vector&lt; Point &gt; &amp;path, double startAngle, double arriveAngle, const vector&lt; Polygon &gt; &amp;obstacle_list, int numAngles, const std::vector&lt; <a class="el" href="classdubins_1_1Curve.html">dubins::Curve</a> &gt; roughSolution, float range)</td></tr>
+<tr class="memdesc:a625cd4665b4abaab82e0c36382221cb2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multipoint Markov-Dubins Path planner.  <a href="namespacestudent.html#a625cd4665b4abaab82e0c36382221cb2">More...</a><br /></td></tr>
+<tr class="separator:a625cd4665b4abaab82e0c36382221cb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0d628521f7d445e696a62e1d7ae4fda"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacestudent.html#aa0d628521f7d445e696a62e1d7ae4fda">student::isPathColliding</a> (vector&lt; Point &gt; vertices, vector&lt; Polygon &gt; obstacle_list)</td></tr>
 <tr class="memdesc:aa0d628521f7d445e696a62e1d7ae4fda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a path is colliding with any obstacle.  <a href="namespacestudent.html#aa0d628521f7d445e696a62e1d7ae4fda">More...</a><br /></td></tr>
 <tr class="separator:aa0d628521f7d445e696a62e1d7ae4fda"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -292,8 +295,11 @@ Variables</h2></td></tr>
 <tr class="memdesc:a0e1bb3537f28ceb666c7e7fc09ce2f5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iteration limit for multipoint Dubins curve path planning attempts.  <a href="student__interface_8cpp.html#a0e1bb3537f28ceb666c7e7fc09ce2f5f">More...</a><br /></td></tr>
 <tr class="separator:a0e1bb3537f28ceb666c7e7fc09ce2f5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e4e006109051541247cf5a49584bd21"><td class="memItemLeft" align="right" valign="top">constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#a4e4e006109051541247cf5a49584bd21">USE_ANGLE_HEURISTIC</a> = true</td></tr>
-<tr class="memdesc:a4e4e006109051541247cf5a49584bd21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable heuristic on angle.  <a href="student__interface_8cpp.html#a4e4e006109051541247cf5a49584bd21">More...</a><br /></td></tr>
+<tr class="memdesc:a4e4e006109051541247cf5a49584bd21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enable heuristic on angle computation.  <a href="student__interface_8cpp.html#a4e4e006109051541247cf5a49584bd21">More...</a><br /></td></tr>
 <tr class="separator:a4e4e006109051541247cf5a49584bd21"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af53bb4507b452390567569a875788c53"><td class="memItemLeft" align="right" valign="top">const unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#af53bb4507b452390567569a875788c53">REFINEMENT_STEPS</a> = 5</td></tr>
+<tr class="memdesc:af53bb4507b452390567569a875788c53"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of steps of angle refinement.  <a href="student__interface_8cpp.html#af53bb4507b452390567569a875788c53">More...</a><br /></td></tr>
+<tr class="separator:af53bb4507b452390567569a875788c53"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec288fbcb048cb507a7616c6a783bf38"><td class="memItemLeft" align="right" valign="top">const double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="student__interface_8cpp.html#aec288fbcb048cb507a7616c6a783bf38">K_MAX</a> = 10.0</td></tr>
 <tr class="memdesc:aec288fbcb048cb507a7616c6a783bf38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum robot curvature.  <a href="student__interface_8cpp.html#aec288fbcb048cb507a7616c6a783bf38">More...</a><br /></td></tr>
 <tr class="separator:aec288fbcb048cb507a7616c6a783bf38"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -389,6 +395,22 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Use quick Iterative Dynamic Programming solution for Multipoint Markov-Dubins problem. </p>
+
+</div>
+</div>
+<a id="a7d4d676a659cb7f322b415c20a9a850f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d4d676a659cb7f322b415c20a9a850f">&#9670;&nbsp;</a></span>MANUAL_LASTCURVE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define MANUAL_LASTCURVE</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Plan manually last segment. </p>
 
 </div>
 </div>
@@ -610,6 +632,23 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="af53bb4507b452390567569a875788c53"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af53bb4507b452390567569a875788c53">&#9670;&nbsp;</a></span>REFINEMENT_STEPS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const unsigned int REFINEMENT_STEPS = 5</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Number of steps of angle refinement. </p>
+<p>Note that this works only with DYNAMIC_PROGRAMMING defined </p>
+
+</div>
+</div>
 <a id="a6b20b4991e96425842dfd0dd6bba41eb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6b20b4991e96425842dfd0dd6bba41eb">&#9670;&nbsp;</a></span>ROBOT_RADIUS</h2>
 
@@ -696,8 +735,8 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Enable heuristic on angle. </p>
-<p>computation. Setting this to true improves the way that free angles are chosen when planning </p>
+<p>Enable heuristic on angle computation. </p>
+<p>Setting this to true improves the way that free angles are chosen when planning. Note: this only works for the slow recursive MPD version ( comment DYNAMIC_PROGRAMMING) </p>
 
 </div>
 </div>
