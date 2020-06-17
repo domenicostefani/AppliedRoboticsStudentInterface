@@ -449,9 +449,11 @@ void findObstacles(const cv::Mat& hsv_img, const double scale,
     // compute robot dimension from barycenter for obstacle dilation
     // distance between robot triangle front vertex and barycenter is triangle height/3*2
     // from documentation, triangle height is 16 cm
-    float robot_dim = ceil(ROBOT_RADIUS * scale);
+    float robot_dim = ceil(1.2 * ROBOT_RADIUS * scale);
 
-    cout << "robot dim: " << robot_dim << endl;
+    #ifdef DEBUG_FINDOBSTACLES
+        cout << "robot dim: " << robot_dim << endl;
+    #endif
 
     // dilate obstacles
     cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(robot_dim, robot_dim));
